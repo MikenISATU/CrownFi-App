@@ -1,0 +1,116 @@
+{
+  "apiVersion": "arcturus.u128.org/v2",
+  "kind": "ServiceRelease",
+  "metadata": {
+    "name": "stellar-project",
+    "revision": "0000000000000000000000000000000000000000"
+  },
+  "spec": {
+    "components": {
+      "postgres": {
+        "image": "docker.io/library/postgres@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+        "containerName": "stellar-project-postgres",
+        "mode": "service",
+        "networks": ["internal_routing"],
+        "restart": "always",
+        "environment": {
+          "POSTGRES_DB": "crownfi",
+          "POSTGRES_USER": "crownfi"
+        },
+        "secrets": [
+          {"name": "postgres-password", "type": "env", "target": "POSTGRES_PASSWORD"}
+        ],
+        "healthCheck": {
+          "command": "pg_isready -U crownfi -d crownfi"
+        }
+      },
+      "redis": {
+        "image": "docker.io/library/redis@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99",
+        "containerName": "stellar-project-redis",
+        "mode": "service",
+        "networks": ["internal_routing"],
+        "restart": "always",
+        "healthCheck": {
+          "command": "redis-cli ping"
+        }
+      },
+      "api": {
+        "image": "git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint/api@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "containerName": "stellar-project-api",
+        "mode": "service",
+        "networks": ["internal_routing"],
+        "restart": "always",
+        "dependencies": ["postgres", "redis"],
+        "environment": {
+          "CROWNFI_API_BIND": "0.0.0.0:8080",
+          "CROWNFI_API_MODE": "testnet",
+          "STELLAR_MODE": "mock",
+          "REDIS_URL": "redis://stellar-project-redis:6379"
+        },
+        "secrets": [
+          {"name": "database-url", "type": "env", "target": "DATABASE_URL"}
+        ],
+        "healthCheck": {
+          "command": "wget -q -O /dev/null http://127.0.0.1:8080/health"
+        }
+      },
+      "db-init": {
+        "image": "git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint/db-init@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "containerName": "stellar-project-db-init",
+        "mode": "oneshot",
+        "networks": ["internal_routing"],
+        "restart": "no",
+        "dependencies": ["postgres"],
+        "secrets": [
+          {"name": "database-url", "type": "env", "target": "DATABASE_URL"},
+          {"name": "direct-url", "type": "env", "target": "DIRECT_URL"}
+        ]
+      },
+      "web": {
+        "image": "git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint/web@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "containerName": "stellar-project-web",
+        "mode": "service",
+        "networks": ["internal_routing"],
+        "restart": "always",
+        "dependencies": ["postgres", "api", "db-init"],
+        "environment": {
+          "NODE_ENV": "production",
+          "STELLAR_MODE": "mock",
+          "WALLET_PROVIDER": "mock",
+          "NEXT_PUBLIC_STELLAR_NETWORK": "testnet",
+          "NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE": "Test SDF Network ; September 2015",
+          "ADMIN_WALLETS": "",
+          "NEXT_PUBLIC_ADMIN_WALLETS": ""
+        },
+        "secrets": [
+          {"name": "database-url", "type": "env", "target": "DATABASE_URL"},
+          {"name": "direct-url", "type": "env", "target": "DIRECT_URL"},
+          {"name": "admin-session-secret", "type": "env", "target": "ADMIN_SESSION_SECRET"}
+        ],
+        "healthCheck": {
+          "command": "wget -q -O /dev/null http://127.0.0.1:3000/api/health"
+        }
+      }
+    },
+    "networks": [
+      {
+        "name": "internal_routing",
+        "external": true
+      }
+    ],
+    "routing": {
+      "web": {
+        "component": "web",
+        "port": 3000,
+        "protocol": "http",
+        "domains": [
+          "stellar-project.u128.org"
+        ]
+      }
+    },
+    "deployment": {
+      "timeoutSeconds": 300,
+      "rollbackOnFailure": true
+    }
+  }
+}

@@ -1,0 +1,63 @@
+name: Arcturus deployment
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-stellar-project
+  cancel-in-progress: false
+
+env:
+  IMAGE_REPOSITORY: git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint
+  ARCTURUS_API_URL: http://127.0.0.1:9090
+  ARCTURUS_BUNDLE: ${{ vars.ARCTURUS_BUNDLE }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push API image
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          printf '%s' "$REGISTRY_PASSWORD" | buildah login --username '${{ github.actor }}' --password-stdin "${IMAGE_REPOSITORY%%/*}"
+          buildah bud --no-cache -f services/api/Dockerfile --tag "$IMAGE_REPOSITORY/api:${{ github.sha }}" .
+          buildah push --digestfile api.digest "$IMAGE_REPOSITORY/api:${{ github.sha }}"
+
+      - name: Build and push Web image
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          buildah bud --no-cache -f web/Dockerfile --tag "$IMAGE_REPOSITORY/web:${{ github.sha }}" .
+          buildah push --digestfile web.digest "$IMAGE_REPOSITORY/web:${{ github.sha }}"
+
+      - name: Build and push DB-Init image
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          cat <<EOF > web/Dockerfile.db-init
+          FROM $IMAGE_REPOSITORY/web:${{ github.sha }}
+          CMD ["sh", "-c", "npx prisma db push && npm run seed"]
+          EOF
+          buildah bud --no-cache -f web/Dockerfile.db-init --tag "$IMAGE_REPOSITORY/db-init:${{ github.sha }}" .
+          buildah push --digestfile db-init.digest "$IMAGE_REPOSITORY/db-init:${{ github.sha }}"
+
+      - name: Render and deploy
+        env:
+          ARCTURUS_DEPLOY_TOKEN: ${{ secrets.ARCTURUS_DEPLOY_TOKEN }}
+        run: |
+          api_digest=$(tr -d '[:space:]' < api.digest)
+          web_digest=$(tr -d '[:space:]' < web.digest)
+          db_init_digest=$(tr -d '[:space:]' < db-init.digest)
+          
+          ./scripts/arcturus-tool render --template arcturus.release.json --service stellar-project \
+            --revision "${{ github.sha }}" \
+            --image "api=$IMAGE_REPOSITORY/api@$api_digest" \
+            --image "web=$IMAGE_REPOSITORY/web@$web_digest" \
+            --image "db-init=$IMAGE_REPOSITORY/db-init@$db_init_digest" \
+            --output release.json --request-output deployment-request.json
+            
+          ./scripts/arcturus-deploy
