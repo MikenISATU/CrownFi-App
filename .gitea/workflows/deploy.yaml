@@ -43,7 +43,7 @@ jobs:
         run: node scripts/render-release.mjs arcturus.release.json '${{ github.sha }}' api.digest web.digest
       - name: Deploy and require success
         env:
-          DEPLOY_TOKEN: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
+          DEPLOY_TOKEN: ${{ secrets.ARCTURUS_DEPLOY_TOKEN }}
         run: |
           curl --fail-with-body --silent --show-error \
             --connect-timeout 10 --max-time 900 \
