@@ -24,7 +24,38 @@ import {
 type Round = { id: string; title: string; status: string };
 type Contestant = { id: string; name: string; country: string; sash: string; portraitUrl?: string };
 
-const getPortraitPath = (sash: string) => {
+const getPortraitPath = (sash: string, category: "preliminary" | "gown" | "swimsuit" = "gown") => {
+  const sashLower = sash.toLowerCase();
+
+  if (category === "swimsuit") {
+    if (sashLower === "vn") return "/assets/candidates/vn_swimsuit.jpg";
+    if (sashLower === "th") return "/assets/candidates/th_swimsuit.jpg";
+    if (sashLower === "kr") return "/assets/candidates/kr_swimsuit.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_swimsuit.jpg";
+    if (sashLower === "ph") return "/assets/candidates/ph_swimsuit_new.jpg";
+    if (sashLower === "my") return "/assets/candidates/my_swimsuit.jpg";
+    if (sashLower === "jp") return "/assets/candidates/jp_swimsuit_new.jpg";
+    if (sashLower === "id") return "/assets/candidates/id_swimsuit.jpg";
+    if (sashLower === "in") return "/assets/candidates/in_swimsuit.jpg";
+    if (sashLower === "cn") return "/assets/candidates/cn_swimsuit_new.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_swimsuit_boat.jpg";
+  }
+
+  if (category === "gown") {
+    if (sashLower === "vn") return "/assets/candidates/vn_gown.jpg";
+    if (sashLower === "th") return "/assets/candidates/th_gown.jpg";
+    if (sashLower === "kr") return "/assets/candidates/kr_gown.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_gown.jpg";
+    if (sashLower === "ph") return "/assets/candidates/ph_gown_new.jpg";
+    if (sashLower === "my") return "/assets/candidates/my_gown.jpg";
+    if (sashLower === "jp") return "/assets/candidates/jp_gown_new.jpg";
+    if (sashLower === "id") return "/assets/candidates/id_gown.jpg";
+    if (sashLower === "in") return "/assets/candidates/in_gown.jpg";
+    if (sashLower === "cn") return "/assets/candidates/cn_gown_new.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_gown_purple.jpg";
+    if (sashLower === "kr") return "/assets/candidates/kr_gown_pink.jpg";
+  }
+
   const map: Record<string, string> = {
     ph: "/assets/candidates/candidate_philippines_portrait_silver-gown.webp",
     jp: "/assets/candidates/candidate_japan_portrait_yellow-gown.webp",
@@ -37,7 +68,7 @@ const getPortraitPath = (sash: string) => {
     in: "/assets/candidates/candidate_india_portrait_gold-gown_stage.webp",
     my: "/assets/candidates/candidate_malaysia_portrait_gold-gown.webp",
   };
-  return map[sash.toLowerCase()] || `/portraits/${sash.toLowerCase()}.webp`;
+  return map[sashLower] || `/portraits/${sashLower}.webp`;
 };
 
 function VotePageContent() {
@@ -46,6 +77,8 @@ function VotePageContent() {
   const initialCandidate = searchParams.get("candidate") || "";
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [round, setRound] = useState<Round | null>(null);
+  const [rounds, setRounds] = useState<Round[]>([]);
+  const [specialtyCategory, setSpecialtyCategory] = useState<"swimsuit" | "gown" | "preliminary">("swimsuit");
   const [picked, setPicked] = useState<string>("");
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -62,7 +95,10 @@ function VotePageContent() {
           setConfirming(true);
         }
       }),
-      getJson<Round[]>("/api/rounds", []).then((rounds) => setRound(rounds.find((item) => item.status === "open") ?? rounds[0] ?? null)),
+      getJson<Round[]>("/api/rounds", []).then((items) => {
+        setRounds(items);
+        setRound(items.find((item) => item.status === "open" && item.title.toLowerCase().includes("preliminary")) ?? items.find((item) => item.status === "open") ?? items[0] ?? null);
+      }),
     ]).finally(() => setLoading(false));
   }, [initialCandidate]);
 
@@ -74,6 +110,22 @@ function VotePageContent() {
   function chooseCandidate(id: string) {
     setPicked(id);
     setVoteId("");
+    const defaultRound = rounds.find((r) => r.status === "open" && r.title.toLowerCase().includes("preliminary"))
+      || rounds.find((r) => r.status === "open")
+      || rounds[0]
+      || null;
+    setRound(defaultRound);
+    setConfirming(true);
+  }
+
+  function chooseSpecialtyCandidate(candidateId: string, category: "swimsuit" | "gown" | "preliminary") {
+    setPicked(candidateId);
+    setVoteId("");
+    const targetRound = rounds.find((r) => r.status === "open" && r.title.toLowerCase().includes(category))
+      || rounds.find((r) => r.status === "open")
+      || rounds[0]
+      || null;
+    setRound(targetRound);
     setConfirming(true);
   }
 
@@ -114,7 +166,7 @@ function VotePageContent() {
       <div className="flex flex-col gap-4 border-b border-gold/15 pb-6 md:flex-row md:items-end md:justify-between">
         <SectionHeader
           eyebrow="Cast your vote"
-          title="Choose the next crown bearer"
+          title="Choose the next Queen on-chain"
           description="Compare every contestant in one view. Your vote is recorded off-chain for speed and included in a Stellar-anchored checkpoint after the round closes."
           className="mb-0"
         />
@@ -159,26 +211,86 @@ function VotePageContent() {
       ) : contestants.length === 0 ? (
         <EmptyState title="No contestants are available" description="An administrator must add contestants before voting can begin." />
       ) : (
-        <section aria-labelledby="candidate-grid-heading">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 id="candidate-grid-heading" className="font-display text-2xl font-semibold text-white">All contestants</h2>
-            <span className="text-sm text-gold-soft/40">{contestants.length} candidates</span>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {contestants.map((contestant) => (
-              <OrnatePortrait
-                key={contestant.id}
-                id={contestant.id}
-                name={contestant.name}
-                country={contestant.country}
-                sash={contestant.sash}
-                imageUrl={contestant.portraitUrl || getPortraitPath(contestant.sash)}
-                onVote={() => chooseCandidate(contestant.id)}
-                className={picked === contestant.id ? "ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.28)]" : ""}
+        <div className="space-y-16">
+          <section aria-labelledby="candidate-grid-heading">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 id="candidate-grid-heading" className="font-display text-2xl font-semibold text-white">All contestants</h2>
+              <span className="text-sm text-gold-soft/40">{contestants.length} candidates</span>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {contestants.map((contestant) => (
+                <OrnatePortrait
+                  key={contestant.id}
+                  id={contestant.id}
+                  name={contestant.name}
+                  country={contestant.country}
+                  sash={contestant.sash}
+                  imageUrl={getPortraitPath(contestant.sash, "preliminary")}
+                  onVote={() => chooseCandidate(contestant.id)}
+                  className={picked === contestant.id && (!round || round.title.toLowerCase().includes("preliminary")) ? "ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.28)]" : ""}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* New Section: Outfits Showcase & Specialty Voting */}
+          <section className="space-y-6 border-t border-gold/15 pt-12">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <SectionHeader
+                title="Specialty Outfits Voting"
+                description="View contestants in their segment outfits and cast your vote for the specialty rounds."
+                className="mb-0"
               />
-            ))}
-          </div>
-        </section>
+              {/* Category tabs */}
+              <div className="flex justify-center gap-6 border-b border-gold/10 pb-1">
+                <button
+                  onClick={() => {
+                    setSpecialtyCategory("swimsuit");
+                    setVoteId("");
+                  }}
+                  className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
+                >
+                  <span className={specialtyCategory === "swimsuit" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+                    Swimsuit Segment
+                  </span>
+                  {specialtyCategory === "swimsuit" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setSpecialtyCategory("gown");
+                    setVoteId("");
+                  }}
+                  className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
+                >
+                  <span className={specialtyCategory === "gown" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+                    Evening Gown Segment
+                  </span>
+                  {specialtyCategory === "gown" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Grid of candidates for the specialty segment */}
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {contestants.map((contestant) => (
+                <OrnatePortrait
+                  key={contestant.id + "-" + specialtyCategory}
+                  id={contestant.id}
+                  name={contestant.name}
+                  country={contestant.country}
+                  sash={contestant.sash}
+                  imageUrl={getPortraitPath(contestant.sash, specialtyCategory)}
+                  onVote={() => chooseSpecialtyCandidate(contestant.id, specialtyCategory)}
+                  className={picked === contestant.id && round?.title.toLowerCase().includes(specialtyCategory) ? "ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.28)]" : ""}
+                />
+              ))}
+            </div>
+          </section>
+        </div>
       )}
 
       {voteId && pickedContestant && (
@@ -210,7 +322,7 @@ function VotePageContent() {
           <div className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-[110px_1fr]">
               <div className="aspect-[4/5] overflow-hidden rounded-2xl border border-gold/25 bg-black/30">
-                <img src={pickedContestant.portraitUrl || getPortraitPath(pickedContestant.sash)} alt={pickedContestant.name} className="h-full w-full object-cover" />
+                <img src={getPortraitPath(pickedContestant.sash, round?.title.toLowerCase().includes("swimsuit") ? "swimsuit" : "gown")} alt={pickedContestant.name} className="h-full w-full object-cover" />
               </div>
               <div className="flex flex-col justify-center">
                 <Badge tone="gold" className="w-fit">{flag(pickedContestant.sash)} {pickedContestant.country}</Badge>

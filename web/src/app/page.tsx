@@ -20,7 +20,38 @@ import * as Lucide from "lucide-react";
 type Contestant = { id: string; name: string; country: string; sash: string; portraitUrl?: string };
 
 // Helper to map country sash to candidate asset portraits in WebP format
-const getPortraitPath = (sash: string) => {
+const getPortraitPath = (sash: string, category: "preliminary" | "gown" | "swimsuit" = "preliminary") => {
+  const sashLower = sash.toLowerCase();
+
+  if (category === "swimsuit") {
+    if (sashLower === "vn") return "/assets/candidates/vn_swimsuit.jpg";
+    if (sashLower === "th") return "/assets/candidates/th_swimsuit.jpg";
+    if (sashLower === "kr") return "/assets/candidates/kr_swimsuit.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_swimsuit.jpg";
+    if (sashLower === "ph") return "/assets/candidates/ph_swimsuit_new.jpg";
+    if (sashLower === "my") return "/assets/candidates/my_swimsuit.jpg";
+    if (sashLower === "jp") return "/assets/candidates/jp_swimsuit_new.jpg";
+    if (sashLower === "id") return "/assets/candidates/id_swimsuit.jpg";
+    if (sashLower === "in") return "/assets/candidates/in_swimsuit.jpg";
+    if (sashLower === "cn") return "/assets/candidates/cn_swimsuit_new.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_swimsuit_boat.jpg";
+  }
+
+  if (category === "gown") {
+    if (sashLower === "vn") return "/assets/candidates/vn_gown.jpg";
+    if (sashLower === "th") return "/assets/candidates/th_gown.jpg";
+    if (sashLower === "kr") return "/assets/candidates/kr_gown.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_gown.jpg";
+    if (sashLower === "ph") return "/assets/candidates/ph_gown_new.jpg";
+    if (sashLower === "my") return "/assets/candidates/my_gown.jpg";
+    if (sashLower === "jp") return "/assets/candidates/jp_gown_new.jpg";
+    if (sashLower === "id") return "/assets/candidates/id_gown.jpg";
+    if (sashLower === "in") return "/assets/candidates/in_gown.jpg";
+    if (sashLower === "cn") return "/assets/candidates/cn_gown_new.jpg";
+    if (sashLower === "sg") return "/assets/candidates/sg_gown_purple.jpg";
+    if (sashLower === "kr") return "/assets/candidates/kr_gown_pink.jpg";
+  }
+
   const map: Record<string, string> = {
     ph: "/assets/candidates/candidate_philippines_portrait_silver-gown.webp",
     jp: "/assets/candidates/candidate_japan_portrait_yellow-gown.webp",
@@ -33,11 +64,12 @@ const getPortraitPath = (sash: string) => {
     in: "/assets/candidates/candidate_india_portrait_gold-gown_stage.webp",
     my: "/assets/candidates/candidate_malaysia_portrait_gold-gown.webp",
   };
-  return map[sash.toLowerCase()] || `/portraits/${sash.toLowerCase()}.webp`;
+  return map[sashLower] || `/portraits/${sashLower}.webp`;
 };
 
 export default function Home() {
   const [delegates, setDelegates] = useState<Contestant[]>([]);
+  const [activeCategory, setActiveCategory] = useState<"preliminary" | "gown" | "swimsuit">("preliminary");
   const [activeDelegate, setActiveDelegate] = useState<Contestant | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -89,13 +121,51 @@ export default function Home() {
 
       {/* 2. Meet the Delegates Snap Carousel */}
       <section className="space-y-8">
-        <div className="text-center space-y-2">
-          <div className="eyebrow">Delegate Roster</div>
-          <SectionHeader 
-            title="Meet the Delegates"
-            description="Vote for the NEXT Queen onchain! Help your favorite candidate advance to the next level using your power to vote!"
-            className="text-center mx-auto"
-          />
+        <div className="text-center space-y-4">
+          <div className="space-y-2">
+            <div className="eyebrow">Delegate Roster</div>
+            <SectionHeader 
+              title="Meet the Delegates"
+              description="Vote for the NEXT Queen onchain! Help your favorite candidate advance to the next level using your power to vote!"
+              className="text-center mx-auto"
+            />
+          </div>
+          {/* Category Toggle Tabs */}
+          <div className="flex justify-center gap-6 border-b border-gold/10 pb-1 w-fit mx-auto">
+            <button
+              onClick={() => setActiveCategory("preliminary")}
+              className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
+            >
+              <span className={activeCategory === "preliminary" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+                Preliminary
+              </span>
+              {activeCategory === "preliminary" && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveCategory("swimsuit")}
+              className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
+            >
+              <span className={activeCategory === "swimsuit" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+                Swimsuit
+              </span>
+              {activeCategory === "swimsuit" && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveCategory("gown")}
+              className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
+            >
+              <span className={activeCategory === "gown" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+                Evening Gown
+              </span>
+              {activeCategory === "gown" && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+              )}
+            </button>
+          </div>
         </div>
         
         {delegates.length === 0 ? (
@@ -114,7 +184,7 @@ export default function Home() {
                   name={d.name}
                   country={d.country}
                   sash={d.sash}
-                  imageUrl={d.portraitUrl || getPortraitPath(d.sash)}
+                  imageUrl={getPortraitPath(d.sash, activeCategory)}
                   onVote={() => {
                     if (isActive) {
                       window.location.href = `/vote?candidate=${d.id}`;
@@ -175,7 +245,7 @@ export default function Home() {
                 height={`5'${activeDelegate.name.length % 12 + 2}"`}
                 edition={`EDITION 1 of ${activeDelegate.name.length * 10}`}
                 id={`ID:${activeDelegate.id.toUpperCase()}`}
-                imageUrl={activeDelegate.portraitUrl || getPortraitPath(activeDelegate.sash)}
+                imageUrl={getPortraitPath(activeDelegate.sash, activeCategory)}
                 onMint={() => window.location.href = `/vote?candidate=${activeDelegate.id}`}
               />
             )}
