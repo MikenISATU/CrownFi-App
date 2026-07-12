@@ -241,8 +241,13 @@ export default function Home() {
                   name={d.name}
                   country={d.country}
                   sash={d.sash}
-                  imageUrl={d.portraitUrl || getPortraitPath(d.sash, activeCategory)}
+                  imageUrl={
+                    activeCategory === "preliminary" && d.portraitUrl
+                      ? d.portraitUrl
+                      : getPortraitPath(d.sash, activeCategory)
+                  }
                   onVote={() => {
+                    if (isActive) {
                       window.location.href = `/vote?candidate=${d.id}`;
                     }
                   }}
@@ -313,7 +318,11 @@ export default function Home() {
                 height={`5'${(activeDelegate.name.length % 12) + 2}"`}
                 edition={`EDITION 1 of ${activeDelegate.name.length * 10}`}
                 id={`ID:${activeDelegate.id.toUpperCase()}`}
-                imageUrl={activeDelegate.portraitUrl || getPortraitPath(activeDelegate.sash, activeCategory)}
+                imageUrl={
+                  activeCategory === "preliminary" && activeDelegate.portraitUrl
+                    ? activeDelegate.portraitUrl
+                    : getPortraitPath(activeDelegate.sash, activeCategory)
+                }
                 onMint={() => window.location.href = `/vote?candidate=${activeDelegate.id}`}
               />
             )}
