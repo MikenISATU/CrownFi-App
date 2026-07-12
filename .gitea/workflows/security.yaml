@@ -19,6 +19,19 @@ jobs:
           curl --fail --silent --show-error --location \
             --output "$archive" \
             "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/$archive"
-          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $archive" | sha256sum --check -
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $archive" | sha256sum -c -
           tar -xzf "$archive" gitleaks
           ./gitleaks dir --redact=100 --no-banner .
+
+      - name: Check Terraform formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="1.10.5"
+          archive="terraform_${version}_linux_amd64.zip"
+          curl --fail --silent --show-error --location \
+            --output "$archive" \
+            "https://releases.hashicorp.com/terraform/${version}/$archive"
+          echo "0566a24f5332098b15716ebc394be503f4094acba5ba529bf5eb0698ed5e2a90  $archive" | sha256sum -c -
+          unzip -q "$archive" -d /tmp/arcturus-terraform
+          /tmp/arcturus-terraform/terraform fmt -check -recursive terraform

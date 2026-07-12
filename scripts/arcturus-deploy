@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-export ARCTURUS_API_URL="${ARCTURUS_API_URL:?set ARCTURUS_API_URL}"
-exec ./scripts/arcturus-tool deploy deployment-request.json
