@@ -136,7 +136,7 @@ export function ThreeDCarousel<T>({ items, renderItem, onActiveChange, defaultAc
       </div>
 
       {/* Navigation Controls */}
-      <div className="relative flex items-center gap-6 mt-8 z-40">
+      <div className="relative flex items-center gap-6 mt-8 z-30">
         <button
           onClick={handlePrev}
           className="btn-gold h-9 w-9 !px-0 rounded-full flex items-center justify-center"
