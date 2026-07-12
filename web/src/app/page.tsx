@@ -241,9 +241,8 @@ export default function Home() {
                   name={d.name}
                   country={d.country}
                   sash={d.sash}
-                  imageUrl={getPortraitPath(d.sash, activeCategory)}
+                  imageUrl={d.portraitUrl || getPortraitPath(d.sash, activeCategory)}
                   onVote={() => {
-                    if (isActive) {
                       window.location.href = `/vote?candidate=${d.id}`;
                     }
                   }}
