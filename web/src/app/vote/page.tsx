@@ -2,7 +2,12 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, ShieldCheck, Vote as VoteIcon, Wallet } from "lucide-react";
+import {
+  CheckCircle2,
+  ShieldCheck,
+  Vote as VoteIcon,
+  Wallet,
+} from "lucide-react";
 import { useSession } from "@/session/SessionProvider";
 import { Toast } from "@/components/ui";
 import { getJson, postJson } from "@/lib/api";
@@ -22,9 +27,18 @@ import {
 } from "@/components/ui-kit";
 
 type Round = { id: string; title: string; status: string };
-type Contestant = { id: string; name: string; country: string; sash: string; portraitUrl?: string };
+type Contestant = {
+  id: string;
+  name: string;
+  country: string;
+  sash: string;
+  portraitUrl?: string;
+};
 
-const getPortraitPath = (sash: string, category: "preliminary" | "gown" | "swimsuit" = "gown") => {
+const getPortraitPath = (
+  sash: string,
+  category: "preliminary" | "gown" | "swimsuit" = "gown",
+) => {
   const sashLower = sash.toLowerCase();
 
   if (category === "swimsuit") {
@@ -78,26 +92,43 @@ function VotePageContent() {
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [round, setRound] = useState<Round | null>(null);
   const [rounds, setRounds] = useState<Round[]>([]);
-  const [specialtyCategory, setSpecialtyCategory] = useState<"swimsuit" | "gown" | "preliminary">("swimsuit");
+  const [specialtyCategory, setSpecialtyCategory] = useState<
+    "swimsuit" | "gown" | "preliminary"
+  >("swimsuit");
   const [picked, setPicked] = useState<string>("");
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [voteId, setVoteId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<{ msg: string; tone: "ok" | "err" }>({ msg: "", tone: "ok" });
+  const [toast, setToast] = useState<{ msg: string; tone: "ok" | "err" }>({
+    msg: "",
+    tone: "ok",
+  });
 
   useEffect(() => {
     Promise.all([
       getJson<Contestant[]>("/api/contestants", []).then((items) => {
         setContestants(items);
-        if (initialCandidate && items.some((contestant) => contestant.id === initialCandidate)) {
+        if (
+          initialCandidate &&
+          items.some((contestant) => contestant.id === initialCandidate)
+        ) {
           setPicked(initialCandidate);
           setConfirming(true);
         }
       }),
       getJson<Round[]>("/api/rounds", []).then((items) => {
         setRounds(items);
-        setRound(items.find((item) => item.status === "open" && item.title.toLowerCase().includes("preliminary")) ?? items.find((item) => item.status === "open") ?? items[0] ?? null);
+        setRound(
+          items.find(
+            (item) =>
+              item.status === "open" &&
+              item.title.toLowerCase().includes("preliminary"),
+          ) ??
+            items.find((item) => item.status === "open") ??
+            items[0] ??
+            null,
+        );
       }),
     ]).finally(() => setLoading(false));
   }, [initialCandidate]);
@@ -110,21 +141,31 @@ function VotePageContent() {
   function chooseCandidate(id: string) {
     setPicked(id);
     setVoteId("");
-    const defaultRound = rounds.find((r) => r.status === "open" && r.title.toLowerCase().includes("preliminary"))
-      || rounds.find((r) => r.status === "open")
-      || rounds[0]
-      || null;
+    const defaultRound =
+      rounds.find(
+        (r) =>
+          r.status === "open" && r.title.toLowerCase().includes("preliminary"),
+      ) ||
+      rounds.find((r) => r.status === "open") ||
+      rounds[0] ||
+      null;
     setRound(defaultRound);
     setConfirming(true);
   }
 
-  function chooseSpecialtyCandidate(candidateId: string, category: "swimsuit" | "gown" | "preliminary") {
+  function chooseSpecialtyCandidate(
+    candidateId: string,
+    category: "swimsuit" | "gown" | "preliminary",
+  ) {
     setPicked(candidateId);
     setVoteId("");
-    const targetRound = rounds.find((r) => r.status === "open" && r.title.toLowerCase().includes(category))
-      || rounds.find((r) => r.status === "open")
-      || rounds[0]
-      || null;
+    const targetRound =
+      rounds.find(
+        (r) => r.status === "open" && r.title.toLowerCase().includes(category),
+      ) ||
+      rounds.find((r) => r.status === "open") ||
+      rounds[0] ||
+      null;
     setRound(targetRound);
     setConfirming(true);
   }
@@ -133,11 +174,14 @@ function VotePageContent() {
     if (!fan || !round || !picked) return;
     setBusy(true);
     try {
-      const { ok, data } = await postJson<{ error?: string; voteId?: string }>("/api/vote", {
-        roundId: round.id,
-        fanId: fan.id,
-        contestantId: picked,
-      });
+      const { ok, data } = await postJson<{ error?: string; voteId?: string }>(
+        "/api/vote",
+        {
+          roundId: round.id,
+          fanId: fan.id,
+          contestantId: picked,
+        },
+      );
       const payload = data as { error?: string; voteId?: string };
       const error = payload.error;
       if (ok) {
@@ -158,7 +202,9 @@ function VotePageContent() {
     }
   }
 
-  const pickedContestant = contestants.find((contestant) => contestant.id === picked);
+  const pickedContestant = contestants.find(
+    (contestant) => contestant.id === picked,
+  );
   const votingOpen = round?.status === "open";
 
   return (
@@ -187,35 +233,62 @@ function VotePageContent() {
         <Card className="border-gold/25 bg-gold/5">
           <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-5">
             <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold"><Wallet size={19} /></span>
+              <span className="grid h-10 w-10 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-gold">
+                <Wallet size={19} />
+              </span>
               <div>
-                <h2 className="font-semibold text-white">Connect before choosing your finalist</h2>
-                <p className="mt-1 text-sm text-gold-soft/45">CrownFi associates one vote receipt with the connected wallet for this round.</p>
+                <h2 className="font-semibold text-white">
+                  Connect before choosing your finalist
+                </h2>
+                <p className="mt-1 text-sm text-gold-soft/45">
+                  CrownFi associates one vote receipt with the connected wallet
+                  for this round.
+                </p>
               </div>
             </div>
-            <Button onClick={connect} disabled={connecting}>{connecting ? "Connecting…" : "Connect Freighter"}</Button>
+            <Button onClick={connect} disabled={connecting}>
+              {connecting ? "Connecting…" : "Connect Freighter"}
+            </Button>
           </CardContent>
         </Card>
       )}
 
       {!votingOpen && round && (
         <div className="rounded-2xl border border-gold/20 bg-gold/5 px-4 py-3 text-sm text-gold-soft/60">
-          Voting is closed for <strong className="text-gold-soft">{round.title}</strong>. Receipts can now be checked from the verification page after its checkpoint is available.
+          Voting is closed for{" "}
+          <strong className="text-gold-soft">{round.title}</strong>. Receipts
+          can now be checked from the verification page after its checkpoint is
+          available.
         </div>
       )}
 
       {loading ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => <div key={index} className="aspect-[3/5] animate-pulse rounded-2xl border border-line bg-white/5" />)}
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="aspect-[3/5] animate-pulse rounded-2xl border border-line bg-white/5"
+            />
+          ))}
         </div>
       ) : contestants.length === 0 ? (
-        <EmptyState title="No contestants are available" description="An administrator must add contestants before voting can begin." />
+        <EmptyState
+          title="No contestants are available"
+          description="An administrator must add contestants before voting can begin."
+        />
       ) : (
         <div className="space-y-16">
           <section aria-labelledby="candidate-grid-heading">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 id="candidate-grid-heading" className="font-display text-2xl font-semibold text-white">All contestants</h2>
-              <span className="text-sm text-gold-soft/40">{contestants.length} candidates</span>
+              <h2
+                id="candidate-grid-heading"
+                className="font-display text-2xl font-semibold text-white"
+              >
+                All contestants
+              </h2>
+              <span className="text-sm text-gold-soft/40">
+                {contestants.length} candidates
+              </span>
             </div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {contestants.map((contestant) => (
@@ -227,7 +300,13 @@ function VotePageContent() {
                   sash={contestant.sash}
                   imageUrl={getPortraitPath(contestant.sash, "preliminary")}
                   onVote={() => chooseCandidate(contestant.id)}
-                  className={picked === contestant.id && (!round || round.title.toLowerCase().includes("preliminary")) ? "ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.28)]" : ""}
+                  className={
+                    picked === contestant.id &&
+                    (!round ||
+                      round.title.toLowerCase().includes("preliminary"))
+                      ? "ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.28)]"
+                      : ""
+                  }
                 />
               ))}
             </div>
@@ -250,7 +329,13 @@ function VotePageContent() {
                   }}
                   className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
                 >
-                  <span className={specialtyCategory === "swimsuit" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+                  <span
+                    className={
+                      specialtyCategory === "swimsuit"
+                        ? "text-gold"
+                        : "text-gold-soft/40 hover:text-gold-soft/75"
+                    }
+                  >
                     Swimsuit Segment
                   </span>
                   {specialtyCategory === "swimsuit" && (
@@ -264,7 +349,13 @@ function VotePageContent() {
                   }}
                   className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
                 >
-                  <span className={specialtyCategory === "gown" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+                  <span
+                    className={
+                      specialtyCategory === "gown"
+                        ? "text-gold"
+                        : "text-gold-soft/40 hover:text-gold-soft/75"
+                    }
+                  >
                     Evening Gown Segment
                   </span>
                   {specialtyCategory === "gown" && (
@@ -284,8 +375,15 @@ function VotePageContent() {
                   country={contestant.country}
                   sash={contestant.sash}
                   imageUrl={getPortraitPath(contestant.sash, specialtyCategory)}
-                  onVote={() => chooseSpecialtyCandidate(contestant.id, specialtyCategory)}
-                  className={picked === contestant.id && round?.title.toLowerCase().includes(specialtyCategory) ? "ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.28)]" : ""}
+                  onVote={() =>
+                    chooseSpecialtyCandidate(contestant.id, specialtyCategory)
+                  }
+                  className={
+                    picked === contestant.id &&
+                    round?.title.toLowerCase().includes(specialtyCategory)
+                      ? "ring-2 ring-gold shadow-[0_0_25px_rgba(212,175,55,0.28)]"
+                      : ""
+                  }
                 />
               ))}
             </div>
@@ -297,13 +395,22 @@ function VotePageContent() {
         <Card className="border-emerald/30 bg-emerald/5">
           <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-5">
             <div className="flex items-start gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald/15 text-emerald"><CheckCircle2 size={23} /></span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-emerald/15 text-emerald">
+                <CheckCircle2 size={23} />
+              </span>
               <div>
-                <h2 className="font-display text-xl font-semibold text-white">Vote recorded for {pickedContestant.name}</h2>
-                <p className="mt-1 text-sm text-gold-soft/50">Receipt {short(voteId, 8)} becomes independently verifiable after the round closes and its checkpoint is published.</p>
+                <h2 className="font-display text-xl font-semibold text-white">
+                  Vote recorded for {pickedContestant.name}
+                </h2>
+                <p className="mt-1 text-sm text-gold-soft/50">
+                  Receipt {short(voteId, 8)} becomes independently verifiable
+                  after the round closes and its checkpoint is published.
+                </p>
               </div>
             </div>
-            <ButtonLink href="/verify" variant="secondary"><ShieldCheck size={17} /> Open verification</ButtonLink>
+            <ButtonLink href="/verify" variant="secondary">
+              <ShieldCheck size={17} /> Open verification
+            </ButtonLink>
           </CardContent>
         </Card>
       )}
@@ -314,7 +421,9 @@ function VotePageContent() {
         onConfirm={cast}
         title="Confirm your vote"
         description="Review the selected contestant and round before the vote is submitted."
-        confirmLabel={pickedContestant ? `Vote for ${pickedContestant.name}` : "Cast vote"}
+        confirmLabel={
+          pickedContestant ? `Vote for ${pickedContestant.name}` : "Cast vote"
+        }
         pendingLabel="Recording vote…"
         pending={busy}
       >
@@ -322,21 +431,60 @@ function VotePageContent() {
           <div className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-[110px_1fr]">
               <div className="aspect-[4/5] overflow-hidden rounded-2xl border border-gold/25 bg-black/30">
-                <img src={getPortraitPath(pickedContestant.sash, round?.title.toLowerCase().includes("swimsuit") ? "swimsuit" : "gown")} alt={pickedContestant.name} className="h-full w-full object-cover" />
+                <img
+                  src={getPortraitPath(
+                    pickedContestant.sash,
+                    round?.title.toLowerCase().includes("swimsuit")
+                      ? "swimsuit"
+                      : "gown",
+                  )}
+                  alt={pickedContestant.name}
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="flex flex-col justify-center">
-                <Badge tone="gold" className="w-fit">{flag(pickedContestant.sash)} {pickedContestant.country}</Badge>
-                <h3 className="mt-3 font-display text-3xl font-semibold text-white">{pickedContestant.name}</h3>
-                <p className="mt-2 text-sm leading-6 text-gold-soft/50">This selection cannot be changed after the vote is accepted for the current round.</p>
+                <Badge tone="gold" className="w-fit">
+                  {flag(pickedContestant.sash)} {pickedContestant.country}
+                </Badge>
+                <h3 className="mt-3 font-display text-3xl font-semibold text-white">
+                  {pickedContestant.name}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-gold-soft/50">
+                  This selection cannot be changed after the vote is accepted
+                  for the current round.
+                </p>
               </div>
             </div>
             <dl className="space-y-2 rounded-2xl border border-line bg-black/25 p-4 text-sm">
-              <div className="flex justify-between gap-4"><dt className="text-gold-soft/40">Voting round</dt><dd className="font-semibold text-gold-soft">{round?.title ?? "Unavailable"}</dd></div>
-              <div className="flex justify-between gap-4"><dt className="text-gold-soft/40">Wallet</dt><dd className="mono text-xs text-gold-soft">{address ? short(address, 8) : "Not connected"}</dd></div>
-              <div className="flex justify-between gap-4"><dt className="text-gold-soft/40">Blockchain step</dt><dd className="text-right text-gold-soft">Final checkpoint after closure</dd></div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-gold-soft/40">Voting round</dt>
+                <dd className="font-semibold text-gold-soft">
+                  {round?.title ?? "Unavailable"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-gold-soft/40">Wallet</dt>
+                <dd className="mono text-xs text-gold-soft">
+                  {address ? short(address, 8) : "Not connected"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-gold-soft/40">Blockchain step</dt>
+                <dd className="text-right text-gold-soft">
+                  Final checkpoint after closure
+                </dd>
+              </div>
             </dl>
-            {!fan && <p className="rounded-2xl border border-ruby/30 bg-ruby/10 px-4 py-3 text-sm text-ruby">Connect Freighter before confirming this vote.</p>}
-            {!votingOpen && <p className="rounded-2xl border border-ruby/30 bg-ruby/10 px-4 py-3 text-sm text-ruby">This round is not open for voting.</p>}
+            {!fan && (
+              <p className="rounded-2xl border border-ruby/30 bg-ruby/10 px-4 py-3 text-sm text-ruby">
+                Connect Freighter before confirming this vote.
+              </p>
+            )}
+            {!votingOpen && (
+              <p className="rounded-2xl border border-ruby/30 bg-ruby/10 px-4 py-3 text-sm text-ruby">
+                This round is not open for voting.
+              </p>
+            )}
           </div>
         )}
       </ConfirmModal>
@@ -348,7 +496,13 @@ function VotePageContent() {
 
 export default function VotePage() {
   return (
-    <Suspense fallback={<PageSection className="py-12 text-center text-sm text-gold-soft/50">Loading voting experience…</PageSection>}>
+    <Suspense
+      fallback={
+        <PageSection className="py-12 text-center text-sm text-gold-soft/50">
+          Loading voting experience…
+        </PageSection>
+      }
+    >
       <VotePageContent />
     </Suspense>
   );

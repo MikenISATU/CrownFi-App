@@ -12,15 +12,24 @@ import {
   AboutSection,
   PromoSection,
   FooterSection,
-  NFTCollectibleWithPedestal
+  NFTCollectibleWithPedestal,
 } from "@/components/ui-kit";
 import { getJson } from "@/lib/api";
 import * as Lucide from "lucide-react";
 
-type Contestant = { id: string; name: string; country: string; sash: string; portraitUrl?: string };
+type Contestant = {
+  id: string;
+  name: string;
+  country: string;
+  sash: string;
+  portraitUrl?: string;
+};
 
 // Helper to map country sash to candidate asset portraits in WebP format
-const getPortraitPath = (sash: string, category: "preliminary" | "gown" | "swimsuit" = "preliminary") => {
+const getPortraitPath = (
+  sash: string,
+  category: "preliminary" | "gown" | "swimsuit" = "preliminary",
+) => {
   const sashLower = sash.toLowerCase();
 
   if (category === "swimsuit") {
@@ -69,7 +78,9 @@ const getPortraitPath = (sash: string, category: "preliminary" | "gown" | "swims
 
 export default function Home() {
   const [delegates, setDelegates] = useState<Contestant[]>([]);
-  const [activeCategory, setActiveCategory] = useState<"preliminary" | "gown" | "swimsuit">("preliminary");
+  const [activeCategory, setActiveCategory] = useState<
+    "preliminary" | "gown" | "swimsuit"
+  >("preliminary");
   const [activeDelegate, setActiveDelegate] = useState<Contestant | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -91,17 +102,40 @@ export default function Home() {
       const { scrollLeft, clientWidth } = scrollRef.current;
       const scrollAmount = clientWidth * 0.75;
       scrollRef.current.scrollTo({
-        left: direction === "left" ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
-        behavior: "smooth"
+        left:
+          direction === "left"
+            ? scrollLeft - scrollAmount
+            : scrollLeft + scrollAmount,
+        behavior: "smooth",
       });
     }
   };
 
   const featureItems = [
-    { title: "Transparent Voting", description: "Secure and tamper-proof voting system running off-chain with cryptographic seals.", iconName: "Shield" as const },
-    { title: "Global Access", description: "Open to pageants and fans worldwide, bridging communities on-chain.", iconName: "Globe" as const },
-    { title: "Fair & Secure Platform", description: "Built on blockchain for trust and integrity, preventing double voting and manipulation.", iconName: "Gem" as const },
-    { title: "Empowering Queens", description: "Supporting dreams and inspiring the world. Direct-to-contestant funding mechanics.", iconName: "Crown" as const },
+    {
+      title: "Transparent Voting",
+      description:
+        "Secure and tamper-proof voting system running off-chain with cryptographic seals.",
+      iconName: "Shield" as const,
+    },
+    {
+      title: "Global Access",
+      description:
+        "Open to pageants and fans worldwide, bridging communities on-chain.",
+      iconName: "Globe" as const,
+    },
+    {
+      title: "Fair & Secure Platform",
+      description:
+        "Built on blockchain for trust and integrity, preventing double voting and manipulation.",
+      iconName: "Gem" as const,
+    },
+    {
+      title: "Empowering Queens",
+      description:
+        "Supporting dreams and inspiring the world. Direct-to-contestant funding mechanics.",
+      iconName: "Crown" as const,
+    },
   ];
 
   return (
@@ -124,7 +158,7 @@ export default function Home() {
         <div className="text-center space-y-4">
           <div className="space-y-2">
             <div className="eyebrow">Delegate Roster</div>
-            <SectionHeader 
+            <SectionHeader
               title="Meet the Delegates"
               description="Vote for the NEXT Queen onchain! Help your favorite candidate advance to the next level using your power to vote!"
               className="text-center mx-auto"
@@ -136,7 +170,13 @@ export default function Home() {
               onClick={() => setActiveCategory("preliminary")}
               className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
             >
-              <span className={activeCategory === "preliminary" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+              <span
+                className={
+                  activeCategory === "preliminary"
+                    ? "text-gold"
+                    : "text-gold-soft/40 hover:text-gold-soft/75"
+                }
+              >
                 Preliminary
               </span>
               {activeCategory === "preliminary" && (
@@ -147,7 +187,13 @@ export default function Home() {
               onClick={() => setActiveCategory("swimsuit")}
               className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
             >
-              <span className={activeCategory === "swimsuit" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+              <span
+                className={
+                  activeCategory === "swimsuit"
+                    ? "text-gold"
+                    : "text-gold-soft/40 hover:text-gold-soft/75"
+                }
+              >
                 Swimsuit
               </span>
               {activeCategory === "swimsuit" && (
@@ -158,7 +204,13 @@ export default function Home() {
               onClick={() => setActiveCategory("gown")}
               className="relative pb-2 text-xs font-semibold tracking-widest uppercase transition-all duration-300 focus:outline-none"
             >
-              <span className={activeCategory === "gown" ? "text-gold" : "text-gold-soft/40 hover:text-gold-soft/75"}>
+              <span
+                className={
+                  activeCategory === "gown"
+                    ? "text-gold"
+                    : "text-gold-soft/40 hover:text-gold-soft/75"
+                }
+              >
                 Evening Gown
               </span>
               {activeCategory === "gown" && (
@@ -167,11 +219,16 @@ export default function Home() {
             </button>
           </div>
         </div>
-        
+
         {delegates.length === 0 ? (
           <div className="text-center py-12 border border-dashed border-gold/15 rounded-2xl bg-black/25">
-            <Lucide.Users size={32} className="mx-auto text-gold-soft/30 animate-pulse mb-3" />
-            <p className="text-sm text-gold-soft/50">Loading candidate list...</p>
+            <Lucide.Users
+              size={32}
+              className="mx-auto text-gold-soft/30 animate-pulse mb-3"
+            />
+            <p className="text-sm text-gold-soft/50">
+              Loading candidate list...
+            </p>
           </div>
         ) : (
           <ThreeDCarousel
@@ -202,51 +259,72 @@ export default function Home() {
         {/* Background effects */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(212,175,55,0.08),transparent_60%)] pointer-events-none" />
         <div className="absolute -left-20 -top-20 w-80 h-80 rounded-full bg-gold/5 blur-[80px] pointer-events-none" />
-        
+
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div className="space-y-6 text-left">
             <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-gold tracking-widest uppercase bg-gold/10 px-2 py-0.5 rounded border border-gold/15">
               Exclusive drop
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-semibold text-ink dark:text-white leading-tight transition-all duration-300">
-              Support {activeDelegate ? activeDelegate.name.split(' ')[0] : "Queen"}
+              Support{" "}
+              {activeDelegate ? activeDelegate.name.split(" ")[0] : "Queen"}
             </h2>
             <p className="text-xs sm:text-sm text-ink/75 dark:text-gold-soft/60 leading-6">
-              Every official candidate portrait has been transformed into an exclusive NFT-inspired digital collectible. Mint your favorite queen on Stellar and own a timeless piece of digital history.
+              Every official candidate portrait has been transformed into an
+              exclusive NFT-inspired digital collectible. Mint your favorite
+              queen on Stellar and own a timeless piece of digital history.
             </p>
             <p className="text-xs text-ink/55 dark:text-gold-soft/45 leading-6">
-              Your support directly helps fund her pageant journey, empower her advocacies, and bring her dreams to life.
+              Your support directly helps fund her pageant journey, empower her
+              advocacies, and bring her dreams to life.
             </p>
-            
+
             <div className="pt-2 border-t border-gold/15 flex gap-8 transition-all duration-300">
               <div>
-                <div className="text-[10px] text-ink/55 dark:text-gold-soft/50 uppercase tracking-widest">Network</div>
+                <div className="text-[10px] text-ink/55 dark:text-gold-soft/50 uppercase tracking-widest">
+                  Network
+                </div>
                 <div className="text-xs font-semibold text-ink dark:text-white mt-0.5 flex items-center gap-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${activeDelegate?.sash.toUpperCase() === 'PH' ? 'bg-emerald' : 'bg-blue-400'}`}></span>
-                  {activeDelegate?.sash.toUpperCase() === 'PH' ? 'Stellar Public' : 'Stellar Testnet'}
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${activeDelegate?.sash.toUpperCase() === "PH" ? "bg-emerald" : "bg-blue-400"}`}
+                  ></span>
+                  {activeDelegate?.sash.toUpperCase() === "PH"
+                    ? "Stellar Public"
+                    : "Stellar Testnet"}
                 </div>
               </div>
               <div>
-                <div className="text-[10px] text-ink/55 dark:text-gold-soft/50 uppercase tracking-widest">Price</div>
+                <div className="text-[10px] text-ink/55 dark:text-gold-soft/50 uppercase tracking-widest">
+                  Price
+                </div>
                 <div className="text-xs font-semibold text-ink dark:text-white mt-0.5">
-                  {activeDelegate ? (activeDelegate.name.length * 8.5).toFixed(2) : "10.00"} XLM
+                  {activeDelegate
+                    ? (activeDelegate.name.length * 8.5).toFixed(2)
+                    : "10.00"}{" "}
+                  XLM
                 </div>
               </div>
             </div>
           </div>
-          
+
           {/* Collectible with pedestal */}
           <div className="transition-opacity duration-300">
             {activeDelegate && (
               <NFTCollectibleWithPedestal
                 name={activeDelegate.name}
                 country={activeDelegate.country}
-                continent={["Asia", "Europe", "Americas", "Africa"][activeDelegate.name.length % 4]}
-                height={`5'${activeDelegate.name.length % 12 + 2}"`}
+                continent={
+                  ["Asia", "Europe", "Americas", "Africa"][
+                    activeDelegate.name.length % 4
+                  ]
+                }
+                height={`5'${(activeDelegate.name.length % 12) + 2}"`}
                 edition={`EDITION 1 of ${activeDelegate.name.length * 10}`}
                 id={`ID:${activeDelegate.id.toUpperCase()}`}
                 imageUrl={getPortraitPath(activeDelegate.sash, activeCategory)}
-                onMint={() => window.location.href = `/vote?candidate=${activeDelegate.id}`}
+                onMint={() =>
+                  (window.location.href = `/vote?candidate=${activeDelegate.id}`)
+                }
               />
             )}
           </div>

@@ -47,7 +47,8 @@ const tabs: { id: Tab; label: string; Icon: typeof BarChart3 }[] = [
 ];
 
 export default function AdminPage() {
-  const { isAdmin, address, connect, connecting, adminAllowlistConfigured } = useSession();
+  const { isAdmin, address, connect, connecting, adminAllowlistConfigured } =
+    useSession();
   const [tab, setTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<any>(null);
   const [rounds, setRounds] = useState<any[]>([]);
@@ -61,7 +62,11 @@ export default function AdminPage() {
   const [roundModal, setRoundModal] = useState(false);
   const [contestantModal, setContestantModal] = useState(false);
   const [roundTitle, setRoundTitle] = useState("");
-  const [contestantForm, setContestantForm] = useState({ name: "", country: "", sash: "" });
+  const [contestantForm, setContestantForm] = useState({
+    name: "",
+    country: "",
+    sash: "",
+  });
 
   function loadAll() {
     setLoading(true);
@@ -89,10 +94,16 @@ export default function AdminPage() {
     }
     const challenge = await postJson<any>("/api/admin/challenge", { address });
     if (!challenge.ok) {
-      flash("This wallet is not authorized by the server admin allowlist.", "err");
+      flash(
+        "This wallet is not authorized by the server admin allowlist.",
+        "err",
+      );
       return false;
     }
-    const signed = await signAdminMessage((challenge.data as any).message, address);
+    const signed = await signAdminMessage(
+      (challenge.data as any).message,
+      address,
+    );
     if (signed.error || !signed.signature) {
       flash(signed.error ?? "Admin signature was cancelled.", "err");
       return false;
@@ -113,27 +124,37 @@ export default function AdminPage() {
     if (!(await ensureAdminSession())) return;
     setBusy(id);
     try {
-      const prep = await postJson<any>(`/api/rounds/${id}/prepare-close`, { adminAddress: address! });
-      if (!prep.ok) throw new Error((prep.data as any)?.error ?? "prepare_failed");
+      const prep = await postJson<any>(`/api/rounds/${id}/prepare-close`, {
+        adminAddress: address!,
+      });
+      if (!prep.ok)
+        throw new Error((prep.data as any)?.error ?? "prepare_failed");
 
       if ((prep.data as any).mock) {
         const result = await postJson<any>(`/api/rounds/${id}/close`, {});
-        if (!result.ok) throw new Error((result.data as any)?.error ?? "close_failed");
-        flash(`Voting closed in demo mode. Root ${short((result.data as any).merkleRoot, 6)}`);
+        if (!result.ok)
+          throw new Error((result.data as any)?.error ?? "close_failed");
+        flash(
+          `Voting closed in demo mode. Root ${short((result.data as any).merkleRoot, 6)}`,
+        );
         setRoundToClose(null);
         return;
       }
 
       const signed = await signWithFreighter((prep.data as any).xdr, address!);
-      if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
+      if (signed.error || !signed.signedXdr)
+        throw new Error(signed.error ?? "You cancelled the signature.");
 
       const confirmed = await postJson<any>(`/api/rounds/${id}/confirm-close`, {
         signedXdr: signed.signedXdr,
         intentId: (prep.data as any).intentId,
       });
-      if (!confirmed.ok) throw new Error((confirmed.data as any)?.error ?? "confirm_failed");
+      if (!confirmed.ok)
+        throw new Error((confirmed.data as any)?.error ?? "confirm_failed");
 
-      flash(`Checkpoint published on Stellar. Root ${short((confirmed.data as any).merkleRoot, 6)}`);
+      flash(
+        `Checkpoint published on Stellar. Root ${short((confirmed.data as any).merkleRoot, 6)}`,
+      );
       setRoundToClose(null);
     } catch (error: any) {
       const message = String(error?.message ?? "");
@@ -173,7 +194,13 @@ export default function AdminPage() {
   }
 
   async function createContestant() {
-    if (!contestantForm.name || !contestantForm.country || contestantForm.sash.length !== 2 || !(await ensureAdminSession())) return;
+    if (
+      !contestantForm.name ||
+      !contestantForm.country ||
+      contestantForm.sash.length !== 2 ||
+      !(await ensureAdminSession())
+    )
+      return;
     setBusy("create-contestant");
     try {
       const response = await fetch("/api/contestants", {
@@ -201,10 +228,17 @@ export default function AdminPage() {
       const response = await fetch("/api/organizer-requests", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: decision.request.id, status: decision.status }),
+        body: JSON.stringify({
+          id: decision.request.id,
+          status: decision.status,
+        }),
       });
       if (!response.ok) throw new Error("decision_failed");
-      flash(decision.status === "approved" ? "Organizer application approved." : "Organizer application rejected.");
+      flash(
+        decision.status === "approved"
+          ? "Organizer application approved."
+          : "Organizer application rejected.",
+      );
       setDecision(null);
       loadAll();
     } catch {
@@ -229,19 +263,39 @@ export default function AdminPage() {
     return (
       <Card className="mx-auto max-w-2xl border-gold/25">
         <CardContent className="px-6 py-12 text-center sm:px-10">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-gold/25 bg-gold/10 text-gold"><Lock size={25} /></span>
-          <Badge tone="gold" className="mt-5">Restricted administration</Badge>
-          <h1 className="mt-4 font-display text-3xl font-semibold text-white">{heading}</h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gold-soft/50">{description}</p>
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-gold/25 bg-gold/10 text-gold">
+            <Lock size={25} />
+          </span>
+          <Badge tone="gold" className="mt-5">
+            Restricted administration
+          </Badge>
+          <h1 className="mt-4 font-display text-3xl font-semibold text-white">
+            {heading}
+          </h1>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gold-soft/50">
+            {description}
+          </p>
           {address && (
             <div className="mx-auto mt-5 max-w-md rounded-2xl border border-line bg-black/25 px-4 py-3 text-left">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-soft/40">Connected wallet</div>
-              <div className="mono mt-1 break-all text-sm text-gold-soft">{address}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-soft/40">
+                Connected wallet
+              </div>
+              <div className="mono mt-1 break-all text-sm text-gold-soft">
+                {address}
+              </div>
             </div>
           )}
-          {!address && <Button className="mt-6" onClick={connect} disabled={connecting}>{connecting ? "Connecting…" : "Connect admin wallet"}</Button>}
+          {!address && (
+            <Button className="mt-6" onClick={connect} disabled={connecting}>
+              {connecting ? "Connecting…" : "Connect admin wallet"}
+            </Button>
+          )}
           <div className="mt-6 rounded-2xl border border-line bg-black/20 px-4 py-3 text-left text-xs leading-5 text-gold-soft/40">
-            <strong className="text-gold-soft/65">Local setup:</strong> configure the same public G-address in <code>NEXT_PUBLIC_ADMIN_WALLETS</code> and <code>ADMIN_WALLETS</code>, plus a strong <code>ADMIN_SESSION_SECRET</code>.
+            <strong className="text-gold-soft/65">Local setup:</strong>{" "}
+            configure the same public G-address in{" "}
+            <code>NEXT_PUBLIC_ADMIN_WALLETS</code> and{" "}
+            <code>ADMIN_WALLETS</code>, plus a strong{" "}
+            <code>ADMIN_SESSION_SECRET</code>.
           </div>
         </CardContent>
       </Card>
@@ -258,14 +312,27 @@ export default function AdminPage() {
           description="Review activity, operate voting rounds, manage contestants, and process organizer applications. Administrative changes require a signed wallet challenge."
         />
         <div className="flex items-center gap-2">
-          <Badge tone="success"><ShieldCheck size={13} /> Admin wallet</Badge>
-          <Button size="sm" variant="secondary" onClick={loadAll} disabled={loading}><RefreshCw className={loading ? "animate-spin" : ""} size={15} /> Refresh</Button>
+          <Badge tone="success">
+            <ShieldCheck size={13} /> Admin wallet
+          </Badge>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={loadAll}
+            disabled={loading}
+          >
+            <RefreshCw className={loading ? "animate-spin" : ""} size={15} />{" "}
+            Refresh
+          </Button>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <Card className="h-fit p-2">
-          <nav aria-label="Administration sections" className="flex gap-1 overflow-x-auto lg:grid">
+          <nav
+            aria-label="Administration sections"
+            className="flex gap-1 overflow-x-auto lg:grid"
+          >
             {tabs.map(({ id, label, Icon }) => (
               <button
                 key={id}
@@ -275,9 +342,17 @@ export default function AdminPage() {
               >
                 <Icon size={17} />
                 <span className="font-semibold">{label}</span>
-                {id === "requests" && requests.filter((request) => request.status === "pending").length > 0 && (
-                  <span className="ml-auto rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-bold">{requests.filter((request) => request.status === "pending").length}</span>
-                )}
+                {id === "requests" &&
+                  requests.filter((request) => request.status === "pending")
+                    .length > 0 && (
+                    <span className="ml-auto rounded-full bg-black/20 px-2 py-0.5 text-[10px] font-bold">
+                      {
+                        requests.filter(
+                          (request) => request.status === "pending",
+                        ).length
+                      }
+                    </span>
+                  )}
               </button>
             ))}
           </nav>
@@ -285,9 +360,26 @@ export default function AdminPage() {
 
         <div className="min-w-0">
           {tab === "overview" && <Overview stats={stats} loading={loading} />}
-          {tab === "rounds" && <Rounds rounds={rounds} busy={busy} onClose={setRoundToClose} onCreate={() => setRoundModal(true)} />}
-          {tab === "contestants" && <Contestants contestants={contestants} onCreate={() => setContestantModal(true)} />}
-          {tab === "requests" && <Requests requests={requests} onDecide={(request, status) => setDecision({ request, status })} />}
+          {tab === "rounds" && (
+            <Rounds
+              rounds={rounds}
+              busy={busy}
+              onClose={setRoundToClose}
+              onCreate={() => setRoundModal(true)}
+            />
+          )}
+          {tab === "contestants" && (
+            <Contestants
+              contestants={contestants}
+              onCreate={() => setContestantModal(true)}
+            />
+          )}
+          {tab === "requests" && (
+            <Requests
+              requests={requests}
+              onDecide={(request, status) => setDecision({ request, status })}
+            />
+          )}
         </div>
       </div>
 
@@ -299,12 +391,30 @@ export default function AdminPage() {
         preventClose={busy === "create-round"}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setRoundModal(false)} disabled={busy === "create-round"}>Cancel</Button>
-            <Button onClick={createRound} disabled={!roundTitle.trim() || busy === "create-round"}>{busy === "create-round" ? "Creating…" : "Create round"}</Button>
+            <Button
+              variant="ghost"
+              onClick={() => setRoundModal(false)}
+              disabled={busy === "create-round"}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={createRound}
+              disabled={!roundTitle.trim() || busy === "create-round"}
+            >
+              {busy === "create-round" ? "Creating…" : "Create round"}
+            </Button>
           </>
         }
       >
-        <TextField id="round-title" label="Round title" helper="Example: Grand Finals or People's Choice" value={roundTitle} onChange={(event) => setRoundTitle(event.target.value)} autoFocus />
+        <TextField
+          id="round-title"
+          label="Round title"
+          helper="Example: Grand Finals or People's Choice"
+          value={roundTitle}
+          onChange={(event) => setRoundTitle(event.target.value)}
+          autoFocus
+        />
       </Modal>
 
       <Modal
@@ -315,15 +425,63 @@ export default function AdminPage() {
         preventClose={busy === "create-contestant"}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setContestantModal(false)} disabled={busy === "create-contestant"}>Cancel</Button>
-            <Button onClick={createContestant} disabled={!contestantForm.name || !contestantForm.country || contestantForm.sash.length !== 2 || busy === "create-contestant"}>{busy === "create-contestant" ? "Adding…" : "Add contestant"}</Button>
+            <Button
+              variant="ghost"
+              onClick={() => setContestantModal(false)}
+              disabled={busy === "create-contestant"}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={createContestant}
+              disabled={
+                !contestantForm.name ||
+                !contestantForm.country ||
+                contestantForm.sash.length !== 2 ||
+                busy === "create-contestant"
+              }
+            >
+              {busy === "create-contestant" ? "Adding…" : "Add contestant"}
+            </Button>
           </>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField id="contestant-name" label="Name" value={contestantForm.name} onChange={(event) => setContestantForm({ ...contestantForm, name: event.target.value })} placeholder="Candidate name" />
-          <TextField id="contestant-country" label="Country" value={contestantForm.country} onChange={(event) => setContestantForm({ ...contestantForm, country: event.target.value })} placeholder="Philippines" />
-          <TextField id="contestant-sash" label="Two-letter sash code" helper="Used to display the country flag." maxLength={2} value={contestantForm.sash} onChange={(event) => setContestantForm({ ...contestantForm, sash: event.target.value.toUpperCase() })} placeholder="PH" />
+          <TextField
+            id="contestant-name"
+            label="Name"
+            value={contestantForm.name}
+            onChange={(event) =>
+              setContestantForm({ ...contestantForm, name: event.target.value })
+            }
+            placeholder="Candidate name"
+          />
+          <TextField
+            id="contestant-country"
+            label="Country"
+            value={contestantForm.country}
+            onChange={(event) =>
+              setContestantForm({
+                ...contestantForm,
+                country: event.target.value,
+              })
+            }
+            placeholder="Philippines"
+          />
+          <TextField
+            id="contestant-sash"
+            label="Two-letter sash code"
+            helper="Used to display the country flag."
+            maxLength={2}
+            value={contestantForm.sash}
+            onChange={(event) =>
+              setContestantForm({
+                ...contestantForm,
+                sash: event.target.value.toUpperCase(),
+              })
+            }
+            placeholder="PH"
+          />
         </div>
       </Modal>
 
@@ -331,7 +489,9 @@ export default function AdminPage() {
         open={Boolean(roundToClose)}
         onClose={() => setRoundToClose(null)}
         onConfirm={() => roundToClose && closeRound(roundToClose.id)}
-        title={roundToClose ? `Close ${roundToClose.title}` : "Close voting round"}
+        title={
+          roundToClose ? `Close ${roundToClose.title}` : "Close voting round"
+        }
         description="This is a high-impact action and cannot be undone in the MVP."
         confirmLabel="Close and publish checkpoint"
         pendingLabel="Publishing checkpoint…"
@@ -343,8 +503,19 @@ export default function AdminPage() {
             New votes will stop being accepted as soon as the round is closed.
           </div>
           <ol className="space-y-3 text-sm text-gold-soft/55">
-            {["Stop new votes", "Calculate the final tally", "Generate the Merkle root and tally hash", "Request an admin signature", "Publish the checkpoint to Stellar or local demo mode"].map((step, index) => (
-              <li key={step} className="flex gap-3"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-gold/20 text-xs text-gold">{index + 1}</span><span className="pt-0.5">{step}</span></li>
+            {[
+              "Stop new votes",
+              "Calculate the final tally",
+              "Generate the Merkle root and tally hash",
+              "Request an admin signature",
+              "Publish the checkpoint to Stellar or local demo mode",
+            ].map((step, index) => (
+              <li key={step} className="flex gap-3">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-gold/20 text-xs text-gold">
+                  {index + 1}
+                </span>
+                <span className="pt-0.5">{step}</span>
+              </li>
             ))}
           </ol>
         </div>
@@ -354,9 +525,21 @@ export default function AdminPage() {
         open={Boolean(decision)}
         onClose={() => setDecision(null)}
         onConfirm={decideRequest}
-        title={decision?.status === "approved" ? "Approve organizer application" : "Reject organizer application"}
-        description={decision ? `${decision.request.pageantName} · ${decision.request.orgName}` : undefined}
-        confirmLabel={decision?.status === "approved" ? "Approve application" : "Reject application"}
+        title={
+          decision?.status === "approved"
+            ? "Approve organizer application"
+            : "Reject organizer application"
+        }
+        description={
+          decision
+            ? `${decision.request.pageantName} · ${decision.request.orgName}`
+            : undefined
+        }
+        confirmLabel={
+          decision?.status === "approved"
+            ? "Approve application"
+            : "Reject application"
+        }
         pendingLabel="Updating application…"
         pending={Boolean(decision && busy === `request-${decision.request.id}`)}
         destructive={decision?.status === "rejected"}
@@ -377,7 +560,11 @@ function Overview({ stats, loading }: { stats: any; loading: boolean }) {
   const cards = [
     { label: "Votes cast", value: stats?.votes ?? 0, Icon: Vote },
     { label: "Tickets minted", value: stats?.tickets ?? 0, Icon: Crown },
-    { label: "Collectibles sold", value: stats?.collectiblesSold ?? 0, Icon: Sparkles },
+    {
+      label: "Collectibles sold",
+      value: stats?.collectiblesSold ?? 0,
+      Icon: Sparkles,
+    },
     { label: "Contestants", value: stats?.contestants ?? 0, Icon: Users },
     { label: "Voting rounds", value: stats?.rounds ?? 0, Icon: ClipboardList },
     { label: "GMV (USDC)", value: stats?.gmv ?? 0, Icon: Trophy },
@@ -392,8 +579,12 @@ function Overview({ stats, loading }: { stats: any; loading: boolean }) {
           <Card key={label} className={loading ? "animate-pulse" : ""}>
             <CardContent className="pt-5">
               <Icon className="text-gold-soft/35" size={18} />
-              <div className="mt-3 font-display text-3xl font-semibold text-gold">{value.toLocaleString?.() ?? value}</div>
-              <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-soft/35">{label}</div>
+              <div className="mt-3 font-display text-3xl font-semibold text-gold">
+                {value.toLocaleString?.() ?? value}
+              </div>
+              <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-soft/35">
+                {label}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -402,19 +593,39 @@ function Overview({ stats, loading }: { stats: any; loading: boolean }) {
       <Card>
         <CardHeader>
           <CardTitle>Vote leaderboard</CardTitle>
-          <CardDescription>Current cumulative vote totals returned by the administration statistics endpoint.</CardDescription>
+          <CardDescription>
+            Current cumulative vote totals returned by the administration
+            statistics endpoint.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {top.length === 0 ? (
-            <EmptyState title="No votes have been recorded" description="The leaderboard will populate after participants vote in an open round." />
+            <EmptyState
+              title="No votes have been recorded"
+              description="The leaderboard will populate after participants vote in an open round."
+            />
           ) : (
             <div className="space-y-4">
               {top.map((contestant: any, index: number) => (
-                <div key={contestant.name} className="grid items-center gap-3 sm:grid-cols-[28px_180px_1fr_48px]">
-                  <span className="text-sm font-semibold text-gold-soft/35">#{index + 1}</span>
-                  <div className="truncate text-sm text-white">{flag(contestant.sash)} {contestant.name}</div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-gradient-to-r from-gold-deep to-gold" style={{ width: `${(contestant.votes / max) * 100}%` }} /></div>
-                  <div className="text-right text-sm font-semibold text-gold">{contestant.votes}</div>
+                <div
+                  key={contestant.name}
+                  className="grid items-center gap-3 sm:grid-cols-[28px_180px_1fr_48px]"
+                >
+                  <span className="text-sm font-semibold text-gold-soft/35">
+                    #{index + 1}
+                  </span>
+                  <div className="truncate text-sm text-white">
+                    {flag(contestant.sash)} {contestant.name}
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-white/5">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-gold-deep to-gold"
+                      style={{ width: `${(contestant.votes / max) * 100}%` }}
+                    />
+                  </div>
+                  <div className="text-right text-sm font-semibold text-gold">
+                    {contestant.votes}
+                  </div>
                 </div>
               ))}
             </div>
@@ -425,15 +636,42 @@ function Overview({ stats, loading }: { stats: any; loading: boolean }) {
   );
 }
 
-function Rounds({ rounds, busy, onClose, onCreate }: { rounds: any[]; busy: string; onClose: (round: any) => void; onCreate: () => void }) {
+function Rounds({
+  rounds,
+  busy,
+  onClose,
+  onCreate,
+}: {
+  rounds: any[];
+  busy: string;
+  onClose: (round: any) => void;
+  onCreate: () => void;
+}) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="font-display text-2xl font-semibold text-white">Voting rounds</h2><p className="mt-1 text-sm text-gold-soft/45">Create rounds, monitor vote totals, and publish final checkpoints.</p></div>
-        <Button onClick={onCreate}><Plus size={16} /> Create round</Button>
+        <div>
+          <h2 className="font-display text-2xl font-semibold text-white">
+            Voting rounds
+          </h2>
+          <p className="mt-1 text-sm text-gold-soft/45">
+            Create rounds, monitor vote totals, and publish final checkpoints.
+          </p>
+        </div>
+        <Button onClick={onCreate}>
+          <Plus size={16} /> Create round
+        </Button>
       </div>
       {rounds.length === 0 ? (
-        <EmptyState title="No voting rounds" description="Create a round before contestants can receive votes." action={<Button onClick={onCreate}><Plus size={16} /> Create first round</Button>} />
+        <EmptyState
+          title="No voting rounds"
+          description="Create a round before contestants can receive votes."
+          action={
+            <Button onClick={onCreate}>
+              <Plus size={16} /> Create first round
+            </Button>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {rounds.map((round) => (
@@ -441,17 +679,39 @@ function Rounds({ rounds, busy, onClose, onCreate }: { rounds: any[]; busy: stri
               <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-5">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-display text-xl font-semibold text-white">{round.title}</h3>
-                    <Badge tone={round.status === "open" ? "success" : "neutral"}>{round.status === "open" ? "Voting open" : "Voting closed"}</Badge>
-                    {round.checkpoint && <Badge tone="success">Checkpoint published</Badge>}
+                    <h3 className="font-display text-xl font-semibold text-white">
+                      {round.title}
+                    </h3>
+                    <Badge
+                      tone={round.status === "open" ? "success" : "neutral"}
+                    >
+                      {round.status === "open"
+                        ? "Voting open"
+                        : "Voting closed"}
+                    </Badge>
+                    {round.checkpoint && (
+                      <Badge tone="success">Checkpoint published</Badge>
+                    )}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gold-soft/45">
                     <span>{round._count?.votes ?? 0} votes</span>
-                    {round.checkpoint && <span className="mono text-emerald">Root {short(round.checkpoint.merkleRoot, 7)}</span>}
+                    {round.checkpoint && (
+                      <span className="mono text-emerald">
+                        Root {short(round.checkpoint.merkleRoot, 7)}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <Button variant={round.status === "closed" ? "secondary" : "danger"} disabled={round.status === "closed" || busy === round.id} onClick={() => onClose(round)}>
-                  {busy === round.id ? "Publishing…" : round.status === "closed" ? "Voting closed" : "Close voting"}
+                <Button
+                  variant={round.status === "closed" ? "secondary" : "danger"}
+                  disabled={round.status === "closed" || busy === round.id}
+                  onClick={() => onClose(round)}
+                >
+                  {busy === round.id
+                    ? "Publishing…"
+                    : round.status === "closed"
+                      ? "Voting closed"
+                      : "Close voting"}
                 </Button>
               </CardContent>
             </Card>
@@ -462,24 +722,54 @@ function Rounds({ rounds, busy, onClose, onCreate }: { rounds: any[]; busy: stri
   );
 }
 
-function Contestants({ contestants, onCreate }: { contestants: any[]; onCreate: () => void }) {
+function Contestants({
+  contestants,
+  onCreate,
+}: {
+  contestants: any[];
+  onCreate: () => void;
+}) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="font-display text-2xl font-semibold text-white">Contestants</h2><p className="mt-1 text-sm text-gold-soft/45">Manage the candidate records used by voting and collectible features.</p></div>
-        <Button onClick={onCreate}><Plus size={16} /> Add contestant</Button>
+        <div>
+          <h2 className="font-display text-2xl font-semibold text-white">
+            Contestants
+          </h2>
+          <p className="mt-1 text-sm text-gold-soft/45">
+            Manage the candidate records used by voting and collectible
+            features.
+          </p>
+        </div>
+        <Button onClick={onCreate}>
+          <Plus size={16} /> Add contestant
+        </Button>
       </div>
       {contestants.length === 0 ? (
-        <EmptyState title="No contestants" description="Add contestant records before opening voting." action={<Button onClick={onCreate}><Plus size={16} /> Add first contestant</Button>} />
+        <EmptyState
+          title="No contestants"
+          description="Add contestant records before opening voting."
+          action={
+            <Button onClick={onCreate}>
+              <Plus size={16} /> Add first contestant
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {contestants.map((contestant) => (
             <Card key={contestant.id}>
               <CardContent className="flex items-center gap-4 pt-5">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-2xl">{flag(contestant.sash)}</span>
+                <span className="grid h-12 w-12 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-2xl">
+                  {flag(contestant.sash)}
+                </span>
                 <div className="min-w-0">
-                  <h3 className="truncate font-semibold text-white">{contestant.name}</h3>
-                  <p className="mt-1 text-xs text-gold-soft/40">{contestant.country} · {contestant.sash}</p>
+                  <h3 className="truncate font-semibold text-white">
+                    {contestant.name}
+                  </h3>
+                  <p className="mt-1 text-xs text-gold-soft/40">
+                    {contestant.country} · {contestant.sash}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -490,12 +780,29 @@ function Contestants({ contestants, onCreate }: { contestants: any[]; onCreate: 
   );
 }
 
-function Requests({ requests, onDecide }: { requests: any[]; onDecide: (request: any, status: "approved" | "rejected") => void }) {
+function Requests({
+  requests,
+  onDecide,
+}: {
+  requests: any[];
+  onDecide: (request: any, status: "approved" | "rejected") => void;
+}) {
   return (
     <div className="space-y-4">
-      <div><h2 className="font-display text-2xl font-semibold text-white">Organizer applications</h2><p className="mt-1 text-sm text-gold-soft/45">Review pageants requesting CrownFi onboarding and record an approval decision.</p></div>
+      <div>
+        <h2 className="font-display text-2xl font-semibold text-white">
+          Organizer applications
+        </h2>
+        <p className="mt-1 text-sm text-gold-soft/45">
+          Review pageants requesting CrownFi onboarding and record an approval
+          decision.
+        </p>
+      </div>
       {requests.length === 0 ? (
-        <EmptyState title="No organizer applications" description="New submissions from the Organize page will appear here." />
+        <EmptyState
+          title="No organizer applications"
+          description="New submissions from the Organize page will appear here."
+        />
       ) : (
         <div className="space-y-3">
           {requests.map((request) => (
@@ -503,23 +810,63 @@ function Requests({ requests, onDecide }: { requests: any[]; onDecide: (request:
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="flex flex-wrap items-center gap-2"><CardTitle>{request.pageantName}</CardTitle><Badge tone={request.status === "approved" ? "success" : request.status === "rejected" ? "danger" : "gold"}>{request.status}</Badge></div>
-                    <CardDescription>{request.orgName} · {request.country}</CardDescription>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CardTitle>{request.pageantName}</CardTitle>
+                      <Badge
+                        tone={
+                          request.status === "approved"
+                            ? "success"
+                            : request.status === "rejected"
+                              ? "danger"
+                              : "gold"
+                        }
+                      >
+                        {request.status}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      {request.orgName} · {request.country}
+                    </CardDescription>
                   </div>
                   {request.status === "pending" && (
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => onDecide(request, "approved")}><CheckCircle2 size={15} /> Approve</Button>
-                      <Button size="sm" variant="danger" onClick={() => onDecide(request, "rejected")}><CircleAlert size={15} /> Reject</Button>
+                      <Button
+                        size="sm"
+                        onClick={() => onDecide(request, "approved")}
+                      >
+                        <CheckCircle2 size={15} /> Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => onDecide(request, "rejected")}
+                      >
+                        <CircleAlert size={15} /> Reject
+                      </Button>
                     </div>
                   )}
                 </div>
               </CardHeader>
               <CardContent>
                 <dl className="grid gap-3 rounded-2xl border border-line bg-black/20 p-4 text-sm sm:grid-cols-2">
-                  <div><dt className="text-gold-soft/35">Contact</dt><dd className="mt-1 text-gold-soft">{request.contactName}</dd></div>
-                  <div><dt className="text-gold-soft/35">Email</dt><dd className="mt-1 break-all text-gold-soft">{request.email}</dd></div>
+                  <div>
+                    <dt className="text-gold-soft/35">Contact</dt>
+                    <dd className="mt-1 text-gold-soft">
+                      {request.contactName}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-gold-soft/35">Email</dt>
+                    <dd className="mt-1 break-all text-gold-soft">
+                      {request.email}
+                    </dd>
+                  </div>
                 </dl>
-                {request.message && <p className="mt-4 text-sm leading-6 text-gold-soft/50">{request.message}</p>}
+                {request.message && (
+                  <p className="mt-4 text-sm leading-6 text-gold-soft/50">
+                    {request.message}
+                  </p>
+                )}
               </CardContent>
             </Card>
           ))}

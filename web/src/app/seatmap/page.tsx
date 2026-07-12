@@ -18,8 +18,8 @@ export default function SeatmapPage() {
           Arena Seatmap
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm text-[#5f6172]">
-          Coronation Night 2026 — SM Mall of Asia Arena.
-          Pick an available seat to view details and buy your ticket.
+          Coronation Night 2026 — SM Mall of Asia Arena. Pick an available seat
+          to view details and buy your ticket.
         </p>
       </div>
 
@@ -33,7 +33,8 @@ export default function SeatmapPage() {
             href={`/tickets?tier=${selection.tier}`}
             className="btn-gold !py-3 !px-8 text-base"
           >
-            Buy {selection.tier} · Row {selection.row} Seat {selection.col} — {tier.priceUsdc} USDC
+            Buy {selection.tier} · Row {selection.row} Seat {selection.col} —{" "}
+            {tier.priceUsdc} USDC
           </Link>
         </div>
       )}

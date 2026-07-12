@@ -35,7 +35,10 @@ export default function CollectPage() {
   const [busy, setBusy] = useState("");
   const [balance, setBalance] = useState<number | null>(null);
   const [toast, setToast] = useState({ msg: "", tone: "ok" as "ok" | "err" });
-  const [lastTransaction, setLastTransaction] = useState<{ paymentTx: string; mintTx: string } | null>(null);
+  const [lastTransaction, setLastTransaction] = useState<{
+    paymentTx: string;
+    mintTx: string;
+  } | null>(null);
 
   function load() {
     getJson<Collectible[]>("/api/collectibles", []).then(setItems);
@@ -43,7 +46,10 @@ export default function CollectPage() {
   useEffect(load, []);
 
   const refreshBalance = useCallback(() => {
-    if (address) getJson<{ balanceUsdc: number }>(`/api/usdc-balance?address=${address}`, { balanceUsdc: 0 }).then((b) => setBalance(b.balanceUsdc));
+    if (address)
+      getJson<{ balanceUsdc: number }>(`/api/usdc-balance?address=${address}`, {
+        balanceUsdc: 0,
+      }).then((b) => setBalance(b.balanceUsdc));
     else setBalance(null);
   }, [address]);
   useEffect(refreshBalance, [refreshBalance]);
@@ -59,12 +65,19 @@ export default function CollectPage() {
       return;
     }
     setBusy("faucet");
-    const response = await postJson<any>("/api/faucet", { walletAddress: address, amountUsdc: 50 });
+    const response = await postJson<any>("/api/faucet", {
+      walletAddress: address,
+      amountUsdc: 50,
+    });
     setBusy("");
     if (response.ok) {
       flash("+50 test USDC sent to your wallet.", "ok");
       refreshBalance();
-    } else flash(`Faucet failed: ${(response.data as any)?.error ?? "error"}`, "err");
+    } else
+      flash(
+        `Faucet failed: ${(response.data as any)?.error ?? "error"}`,
+        "err",
+      );
   }
 
   async function buy() {
@@ -81,11 +94,16 @@ export default function CollectPage() {
         buyerAddress: address,
         fanId: fan.id,
       });
-      if (!prep.ok) throw new Error((prep.data as any)?.error ?? "prepare_failed");
+      if (!prep.ok)
+        throw new Error((prep.data as any)?.error ?? "prepare_failed");
 
       if ((prep.data as any).mock) {
-        const response = await postJson<any>("/api/collectibles", { fanId: fan.id, collectibleId: collectible.id });
-        if (!response.ok) throw new Error((response.data as any)?.error ?? "buy_failed");
+        const response = await postJson<any>("/api/collectibles", {
+          fanId: fan.id,
+          collectibleId: collectible.id,
+        });
+        if (!response.ok)
+          throw new Error((response.data as any)?.error ?? "buy_failed");
         flash("Collectible minted in local demo mode. +10 points.", "ok");
         setSelected(null);
         return;
@@ -93,7 +111,8 @@ export default function CollectPage() {
 
       const { xdr, priceUsdc } = prep.data as any;
       const signed = await signWithFreighter(xdr, address);
-      if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
+      if (signed.error || !signed.signedXdr)
+        throw new Error(signed.error ?? "You cancelled the signature.");
 
       const confirmed = await postJson<any>("/api/collectibles/confirm-buy", {
         collectibleId: collectible.id,
@@ -101,14 +120,26 @@ export default function CollectPage() {
         signedXdr: signed.signedXdr,
         intentId: (prep.data as any).intentId,
       });
-      if (!confirmed.ok) throw new Error((confirmed.data as any)?.error ?? "confirm_failed");
+      if (!confirmed.ok)
+        throw new Error((confirmed.data as any)?.error ?? "confirm_failed");
 
-      setLastTransaction({ paymentTx: (confirmed.data as any).paymentTx, mintTx: (confirmed.data as any).mintTx });
-      flash(`Collected for ${priceUsdc} USDC. The contestant payment split was submitted on-chain.`, "ok");
+      setLastTransaction({
+        paymentTx: (confirmed.data as any).paymentTx,
+        mintTx: (confirmed.data as any).mintTx,
+      });
+      flash(
+        `Collected for ${priceUsdc} USDC. The contestant payment split was submitted on-chain.`,
+        "ok",
+      );
       setSelected(null);
     } catch (error: any) {
       const message = String(error?.message ?? "");
-      flash(message.includes("balance") || message.includes("trustline") ? "Not enough test USDC — use the faucet first." : `Could not collect: ${message}`, "err");
+      flash(
+        message.includes("balance") || message.includes("trustline")
+          ? "Not enough test USDC — use the faucet first."
+          : `Could not collect: ${message}`,
+        "err",
+      );
     } finally {
       setBusy("");
       load();
@@ -129,10 +160,19 @@ export default function CollectPage() {
           <Card className="min-w-52">
             <CardContent className="flex items-center justify-between gap-4 pt-5">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-soft/40">Test USDC balance</div>
-                <div className="mt-1 font-display text-3xl font-semibold text-gold">{balance == null ? "…" : balance.toFixed(2)}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-soft/40">
+                  Test USDC balance
+                </div>
+                <div className="mt-1 font-display text-3xl font-semibold text-gold">
+                  {balance == null ? "…" : balance.toFixed(2)}
+                </div>
               </div>
-              <Button size="sm" variant="secondary" disabled={busy === "faucet"} onClick={getTestUsdc}>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={busy === "faucet"}
+                onClick={getTestUsdc}
+              >
                 <WalletCards size={15} />
                 {busy === "faucet" ? "Sending…" : "Get USDC"}
               </Button>
@@ -143,32 +183,79 @@ export default function CollectPage() {
 
       {lastTransaction && (
         <div className="rounded-2xl border border-emerald/30 bg-emerald/10 p-4 text-sm text-gold-soft">
-          <div className="font-semibold text-white">Confirmed on Stellar Testnet</div>
-          <p className="mt-1 text-gold-soft/65">The payment split and collectible mint are recorded as separate transactions.</p>
+          <div className="font-semibold text-white">
+            Confirmed on Stellar Testnet
+          </div>
+          <p className="mt-1 text-gold-soft/65">
+            The payment split and collectible mint are recorded as separate
+            transactions.
+          </p>
           <div className="mt-3 flex flex-wrap gap-3">
-            {testnetTransactionUrl(lastTransaction.paymentTx) && <a className="font-semibold text-gold underline underline-offset-2" href={testnetTransactionUrl(lastTransaction.paymentTx)!} target="_blank" rel="noopener noreferrer">View payment split</a>}
-            {testnetTransactionUrl(lastTransaction.mintTx) && <a className="font-semibold text-gold underline underline-offset-2" href={testnetTransactionUrl(lastTransaction.mintTx)!} target="_blank" rel="noopener noreferrer">View collectible mint</a>}
+            {testnetTransactionUrl(lastTransaction.paymentTx) && (
+              <a
+                className="font-semibold text-gold underline underline-offset-2"
+                href={testnetTransactionUrl(lastTransaction.paymentTx)!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View payment split
+              </a>
+            )}
+            {testnetTransactionUrl(lastTransaction.mintTx) && (
+              <a
+                className="font-semibold text-gold underline underline-offset-2"
+                href={testnetTransactionUrl(lastTransaction.mintTx)!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View collectible mint
+              </a>
+            )}
           </div>
         </div>
       )}
 
       {items.length === 0 ? (
-        <EmptyState title="No collectibles are available" description="Contestant collectibles will appear here after an administrator publishes them." />
+        <EmptyState
+          title="No collectibles are available"
+          description="Contestant collectibles will appear here after an administrator publishes them."
+        />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((collectible) => (
-            <Card key={collectible.id} className="overflow-hidden p-3 transition hover:-translate-y-0.5 hover:border-gold/35">
-              <Portrait id={collectible.contestant.id} name={collectible.contestant.name} sash={collectible.contestant.sash} />
+            <Card
+              key={collectible.id}
+              className="overflow-hidden p-3 transition hover:-translate-y-0.5 hover:border-gold/35"
+            >
+              <Portrait
+                id={collectible.contestant.id}
+                name={collectible.contestant.name}
+                sash={collectible.contestant.sash}
+              />
               <CardContent className="px-2 pb-2 pt-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="truncate font-display text-xl font-semibold text-white">{collectible.contestant.name}</h2>
-                    <p className="mt-1 text-sm text-gold-soft/45">{collectible.contestant.country} · {collectible.title}</p>
+                    <h2 className="truncate font-display text-xl font-semibold text-white">
+                      {collectible.contestant.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-gold-soft/45">
+                      {collectible.contestant.country} · {collectible.title}
+                    </p>
                   </div>
-                  <Badge tone="gold" className="shrink-0">{collectible.priceUsdc} USDC</Badge>
+                  <Badge tone="gold" className="shrink-0">
+                    {collectible.priceUsdc} USDC
+                  </Badge>
                 </div>
-                {collectible.tokenId && <div className="mono mt-3 text-[11px] text-emerald">Token {short(collectible.tokenId, 7)}</div>}
-                <Button className="mt-4 w-full" variant="secondary" onClick={() => setSelected(collectible)}>
+                {collectible.tokenId && (
+                  <div className="mono mt-3 text-[11px] text-emerald">
+                    Token {short(collectible.tokenId, 7)}
+                  </div>
+                )}
+                <Button
+                  className="mt-4 w-full"
+                  variant="secondary"
+                  onClick={() => setSelected(collectible)}
+                >
                   <Gem size={16} />
                   View collectible
                 </Button>
@@ -182,27 +269,59 @@ export default function CollectPage() {
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
         onConfirm={buy}
-        title={selected ? `Collect ${selected.contestant.name}` : "Collect portrait"}
+        title={
+          selected ? `Collect ${selected.contestant.name}` : "Collect portrait"
+        }
         description="Review the collectible and payment before opening Freighter."
-        confirmLabel={selected ? `Collect for ${selected.priceUsdc} USDC` : "Collect"}
+        confirmLabel={
+          selected ? `Collect for ${selected.priceUsdc} USDC` : "Collect"
+        }
         pendingLabel="Confirm in wallet…"
         pending={Boolean(selected && busy === selected.id)}
       >
         {selected && (
           <div className="grid gap-5 sm:grid-cols-[150px_1fr]">
-            <Portrait id={selected.contestant.id} name={selected.contestant.name} sash={selected.contestant.sash} />
+            <Portrait
+              id={selected.contestant.id}
+              name={selected.contestant.name}
+              sash={selected.contestant.sash}
+            />
             <div className="space-y-4">
               <div>
                 <Badge tone="gold">Official portrait</Badge>
-                <h3 className="mt-3 font-display text-2xl font-semibold text-white">{selected.title}</h3>
-                <p className="mt-1 text-sm text-gold-soft/50">{selected.contestant.country} · sash {selected.contestant.sash}</p>
+                <h3 className="mt-3 font-display text-2xl font-semibold text-white">
+                  {selected.title}
+                </h3>
+                <p className="mt-1 text-sm text-gold-soft/50">
+                  {selected.contestant.country} · sash{" "}
+                  {selected.contestant.sash}
+                </p>
               </div>
               <dl className="space-y-2 rounded-2xl border border-line bg-black/25 p-4 text-sm">
-                <div className="flex justify-between gap-4"><dt className="text-gold-soft/45">Price</dt><dd className="font-semibold text-gold">{selected.priceUsdc} USDC</dd></div>
-                <div className="flex justify-between gap-4"><dt className="text-gold-soft/45">Wallet</dt><dd className="mono text-xs text-gold-soft">{address ? short(address, 8) : "Not connected"}</dd></div>
-                <div className="flex justify-between gap-4"><dt className="text-gold-soft/45">Network</dt><dd className="text-gold-soft">Stellar testnet or local demo</dd></div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gold-soft/45">Price</dt>
+                  <dd className="font-semibold text-gold">
+                    {selected.priceUsdc} USDC
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gold-soft/45">Wallet</dt>
+                  <dd className="mono text-xs text-gold-soft">
+                    {address ? short(address, 8) : "Not connected"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gold-soft/45">Network</dt>
+                  <dd className="text-gold-soft">
+                    Stellar testnet or local demo
+                  </dd>
+                </div>
               </dl>
-              {!fan && <p className="text-sm text-ruby">Connect Freighter before collecting.</p>}
+              {!fan && (
+                <p className="text-sm text-ruby">
+                  Connect Freighter before collecting.
+                </p>
+              )}
             </div>
           </div>
         )}

@@ -19,19 +19,30 @@ import { SeatAssignmentModal } from "@/components/tickets/SeatAssignmentModal";
 import type { Ticket } from "@/components/tickets/types";
 import type { SeatSelection } from "@/components/SeatMap";
 
-const TIERS = TIER_LIST.map((t) => ({ name: t.name, price: t.priceUsdc, perks: t.perks }));
+const TIERS = TIER_LIST.map((t) => ({
+  name: t.name,
+  price: t.priceUsdc,
+  perks: t.perks,
+}));
 
 function TicketsPageInner() {
   const { fan, address } = useSession();
   const searchParams = useSearchParams();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const paramTier = searchParams.get("tier");
-  const [tier, setTier] = useState(paramTier && TIER_LIST.some((t) => t.name === paramTier) ? paramTier : "Gold");
+  const [tier, setTier] = useState(
+    paramTier && TIER_LIST.some((t) => t.name === paramTier)
+      ? paramTier
+      : "Gold",
+  );
   const [busy, setBusy] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [toast, setToast] = useState({ msg: "", tone: "ok" as "ok" | "err" });
   const [lastTicketId, setLastTicketId] = useState<string | null>(null);
-  const [lastTransaction, setLastTransaction] = useState<{ paymentTx: string; mintTx: string } | null>(null);
+  const [lastTransaction, setLastTransaction] = useState<{
+    paymentTx: string;
+    mintTx: string;
+  } | null>(null);
   const [reviewingPurchase, setReviewingPurchase] = useState(false);
 
   const [assigningTicket, setAssigningTicket] = useState<Ticket | null>(null);
@@ -51,7 +62,9 @@ function TicketsPageInner() {
 
   const refreshBalance = useCallback(() => {
     if (address) {
-      getJson<{ balanceUsdc: number }>(`/api/usdc-balance?address=${address}`, { balanceUsdc: 0 }).then((b) => setBalance(b.balanceUsdc));
+      getJson<{ balanceUsdc: number }>(`/api/usdc-balance?address=${address}`, {
+        balanceUsdc: 0,
+      }).then((b) => setBalance(b.balanceUsdc));
     } else {
       setBalance(null);
     }
@@ -73,7 +86,10 @@ function TicketsPageInner() {
     if (!assigningTicket || !chosenSeat) return;
     setSavingSeat(true);
     try {
-      const r = await postJson<any>(`/api/tickets/${assigningTicket.id}/assign-seat`, { seat: chosenSeat.label, fanId: fan?.id });
+      const r = await postJson<any>(
+        `/api/tickets/${assigningTicket.id}/assign-seat`,
+        { seat: chosenSeat.label, fanId: fan?.id },
+      );
       if (!r.ok) throw new Error((r.data as any)?.error ?? "assign_failed");
       flash(`Seat ${chosenSeat.label} assigned successfully!`, "ok");
       closeSeatModal();
@@ -91,7 +107,10 @@ function TicketsPageInner() {
       return;
     }
     setBusy(true);
-    const r = await postJson<any>("/api/faucet", { walletAddress: address, amountUsdc: 200 });
+    const r = await postJson<any>("/api/faucet", {
+      walletAddress: address,
+      amountUsdc: 200,
+    });
     setBusy(false);
     if (r.ok) {
       flash("+200 test USDC sent to your wallet.", "ok");
@@ -108,8 +127,13 @@ function TicketsPageInner() {
     }
     setBusy(true);
     try {
-      const prep = await postJson<any>("/api/tickets/prepare-buy", { tier, buyerAddress: address, fanId: fan.id });
-      if (!prep.ok) throw new Error((prep.data as any)?.error ?? "prepare_failed");
+      const prep = await postJson<any>("/api/tickets/prepare-buy", {
+        tier,
+        buyerAddress: address,
+        fanId: fan.id,
+      });
+      if (!prep.ok)
+        throw new Error((prep.data as any)?.error ?? "prepare_failed");
 
       if ((prep.data as any).mock) {
         const r = await postJson<any>("/api/tickets", {
@@ -130,7 +154,8 @@ function TicketsPageInner() {
       }
 
       const signed = await signWithFreighter((prep.data as any).xdr, address);
-      if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
+      if (signed.error || !signed.signedXdr)
+        throw new Error(signed.error ?? "You cancelled the signature.");
 
       const conf = await postJson<any>("/api/tickets/confirm-buy", {
         tier,
@@ -138,19 +163,31 @@ function TicketsPageInner() {
         signedXdr: signed.signedXdr,
         intentId: (prep.data as any).intentId,
       });
-      if (!conf.ok) throw new Error((conf.data as any)?.error ?? "confirm_failed");
+      if (!conf.ok)
+        throw new Error((conf.data as any)?.error ?? "confirm_failed");
 
       const newTicket = (conf.data as any)?.ticket;
       if (newTicket?.id) {
         setLastTicketId(newTicket.id);
         setAssigningTicket(newTicket);
       }
-      setLastTransaction({ paymentTx: (conf.data as any).paymentTx, mintTx: (conf.data as any).mintTx });
-      flash(`Paid ${(prep.data as any).priceUsdc} USDC on-chain — ticket minted! Please choose your seat.`, "ok");
+      setLastTransaction({
+        paymentTx: (conf.data as any).paymentTx,
+        mintTx: (conf.data as any).mintTx,
+      });
+      flash(
+        `Paid ${(prep.data as any).priceUsdc} USDC on-chain — ticket minted! Please choose your seat.`,
+        "ok",
+      );
       setReviewingPurchase(false);
     } catch (e: any) {
       const m = String(e?.message ?? "");
-      flash(m.includes("balance") || m.includes("trustline") ? "Not enough test USDC — click ‘Get test USDC’ first." : `Could not buy: ${m}`, "err");
+      flash(
+        m.includes("balance") || m.includes("trustline")
+          ? "Not enough test USDC — click ‘Get test USDC’ first."
+          : `Could not buy: ${m}`,
+        "err",
+      );
     } finally {
       setBusy(false);
       load();
@@ -163,21 +200,68 @@ function TicketsPageInner() {
 
   return (
     <div>
-      <TicketHero hasAddress={Boolean(address)} balance={balance} busy={busy} onGetTestUsdc={getTestUsdc} />
-      <TicketTierSelector tiers={TIERS} selectedTier={tier} onSelectTier={handleTierChange} />
-      <TicketCheckoutPanel busy={busy} fanConnected={Boolean(fan)} tier={tier} price={selectedTier.price} onBuy={() => setReviewingPurchase(true)} />
-      <TicketSuccessBanner ticketId={lastTicketId} onDismiss={() => setLastTicketId(null)} />
+      <TicketHero
+        hasAddress={Boolean(address)}
+        balance={balance}
+        busy={busy}
+        onGetTestUsdc={getTestUsdc}
+      />
+      <TicketTierSelector
+        tiers={TIERS}
+        selectedTier={tier}
+        onSelectTier={handleTierChange}
+      />
+      <TicketCheckoutPanel
+        busy={busy}
+        fanConnected={Boolean(fan)}
+        tier={tier}
+        price={selectedTier.price}
+        onBuy={() => setReviewingPurchase(true)}
+      />
+      <TicketSuccessBanner
+        ticketId={lastTicketId}
+        onDismiss={() => setLastTicketId(null)}
+      />
       {lastTransaction && (
         <div className="mb-6 rounded-2xl border border-emerald/30 bg-emerald/10 p-4 text-sm text-gold-soft">
-          <div className="font-semibold text-white">Confirmed on Stellar Testnet</div>
-          <p className="mt-1 text-gold-soft/65">Your payment and CrownFi ticket mint are separate on-chain transactions.</p>
+          <div className="font-semibold text-white">
+            Confirmed on Stellar Testnet
+          </div>
+          <p className="mt-1 text-gold-soft/65">
+            Your payment and CrownFi ticket mint are separate on-chain
+            transactions.
+          </p>
           <div className="mt-3 flex flex-wrap gap-3">
-            {testnetTransactionUrl(lastTransaction.paymentTx) && <a className="font-semibold text-gold underline underline-offset-2" href={testnetTransactionUrl(lastTransaction.paymentTx)!} target="_blank" rel="noopener noreferrer">View payment</a>}
-            {testnetTransactionUrl(lastTransaction.mintTx) && <a className="font-semibold text-gold underline underline-offset-2" href={testnetTransactionUrl(lastTransaction.mintTx)!} target="_blank" rel="noopener noreferrer">View ticket mint</a>}
+            {testnetTransactionUrl(lastTransaction.paymentTx) && (
+              <a
+                className="font-semibold text-gold underline underline-offset-2"
+                href={testnetTransactionUrl(lastTransaction.paymentTx)!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View payment
+              </a>
+            )}
+            {testnetTransactionUrl(lastTransaction.mintTx) && (
+              <a
+                className="font-semibold text-gold underline underline-offset-2"
+                href={testnetTransactionUrl(lastTransaction.mintTx)!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View ticket mint
+              </a>
+            )}
           </div>
         </div>
       )}
-      <TicketList tickets={mine} onChooseSeat={(ticket) => { setAssigningTicket(ticket); setChosenSeat(null); }} />
+      <TicketList
+        tickets={mine}
+        onChooseSeat={(ticket) => {
+          setAssigningTicket(ticket);
+          setChosenSeat(null);
+        }}
+      />
       <TicketDemoLinks />
       <ConfirmModal
         open={reviewingPurchase}
@@ -194,21 +278,44 @@ function TicketsPageInner() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <Badge tone="gold">{tier} tier</Badge>
-                <h3 className="mt-3 font-display text-2xl font-semibold text-white">Coronation Night 2026</h3>
-                <p className="mt-1 text-sm text-gold-soft/50">{selectedTier.perks}</p>
+                <h3 className="mt-3 font-display text-2xl font-semibold text-white">
+                  Coronation Night 2026
+                </h3>
+                <p className="mt-1 text-sm text-gold-soft/50">
+                  {selectedTier.perks}
+                </p>
               </div>
               <div className="text-right">
-                <div className="text-[11px] uppercase tracking-[0.16em] text-gold-soft/40">Total</div>
-                <div className="mt-1 font-display text-3xl font-semibold text-gold">{selectedTier.price} USDC</div>
+                <div className="text-[11px] uppercase tracking-[0.16em] text-gold-soft/40">
+                  Total
+                </div>
+                <div className="mt-1 font-display text-3xl font-semibold text-gold">
+                  {selectedTier.price} USDC
+                </div>
               </div>
             </div>
           </div>
           <dl className="space-y-2 rounded-2xl border border-line bg-black/25 p-4 text-sm">
-            <div className="flex justify-between gap-4"><dt className="text-gold-soft/45">Wallet</dt><dd className="mono text-xs text-gold-soft">{address ? short(address, 8) : "Not connected"}</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-gold-soft/45">Seat</dt><dd className="text-gold-soft">Selected after purchase</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-gold-soft/45">Network</dt><dd className="text-gold-soft">Stellar testnet or local demo</dd></div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-gold-soft/45">Wallet</dt>
+              <dd className="mono text-xs text-gold-soft">
+                {address ? short(address, 8) : "Not connected"}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-gold-soft/45">Seat</dt>
+              <dd className="text-gold-soft">Selected after purchase</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-gold-soft/45">Network</dt>
+              <dd className="text-gold-soft">Stellar testnet or local demo</dd>
+            </div>
           </dl>
-          {balance != null && balance < selectedTier.price && <p className="rounded-2xl border border-ruby/30 bg-ruby/10 px-4 py-3 text-sm text-ruby">Your test USDC balance may be too low for this tier.</p>}
+          {balance != null && balance < selectedTier.price && (
+            <p className="rounded-2xl border border-ruby/30 bg-ruby/10 px-4 py-3 text-sm text-ruby">
+              Your test USDC balance may be too low for this tier.
+            </p>
+          )}
         </div>
       </ConfirmModal>
 
@@ -227,7 +334,11 @@ function TicketsPageInner() {
 
 export default function TicketsPage() {
   return (
-    <Suspense fallback={<div className="text-center py-12 text-[#7a7768]">Loading tickets…</div>}>
+    <Suspense
+      fallback={
+        <div className="text-center py-12 text-[#7a7768]">Loading tickets…</div>
+      }
+    >
       <TicketsPageInner />
     </Suspense>
   );
