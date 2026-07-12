@@ -1,53 +1,55 @@
-name: Arcturus Deployment Pipeline
+name: Stellar Project v2 deployment
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+concurrency:
+  group: deploy-stellar-project
+  cancel-in-progress: false
 
 env:
-  APP_NAME: "stellar-project"
-  DOMAIN: "stellar-project.u128.org"
-  TARGET_URL: "http://web:3000"
-  TIER: "complex"
+  API_IMAGE: git.u128.org/mprojects/stellar-project/api
+  WEB_IMAGE: git.u128.org/mprojects/stellar-project/web
+  ARCTURUS_API_URL: http://100.108.225.27:9090
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 🛒 Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: 📦 Build and Push Images
+      - uses: actions/checkout@v4
+      - name: Validate deployment contract
+        run: ./scripts/arcturus-guard
+      - name: Test API
+        run: cargo test --manifest-path services/api/Cargo.toml --locked
+      - name: Test web
+        working-directory: web
         run: |
-          printf '%s' '${{ secrets.REGISTRY_TOKEN }}' | buildah login --username '${{ github.actor }}' --password-stdin git.u128.org
-          
-          # Build and push API
-          buildah bud --no-cache -f services/api/Dockerfile -t git.u128.org/mprojects/stellar-project/api:latest .
-          buildah push git.u128.org/mprojects/stellar-project/api:latest
-          
-          # Build and push Web
-          buildah bud --no-cache -f web/Dockerfile -t git.u128.org/mprojects/stellar-project/web:latest .
-          buildah push git.u128.org/mprojects/stellar-project/web:latest
-          
-          # Build and push DB-Init
-          cat <<EOF > web/Dockerfile.db-init
-          FROM git.u128.org/mprojects/stellar-project/web:latest
-          CMD ["sh", "-c", "npx prisma db push && npm run seed"]
-          EOF
-          buildah bud --no-cache -f web/Dockerfile.db-init -t git.u128.org/mprojects/stellar-project/db-init:latest .
-          buildah push git.u128.org/mprojects/stellar-project/db-init:latest
-
-      - name: 🚀 Dispatch Deploy
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx prisma generate
+          npm run check
+          npm run build
+      - name: Registry login
+        env:
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+        run: printf '%s' "$REGISTRY_TOKEN" | buildah login --username '${{ github.actor }}' --password-stdin git.u128.org
+      - name: Build and push immutable images
+        run: |
+          buildah bud --no-cache -f services/api/Dockerfile -t "$API_IMAGE:${{ github.sha }}" .
+          buildah push --digestfile api.digest "$API_IMAGE:${{ github.sha }}"
+          buildah bud --no-cache -f web/Dockerfile -t "$WEB_IMAGE:${{ github.sha }}" .
+          buildah push --digestfile web.digest "$WEB_IMAGE:${{ github.sha }}"
+      - name: Render release
+        run: node scripts/render-release.mjs arcturus.release.json '${{ github.sha }}' api.digest web.digest
+      - name: Deploy and require success
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
         run: |
           curl --fail-with-body --silent --show-error \
-            --connect-timeout 10 --max-time 600 \
-            -X POST http://arcturus-deploy:8080/deploy \
-            -H "Authorization: Bearer ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "stack": "${{ env.APP_NAME }}",
-              "action": "apply",
-              "domain": "${{ env.DOMAIN }}",
-              "deploy_trigger": "${{ github.sha }}"
-            }'
+            --connect-timeout 10 --max-time 900 \
+            --output deployment-response.json \
+            --request POST "$ARCTURUS_API_URL/v1/deployments" \
+            --header "Authorization: Bearer $DEPLOY_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data-binary @deployment-request.json
+          node scripts/verify-deployment.mjs deployment-response.json

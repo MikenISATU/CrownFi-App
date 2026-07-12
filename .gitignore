@@ -1,4 +1,11 @@
 node_modules
+.arcturus/build/
+image.digest
+api.digest
+web.digest
+release.json
+deployment-request.json
+deployment-response.json
 .next
 .env
 .env.local

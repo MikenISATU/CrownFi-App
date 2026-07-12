@@ -1,24 +1,41 @@
-name: Arcturus lifecycle
+name: Stellar Project lifecycle
 
 on:
   workflow_dispatch:
     inputs:
       operation:
-        description: "disable, enable, rollback, or remove"
+        description: "rollback, disable, enable, or remove"
         required: true
       confirm:
-        description: "Type the service name to confirm"
+        description: "Type stellar-project to confirm"
         required: true
+
+concurrency:
+  group: deploy-stellar-project
+  cancel-in-progress: false
 
 jobs:
   lifecycle:
     if: ${{ github.event.inputs.confirm == 'stellar-project' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Run lifecycle operation
+      - name: Validate operation
+        run: |
+          case '${{ github.event.inputs.operation }}' in
+            rollback|disable|enable|remove) ;;
+            *) echo 'unsupported lifecycle operation' >&2; exit 2 ;;
+          esac
+      - name: Apply lifecycle operation
         env:
-          ARCTURUS_API_URL: http://127.0.0.1:9090
-          ARCTURUS_BUNDLE: ${{ vars.ARCTURUS_BUNDLE }}
-          ARCTURUS_DEPLOY_TOKEN: ${{ secrets.ARCTURUS_DEPLOY_TOKEN }}
-        run: ./scripts/arcturus-service '${{ github.event.inputs.operation }}'
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
+          OPERATION: ${{ github.event.inputs.operation }}
+        run: |
+          method=POST
+          path="/v1/services/stellar-project/$OPERATION"
+          body='{}'
+          if [ "$OPERATION" = remove ]; then method=DELETE; path='/v1/services/stellar-project'; body=; fi
+          curl --fail-with-body --silent --show-error \
+            --request "$method" "http://100.108.225.27:9090$path" \
+            --header "Authorization: Bearer $DEPLOY_TOKEN" \
+            --header 'Content-Type: application/json' \
+            ${body:+--data "$body"}

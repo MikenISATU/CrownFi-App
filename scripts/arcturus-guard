@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail() { echo "Arcturus deployment contract: $*" >&2; exit 1; }
+test -f arcturus.release.json || fail "missing arcturus.release.json"
+python3 -m json.tool arcturus.release.json >/dev/null || fail "release manifest is invalid JSON"
+grep -q '"apiVersion": "arcturus.u128.org/v2"' arcturus.release.json || fail "manifest must use arcturus.u128.org/v2"
+python3 - <<'PY' || fail "release manifest routing contract is invalid"
+import json
+
+with open("arcturus.release.json", encoding="utf-8") as stream:
+    manifest = json.load(stream)
+
+components = manifest.get("spec", {}).get("components", {})
+for route_name, route in manifest.get("spec", {}).get("routing", {}).items():
+    component_name = route.get("component")
+    component = components.get(component_name)
+    if component is None:
+        raise SystemExit(f"route {route_name!r} references missing component {component_name!r}")
+    if "internal_routing" not in component.get("networks", []):
+        raise SystemExit(
+            f"route {route_name!r} component {component_name!r} must join internal_routing"
+        )
+    if not route.get("domains"):
+        raise SystemExit(f"route {route_name!r} requires at least one domain")
+    if not isinstance(route.get("port"), int):
+        raise SystemExit(f"route {route_name!r} requires an integer container port")
+PY
+workflow_files=()
+while IFS= read -r file; do workflow_files+=("$file"); done < <(find .gitea/workflows .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null | grep -E '/(deploy|deployment|lifecycle|destroy)\.(yml|yaml)$' | sort)
+if ((${#workflow_files[@]})); then
+  if grep -nEi '(:latest|/deploy["'\''[:space:]]|docker[[:space:]]+compose|podman[[:space:]]+compose|watchtower|terraform[[:space:]]+(apply|destroy))' "${workflow_files[@]}"; then
+    fail "legacy, mutable, or competing production deployment ownership found in a workflow"
+  fi
+  grep -qE '(render-release|/v1/deployments)' "${workflow_files[@]}" || fail "CI does not invoke the v2 deployment path"
+fi
+terraform_files=()
+while IFS= read -r file; do terraform_files+=("$file"); done < <(find terraform -type f -name '*.tf' -not -path '*/.terraform/*' 2>/dev/null | sort)
+if ((${#terraform_files[@]})) && grep -nE '(null_resource|local_file|arcturus_deploy|docker compose|podman compose)' "${terraform_files[@]}"; then
+  fail "Terraform application-release orchestration is forbidden"
+fi
+echo "Arcturus deployment contract passed."
