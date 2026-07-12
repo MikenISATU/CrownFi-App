@@ -285,12 +285,8 @@ export default function Home() {
                   Network
                 </div>
                 <div className="text-xs font-semibold text-ink dark:text-white mt-0.5 flex items-center gap-1">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${activeDelegate?.sash.toUpperCase() === "PH" ? "bg-emerald" : "bg-blue-400"}`}
-                  ></span>
-                  {activeDelegate?.sash.toUpperCase() === "PH"
-                    ? "Stellar Public"
-                    : "Stellar Testnet"}
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  {process.env.NEXT_PUBLIC_STELLAR_NETWORK && (process.env.NEXT_PUBLIC_STELLAR_NETWORK.toLowerCase() === 'public' || process.env.NEXT_PUBLIC_STELLAR_NETWORK.toLowerCase() === 'mainnet') ? 'Stellar Public' : 'Stellar Testnet'}
                 </div>
               </div>
               <div>
@@ -298,10 +294,7 @@ export default function Home() {
                   Price
                 </div>
                 <div className="text-xs font-semibold text-ink dark:text-white mt-0.5">
-                  {activeDelegate
-                    ? (activeDelegate.name.length * 8.5).toFixed(2)
-                    : "10.00"}{" "}
-                  XLM
+                  25 USDC / 250 XLM
                 </div>
               </div>
             </div>
@@ -321,10 +314,8 @@ export default function Home() {
                 height={`5'${(activeDelegate.name.length % 12) + 2}"`}
                 edition={`EDITION 1 of ${activeDelegate.name.length * 10}`}
                 id={`ID:${activeDelegate.id.toUpperCase()}`}
-                imageUrl={getPortraitPath(activeDelegate.sash, activeCategory)}
-                onMint={() =>
-                  (window.location.href = `/vote?candidate=${activeDelegate.id}`)
-                }
+                imageUrl={activeDelegate.portraitUrl || getPortraitPath(activeDelegate.sash, activeCategory)}
+                onMint={() => window.location.href = `/vote?candidate=${activeDelegate.id}`}
               />
             )}
           </div>
