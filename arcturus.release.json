@@ -35,7 +35,7 @@
         }
       },
       "api": {
-        "image": "git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint/api@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "image": "git.opossum-arcturus.ts.net/MProjects/Stellar-Project/api@sha256:0000000000000000000000000000000000000000000000000000000000000000",
         "containerName": "stellar-project-api",
         "mode": "service",
         "networks": ["internal_routing"],
@@ -55,7 +55,7 @@
         }
       },
       "db-init": {
-        "image": "git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint/db-init@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "image": "git.opossum-arcturus.ts.net/MProjects/Stellar-Project/db-init@sha256:0000000000000000000000000000000000000000000000000000000000000000",
         "containerName": "stellar-project-db-init",
         "mode": "oneshot",
         "networks": ["internal_routing"],
@@ -67,7 +67,7 @@
         ]
       },
       "web": {
-        "image": "git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint/web@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "image": "git.opossum-arcturus.ts.net/MProjects/Stellar-Project/web@sha256:0000000000000000000000000000000000000000000000000000000000000000",
         "containerName": "stellar-project-web",
         "mode": "service",
         "networks": ["internal_routing"],

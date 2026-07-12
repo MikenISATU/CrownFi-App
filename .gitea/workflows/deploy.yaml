@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  IMAGE_REPOSITORY: git.opossum-arcturus.ts.net/u128/arcturus-service-blueprint
+  IMAGE_REPOSITORY: git.opossum-arcturus.ts.net/MProjects/Stellar-Project
   ARCTURUS_API_URL: http://127.0.0.1:9090
   ARCTURUS_BUNDLE: ${{ vars.ARCTURUS_BUNDLE }}
 
