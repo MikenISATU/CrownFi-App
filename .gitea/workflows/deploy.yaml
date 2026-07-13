@@ -5,46 +5,21 @@ on:
     branches: [main]
 
 concurrency:
-  group: deploy-stellar-project
+  group: arcturus-stellar-project
   cancel-in-progress: false
 
 env:
-  API_IMAGE: git.u128.org/mprojects/stellar-project/api
-  WEB_IMAGE: git.u128.org/mprojects/stellar-project/web
-  ARCTURUS_API_URL: http://100.108.225.27:9090
+  ARCTURUS_REGISTRY_HOST: git.u128.org
+  ARCTURUS_BUNDLE: ${{ vars.ARCTURUS_BUNDLE }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate deployment contract
-        run: ./scripts/arcturus-guard
-      - name: Test API
-        run: buildah bud --target test --tag localhost/stellar-api-test:${{ github.sha }} -f services/api/Dockerfile .
-      - name: Test web
-        run: buildah bud --target builder --tag localhost/stellar-web-test:${{ github.sha }} -f web/Dockerfile .
-      - name: Registry login
+      - name: Build, deploy, and verify immutable release
         env:
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
-        run: printf '%s' "$REGISTRY_TOKEN" | buildah login --username '${{ github.actor }}' --password-stdin git.u128.org
-      - name: Build and push immutable images
-        run: |
-          buildah bud -f services/api/Dockerfile -t "$API_IMAGE:${{ github.sha }}" .
-          buildah push --digestfile api.digest "$API_IMAGE:${{ github.sha }}"
-          buildah bud -f web/Dockerfile -t "$WEB_IMAGE:${{ github.sha }}" .
-          buildah push --digestfile web.digest "$WEB_IMAGE:${{ github.sha }}"
-      - name: Render release
-        run: node scripts/render-release.mjs arcturus.release.json '${{ github.sha }}' api.digest web.digest
-      - name: Deploy and require success
-        env:
-          DEPLOY_TOKEN: ${{ secrets.ARCTURUS_DEPLOY_TOKEN }}
-        run: |
-          curl --fail-with-body --silent --show-error \
-            --connect-timeout 10 --max-time 900 \
-            --output deployment-response.json \
-            --request POST "$ARCTURUS_API_URL/v1/deployments" \
-            --header "Authorization: Bearer $DEPLOY_TOKEN" \
-            --header 'Content-Type: application/json' \
-            --data-binary @deployment-request.json
-          node scripts/verify-deployment.mjs deployment-response.json
+          ARCTURUS_DEPLOY_TOKEN: ${{ secrets.ARCTURUS_DEPLOY_TOKEN }}
+        run: ./scripts/arcturus-ci '${{ github.sha }}'

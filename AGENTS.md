@@ -1,13 +1,13 @@
 # Deployment contract for automation and LLM agents
 
-Production deployment for this repository has exactly one supported path:
+Production deployment for this repository has exactly one supported path. Read project-owned `.arcturus/project.json` and the sole release manifest `arcturus.release.json` first:
 
-1. Test the Rust API and Next.js web application.
-2. Build `api` and `web` with the full Git commit as their temporary tag.
+1. Run `scripts/arcturus-guard`, then the generic `scripts/arcturus-ci <full-commit>` driver.
+2. In isolated job-local Buildah storage, build the API `test` and web `builder` validation targets before the corresponding `runtime` targets.
 3. Push them and capture registry-provided `sha256` digests.
 4. Render `arcturus.release.json`; `db-init` uses the exact same web digest.
-5. Submit `deployment-request.json` to `POST /v1/deployments` and require HTTP success **and** JSON `status: succeeded`.
-6. Verify `arcturus-stellar-project.target`, component health, the active manifest, generated nginx route, and `https://stellar-project.u128.org`.
+5. Deploy only through `arcturusctl project deploy`; never use direct bearer-token curl.
+6. Verify the active commit, exact images, component health, and the published router receipt for `stellar-project-web:3000`. Public verification expects the configured Cloudflare challenge.
 
 Never do any of the following for production:
 
@@ -16,6 +16,7 @@ Never do any of the following for production:
 - Do not create a second deployment architecture or manually replace containers.
 - Do not write nginx configuration directly. Routing comes from `spec.routing` in the active v2 release.
 - Do not put secret values in Git, workflows, manifests, command arguments, or logs.
+- Do not use `DEPLOY_WEBHOOK_SECRET`, `REGISTRY_PASSWORD`, embedded Git credentials, or shared/global Buildah pruning.
 - Do not allow Compose/Watchtower and Quadlet to own the production service simultaneously.
 
 Every component referenced by `spec.routing` must join `internal_routing`; the
@@ -24,4 +25,4 @@ the active manifest to be published and the generated portal vhost to appear.
 
 `compose.yaml` and `infra/docker-compose.yml` are local/emergency compatibility files only. Terraform may manage long-lived infrastructure but never an application release. Existing database data is the external Podman volume `crownfi-platform_crownfi_postgres`; deployment and rollback must never delete it.
 
-If deployment fails, inspect the API response and systemd journals. Do not fall back to the legacy path. Fix the v2 manifest or image and redeploy.
+Use `scripts/arcturus-lifecycle` for status/rollback/enable/disable/remove and manually dispatch the acceptance workflow for the expected-502 rollback probe. CI has no backup or reboot authority. If deployment fails, inspect the API response, route receipt, and systemd journals. Do not fall back to the legacy path.
