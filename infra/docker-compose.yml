@@ -24,6 +24,7 @@ services:
       retries: 10
 
   api:
+    image: git.u128.org/mprojects/stellar-project/api:latest
     build:
       context: ..
       dockerfile: services/api/Dockerfile
@@ -48,6 +49,7 @@ services:
         condition: service_healthy
 
   db-init:
+    image: git.u128.org/mprojects/stellar-project/db-init:latest
     build:
       context: ..
       dockerfile: web/Dockerfile
@@ -60,6 +62,7 @@ services:
         condition: service_healthy
 
   web:
+    image: git.u128.org/mprojects/stellar-project/web:latest
     build:
       context: ..
       dockerfile: web/Dockerfile

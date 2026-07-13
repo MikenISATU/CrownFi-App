@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+fail() { echo "Arcturus deployment contract: $*" >&2; exit 1; }
+test -f arcturus.release.json || fail "missing arcturus.release.json"
+test -f .arcturus/project.json || fail "missing .arcturus/project.json"
+if command -v python3 >/dev/null 2>&1; then
+python3 - <<'PY' || exit 1
+import json
+
+manifest = json.load(open("arcturus.release.json"))
+project = json.load(open(".arcturus/project.json"))
+if manifest.get("apiVersion") != "arcturus.u128.org/v2": raise SystemExit("invalid release schema")
+if project.get("apiVersion") != "arcturus.u128.org/project/v1": raise SystemExit("invalid project schema")
+if project.get("service") != manifest.get("metadata", {}).get("name"): raise SystemExit("service mismatch")
+if project.get("ci", {}).get("storage") != "isolated": raise SystemExit("CI storage must be isolated")
+components = manifest.get("spec", {}).get("components", {})
+mapped = {}
+for build_name, build in project.get("builds", {}).items():
+    if not build.get("validationTargets"): raise SystemExit(f"{build_name} has no validation target")
+    for component_name in build.get("components", []):
+        if component_name in mapped: raise SystemExit(f"duplicate component mapping: {component_name}")
+        if component_name not in components: raise SystemExit(f"unknown component mapping: {component_name}")
+        if components[component_name]["image"].split("@", 1)[0] != build.get("repository"):
+            raise SystemExit(f"repository mismatch: {component_name}")
+        mapped[component_name] = build_name
+fixed = set(project.get("fixedComponents", []))
+if set(components) != set(mapped) | fixed or set(mapped) & fixed:
+    raise SystemExit("every component must map once to a build or fixed image")
+for name in fixed:
+    image = components[name].get("image", "")
+    if "@sha256:" not in image or image.endswith("0" * 64): raise SystemExit(f"invalid fixed image: {name}")
+for name, component in components.items():
+    for dependency in component.get("dependsOn", []):
+        if dependency not in components: raise SystemExit(f"missing dependency: {name}/{dependency}")
+    for key in component.get("environment", {}):
+        if any(word in key.lower() for word in ("secret", "token", "password", "credential", "private_key")):
+            raise SystemExit(f"secret-like environment field must be a secret reference: {key}")
+for route_name, route in manifest.get("spec", {}).get("routing", {}).items():
+    component = components.get(route.get("component"), {})
+    if "internal_routing" not in component.get("networks", []): raise SystemExit(f"route lacks internal_routing: {route_name}")
+    if not route.get("domains") or not isinstance(route.get("port"), int): raise SystemExit(f"invalid route: {route_name}")
+PY
+else
+  [[ "${ARCTURUS_PROJECT_VALIDATED:-}" == 1 ]] || fail "use prior pinned-bundle project validation on a minimal runner"
+fi
+workflow_files=()
+while IFS= read -r file; do workflow_files+=("$file"); done < <(find .gitea/workflows .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null | sort)
+if ((${#workflow_files[@]})); then
+  if grep -nEi '(:latest|/deploy["'\''[:space:]]|docker[[:space:]]+compose|podman[[:space:]]+compose|watchtower|terraform[[:space:]]+(apply|destroy)|DEPLOY_WEBHOOK_SECRET|REGISTRY_PASSWORD|authorization:[[:space:]]*bearer|curl[^#]*(/v1/deployments|/v1/services))' "${workflow_files[@]}"; then
+    fail "legacy, mutable, direct-curl, or competing ownership found"
+  fi
+  grep -qE '(arcturus-ci|project deploy)' "${workflow_files[@]}" || fail "workflow does not use the generic driver"
+fi
+if [[ -f .git/config ]] && grep -qE 'url = https?://[^/@[:space:]]+:[^/@[:space:]]+@' .git/config; then fail "Git remote embeds credentials"; fi
+echo "Arcturus deployment contract passed."

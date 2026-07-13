@@ -4,6 +4,10 @@ CrownFi is a hackathon/testnet MVP for pageant voting, ticketing, fan rewards, c
 
 > **Status:** hackathon MVP. This repository is suitable for demos, review, and iteration. It is **not** production-ready voting infrastructure, mainnet financial infrastructure, or a replacement for legal tabulation/compliance systems.
 
+> **Deployment:** the hosted demo is released only through the digest-pinned
+> Arcturus v2 manifest. Automation and LLM agents must follow `AGENTS.md`;
+> Compose and Terraform do not own the hosted application lifecycle.
+
 ## Mainline architecture
 
 The current mainline branch is intentionally simple so the team can demo it quickly:

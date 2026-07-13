@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+token_file="${ARCTURUS_TOKEN_FILE:?ARCTURUS_TOKEN_FILE is required}"
+./scripts/arcturus-tool project verify .arcturus/project.json --release release.json --token-file "$token_file"
+./scripts/arcturus-tool project rollback-probe .arcturus/project.json --request deployment-request.json --token-file "$token_file"
+./scripts/arcturus-tool project verify .arcturus/project.json --release release.json --token-file "$token_file"

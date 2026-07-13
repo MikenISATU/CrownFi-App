@@ -1,0 +1,24 @@
+name: Stellar Project rollback acceptance
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: arcturus-stellar-project
+  cancel-in-progress: false
+
+env:
+  ARCTURUS_REGISTRY_HOST: git.u128.org
+  ARCTURUS_BUNDLE: ${{ vars.ARCTURUS_BUNDLE }}
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build current release and prove automatic rollback
+        env:
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          ARCTURUS_DEPLOY_TOKEN: ${{ secrets.ARCTURUS_DEPLOY_TOKEN }}
+        run: ./scripts/arcturus-ci '${{ github.sha }}' --acceptance

@@ -1,4 +1,12 @@
 node_modules
+.arcturus/build/
+.arcturus/updates/
+image.digest
+api.digest
+web.digest
+release.json
+deployment-request.json
+deployment-response.json
 .next
 .env
 .env.local
@@ -13,3 +21,15 @@ prisma/migrations/dev.db*
 # local AI/editor/build artifacts
 .claude/settings.local.json
 web/tsconfig.tsbuildinfo
+
+# BEGIN ARCTURUS GENERATED
+.arcturus/build/
+.arcturus/updates/
+image.digest
+release.json
+deployment-request.json
+deployment-response.json
+.env
+.env.*
+!.env.example
+# END ARCTURUS GENERATED
