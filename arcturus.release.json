@@ -53,7 +53,7 @@
           "STELLAR_MODE": "mock",
           "REDIS_URL": "redis://stellar-project-redis:6379"
         },
-        "secrets": [{"name": "stellar-database-url", "type": "env", "target": "DATABASE_URL"}],
+        "secrets": [{"name": "stellar-database-url-20260712", "type": "env", "target": "DATABASE_URL"}],
         "dependsOn": ["postgres", "redis"],
         "networks": ["app"],
         "restart": "always"
@@ -64,8 +64,8 @@
         "mode": "oneshot",
         "command": ["sh", "-c", "npx prisma db push && npm run seed"],
         "secrets": [
-          {"name": "stellar-database-url", "type": "env", "target": "DATABASE_URL"},
-          {"name": "stellar-database-url", "type": "env", "target": "DIRECT_URL"}
+          {"name": "stellar-database-url-20260712", "type": "env", "target": "DATABASE_URL"},
+          {"name": "stellar-database-url-20260712", "type": "env", "target": "DIRECT_URL"}
         ],
         "dependsOn": ["postgres"],
         "networks": ["app"],
@@ -84,9 +84,9 @@
           "NEXT_PUBLIC_ADMIN_WALLETS": ""
         },
         "secrets": [
-          {"name": "stellar-database-url", "type": "env", "target": "DATABASE_URL"},
-          {"name": "stellar-database-url", "type": "env", "target": "DIRECT_URL"},
-          {"name": "stellar-admin-session-secret", "type": "env", "target": "ADMIN_SESSION_SECRET"}
+          {"name": "stellar-database-url-20260712", "type": "env", "target": "DATABASE_URL"},
+          {"name": "stellar-database-url-20260712", "type": "env", "target": "DIRECT_URL"},
+          {"name": "stellar-admin-session-20260712", "type": "env", "target": "ADMIN_SESSION_SECRET"}
         ],
         "dependsOn": ["api", "db-init"],
         "networks": ["app", "internal_routing"],
