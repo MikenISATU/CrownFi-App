@@ -14,7 +14,7 @@
           "POSTGRES_DB": "crownfi",
           "POSTGRES_USER": "crownfi"
         },
-        "secrets": [{"name": "stellar-postgres-password", "type": "env", "target": "POSTGRES_PASSWORD"}],
+        "secrets": [{"name": "stellar-postgres-password-20260713", "type": "env", "target": "POSTGRES_PASSWORD"}],
         "volumes": [{
           "source": "crownfi-platform_crownfi_postgres",
           "target": "/var/lib/postgresql/data",
