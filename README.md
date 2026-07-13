@@ -4,6 +4,26 @@ CrownFi is a hackathon/testnet MVP for pageant voting, ticketing, fan rewards, c
 
 > **Status:** hackathon MVP. This repository is suitable for demos, review, and iteration. It is **not** production-ready voting infrastructure, mainnet financial infrastructure, or a replacement for legal tabulation/compliance systems.
 
+## What's new on this branch (`finale-platform`)
+
+Beyond the mainline voting/ticketing/collectibles, this build adds:
+
+- **Prediction markets** — Polymarket-style pooled markets on pageant outcomes (or any topic via a "General" category). Any connected user *or* admin can create a market with per-outcome inputs; fans stake USDC, **cancel positions** before close, and **claim** a pro-rata share of the pool. A **2% fee on winnings only** goes to a treasury. Includes a live **odds-over-time chart** and a **tabular outcomes** view (Chance / Pool / To-win).
+- **Reusable pageant NFT contract (`pageant-nft`)** — one instance per pageant, **per-candidate IPFS metadata** (Pinata), effectively unlimited supply, **one mint per wallet**, and **admin-signed minting** so buyers sign only the payment. In-app **NFT gallery** on `/me` (token id + art + explorer link).
+- **Per-category voting** — each pageant stage (Top 20 Swimsuit, Top 10 Long Gown, Top 5 Q&A, Overall Winner) is its **own round with its own tally**, with optional per-category candidate photos (`web/public/candidates/<stage>/`).
+- **UX** — Light/Night mode, mobile burger nav, sticky market filters, browser-side image auto-optimization, and a **Privy (email/Google) Web2 login** path alongside Freighter.
+- **Payments admin** — master enable/disable, **maintenance mode**, and a scaffolded **GCash (via PayMongo)** checkout path (disabled until keys are set).
+
+### Deployed testnet contracts (2026-07)
+
+| Contract | ID |
+|---|---|
+| Prediction market | `CCYBJ3RO45I6IWMJ7YE4PNXPJ4TD64U4EWQD6PPWJ76RO7NKUTXPQGIW` |
+| Pageant NFT | `CCONZKTIQHR5UE4AKROICICZ2JSWDAXYBNYDCKDIMRFSIK37PND5PMQW` |
+| Prediction treasury (fee sink) | `GC3PXGAWQWHHV6M6AKR3LSZZ7RNYZXASGNJM7BSU3EMWI5KG2R5QSIY3` |
+
+Runbooks: [`contracts/DeploySC.md`](contracts/DeploySC.md) (deploy/init), [`docs/setup/deploy-nft-5-contestants.md`](docs/setup/deploy-nft-5-contestants.md) (Pinata + NFT), and the GCash steps in the PR description.
+
 ## Mainline architecture
 
 The current mainline branch is intentionally simple so the team can demo it quickly:
@@ -174,8 +194,13 @@ When using `STELLAR_MODE=live`, set deployed Soroban contract IDs:
 | `COLLECTIBLE_CONTRACT_ID` | Collectible contract |
 | `SALE_SPLITTER_CONTRACT_ID` | Listing/payment split contract |
 | `USDC_TEST_CONTRACT_ID` | Demo/test USDC contract |
+| `PAGEANT_NFT_CONTRACT_ID` | Reusable per-candidate NFT contract (`pageant-nft`) |
+| `PREDICTION_MARKET_CONTRACT_ID` | Prediction-market escrow/settlement contract |
+| `PREDICTION_MARKET_TREASURY` | Wallet that receives the 2% market fee |
 | `STELLAR_PLATFORM_SECRET` | Server-only platform signing key for platform-authorized operations |
 | `DEMO_CONTESTANT_PAYOUT` | Demo payout wallet used by listing registration scripts |
+
+Optional (fiat): `PAYMONGO_SECRET_KEY`, `PAYMONGO_PUBLIC_KEY`, `PAYMONGO_WEBHOOK_SECRET`, `PHP_PER_USD` enable the GCash checkout. Leave blank to keep it disabled.
 
 Do not commit `.env`, private keys, seed phrases, database passwords, Supabase service-role keys, or Stellar secret keys.
 
