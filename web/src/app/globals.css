@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CrownFi light theme: white background, gold accent (matches the deck). */
+:root { color-scheme: light; }
+
+body {
+  color: #23252f;
+  font-family: "Times New Roman", Times, Georgia, serif;
+  background:
+    radial-gradient(1100px 520px at 50% -12%, rgba(201,162,39,0.10), transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #faf7ef 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Elegant display hierarchy for a serif face: a touch of tracking + tight leading. */
+.font-display { letter-spacing: -0.01em; }
+
+@layer components {
+  /* Was frosted-glass-on-dark. Now a clean white card with a soft warm shadow. */
+  .glass { @apply rounded-2xl border border-[#e7e2d3] bg-white shadow-[0_12px_34px_-20px_rgba(120,100,40,0.28)]; }
+  .glass-hover { @apply transition hover:border-[#d8b24a] hover:shadow-[0_18px_44px_-22px_rgba(184,145,47,0.38)]; }
+  /* Golden CTA — gold gradient with white serif text (the signature button). */
+  .btn-gold { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#e6c65a] via-[#d4af37] to-[#b8912f] px-6 py-2.5 text-sm font-semibold tracking-wide text-white shadow-gold ring-1 ring-[#a97f16]/50 transition hover:brightness-[1.06] active:brightness-95 disabled:pointer-events-none disabled:opacity-40; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9d3c3] bg-white/60 px-5 py-2.5 text-sm font-medium tracking-wide text-[#3a3f52] transition hover:border-[#c9a227] hover:bg-[#faf6ea] disabled:opacity-40; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full border border-[#e7e2d3] bg-[#faf7ef] px-2.5 py-1 text-xs text-[#5f6172]; }
+  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a97f16]; }
+  .field { @apply w-full rounded-xl border border-[#dcd6c6] bg-white px-3 py-2.5 text-sm text-[#23252f] placeholder-[#9a968b] outline-none transition focus:border-[#c9a227] focus:ring-2 focus:ring-[#e6cf8f]; }
+  .tag-on { @apply inline-flex items-center gap-1 rounded-full bg-[#e1f5ee] px-2 py-0.5 text-[11px] font-semibold text-[#0f6e56]; }
+  .tag-off { @apply inline-flex items-center gap-1 rounded-full bg-[#f1eee4] px-2 py-0.5 text-[11px] font-semibold text-[#6b6552]; }
+  .surface-soft { @apply bg-[#faf7ef]; }
+}
+
+.mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+*:focus-visible { outline: 2px solid #c9a227; outline-offset: 2px; border-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   NIGHT MODE — activated by `html.dark` (set by the theme toggle). The app uses
+   hardcoded light colors inline, so we remap the handful of most-common tokens
+   here to keep gold + readable (white) text on a deep background.
+   ─────────────────────────────────────────────────────────────────────────── */
+html.dark { color-scheme: dark; }
+html.dark body {
+  color: #ece7db;
+  background:
+    radial-gradient(1100px 520px at 50% -12%, rgba(212,175,55,0.16), transparent 60%),
+    linear-gradient(180deg, #16171d 0%, #0f1015 100%);
+}
+
+/* Component classes — !important to beat the @apply-generated bg-white/border inside them. */
+html.dark .glass { background: #1c1e26 !important; border-color: #31333d !important; box-shadow: 0 14px 36px -22px rgba(0,0,0,0.65); }
+html.dark .glass-hover:hover { border-color: #6a5a26 !important; box-shadow: 0 20px 46px -22px rgba(0,0,0,0.75); }
+html.dark .btn-ghost { background: #1c1e26 !important; border-color: #3a3c46 !important; color: #ded9cc !important; }
+html.dark .btn-ghost:hover { background: #23252f !important; border-color: #c9a227 !important; }
+html.dark .field { background: #191b22 !important; border-color: #3a3c46 !important; color: #ece7db !important; }
+html.dark .field::placeholder { color: #6f6b60 !important; }
+html.dark .chip { background: #1c1e26 !important; border-color: #3a3c46 !important; color: #c8c2b4 !important; }
+html.dark .surface-soft { background: #191b22 !important; }
+html.dark .tag-off { background: #23252f !important; color: #b9b3a5 !important; }
+
+/* Most-common inline text tokens → light (gold #a97f16/#b8912f stays gold, readable on dark) */
+html.dark .text-\[\#23252f\] { color: #ece7db !important; }
+html.dark .text-\[\#3a3f52\] { color: #d3cdbf !important; }
+html.dark .text-\[\#5f6172\] { color: #aca795 !important; }
+html.dark .text-\[\#7a7768\] { color: #9f998b !important; }
+html.dark .text-\[\#9a968b\] { color: #857f73 !important; }
+
+/* Surfaces */
+html.dark .bg-white { background-color: #1c1e26 !important; }
+html.dark .bg-white\/90 { background-color: rgba(20,21,26,0.90) !important; }
+html.dark .bg-white\/85 { background-color: rgba(28,30,38,0.85) !important; }
+html.dark .bg-white\/80 { background-color: rgba(28,30,38,0.82) !important; }
+html.dark .bg-white\/70 { background-color: rgba(28,30,38,0.70) !important; }
+html.dark .bg-white\/60 { background-color: rgba(28,30,38,0.60) !important; }
+html.dark .bg-\[\#faf7ef\] { background-color: #191b22 !important; }
+html.dark .bg-\[\#faf6ea\] { background-color: #23252f !important; }
+html.dark .bg-\[\#efe9d8\] { background-color: #2c2e38 !important; }
+html.dark .bg-\[\#fbf9f2\]\/85 { background-color: rgba(24,26,32,0.85) !important; }
+html.dark .bg-\[\#faf7ef\]\/80, html.dark .bg-\[\#faf7ef\]\/70 { background-color: rgba(25,27,34,0.8) !important; }
+
+/* Borders */
+html.dark .border-\[\#eee6d3\] { border-color: #2f313b !important; }
+html.dark .border-\[\#e7e2d3\] { border-color: #33353f !important; }
+html.dark .border-\[\#efe4c2\] { border-color: #3a3524 !important; }
+html.dark .border-\[\#dcd6c6\] { border-color: #3a3c46 !important; }
+html.dark .border-\[\#e7d9a8\] { border-color: #4a4126 !important; }
+
+/* Hero band uses an inline light gradient — repaint it for dark. */
+html.dark .hero-band { background: radial-gradient(120% 90% at 50% -10%, #23241d 0%, #17181e 45%, #121319 100%) !important; }
