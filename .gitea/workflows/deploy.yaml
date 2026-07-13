@@ -21,23 +21,18 @@ jobs:
       - name: Validate deployment contract
         run: ./scripts/arcturus-guard
       - name: Test API
-        run: cargo test --manifest-path services/api/Cargo.toml --locked
+        run: buildah bud --target test --tag localhost/stellar-api-test:${{ github.sha }} -f services/api/Dockerfile .
       - name: Test web
-        working-directory: web
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          npx prisma generate
-          npm run check
-          npm run build
+        run: buildah bud --target builder --tag localhost/stellar-web-test:${{ github.sha }} -f web/Dockerfile .
       - name: Registry login
         env:
           REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
         run: printf '%s' "$REGISTRY_TOKEN" | buildah login --username '${{ github.actor }}' --password-stdin git.u128.org
       - name: Build and push immutable images
         run: |
-          buildah bud --no-cache -f services/api/Dockerfile -t "$API_IMAGE:${{ github.sha }}" .
+          buildah bud -f services/api/Dockerfile -t "$API_IMAGE:${{ github.sha }}" .
           buildah push --digestfile api.digest "$API_IMAGE:${{ github.sha }}"
-          buildah bud --no-cache -f web/Dockerfile -t "$WEB_IMAGE:${{ github.sha }}" .
+          buildah bud -f web/Dockerfile -t "$WEB_IMAGE:${{ github.sha }}" .
           buildah push --digestfile web.digest "$WEB_IMAGE:${{ github.sha }}"
       - name: Render release
         run: node scripts/render-release.mjs arcturus.release.json '${{ github.sha }}' api.digest web.digest
