@@ -3,9 +3,9 @@ set -euo pipefail
 
 fail() { echo "Arcturus deployment contract: $*" >&2; exit 1; }
 test -f arcturus.release.json || fail "missing arcturus.release.json"
-python3 -m json.tool arcturus.release.json >/dev/null || fail "release manifest is invalid JSON"
 grep -q '"apiVersion": "arcturus.u128.org/v2"' arcturus.release.json || fail "manifest must use arcturus.u128.org/v2"
-python3 - <<'PY' || fail "release manifest routing contract is invalid"
+if command -v python3 >/dev/null 2>&1; then
+  python3 - <<'PY' || fail "release manifest routing contract is invalid"
 import json
 
 with open("arcturus.release.json", encoding="utf-8") as stream:
@@ -26,6 +26,33 @@ for route_name, route in manifest.get("spec", {}).get("routing", {}).items():
     if not isinstance(route.get("port"), int):
         raise SystemExit(f"route {route_name!r} requires an integer container port")
 PY
+elif command -v node >/dev/null 2>&1; then
+  node <<'JS' || fail "release manifest routing contract is invalid"
+const fs = require("node:fs");
+const manifest = JSON.parse(fs.readFileSync("arcturus.release.json", "utf8"));
+const components = manifest.spec?.components ?? {};
+for (const [routeName, route] of Object.entries(manifest.spec?.routing ?? {})) {
+  const component = components[route.component];
+  if (!component) throw new Error(`route ${routeName} references a missing component`);
+  if (!(component.networks ?? []).includes("internal_routing")) {
+    throw new Error(`route ${routeName} component must join internal_routing`);
+  }
+  if (!Array.isArray(route.domains) || route.domains.length === 0) {
+    throw new Error(`route ${routeName} requires at least one domain`);
+  }
+  if (!Number.isInteger(route.port)) throw new Error(`route ${routeName} requires an integer port`);
+}
+JS
+elif command -v jq >/dev/null 2>&1; then
+  jq -e '. as $m | [(.spec.routing // {} | to_entries[]) | select(
+    (.value.component as $c | $m.spec.components[$c] == null) or
+    (.value.component as $c | (($m.spec.components[$c].networks // []) | index("internal_routing")) == null) or
+    ((.value.domains // []) | length == 0) or
+    (.value.port | type != "number" or floor != .)
+  )] | length == 0' arcturus.release.json >/dev/null || fail "release manifest routing contract is invalid"
+else
+  fail "manifest validation requires python3, node, or jq"
+fi
 workflow_files=()
 while IFS= read -r file; do workflow_files+=("$file"); done < <(find .gitea/workflows .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null | grep -E '/(deploy|deployment|lifecycle|destroy)\.(yml|yaml)$' | sort)
 if ((${#workflow_files[@]})); then
