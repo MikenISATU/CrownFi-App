@@ -376,6 +376,15 @@ model KycLog {
 // PHASE 4 — Prediction markets (mirror of on-chain state so users browse w/o a wallet).
 // Settlement lives in the prediction-market Soroban contract; this is the app's view + intake.
 // ─────────────────────────────────────────────────────────────────────────────
+// Uploaded images (market banners, candidate photos). Stored in Postgres and served via
+// /api/images/[id] — the filesystem is read-only on serverless, so disk writes are not an option.
+model StoredImage {
+  id        String   @id @default(cuid())
+  mime      String
+  bytes     Bytes
+  createdAt DateTime @default(now())
+}
+
 model PredictionMarket {
   id            String   @id @default(cuid())
   pageantId     String? // optional link to a Pageant

@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { randomBytes } from "crypto";
+import sharp from "sharp";
 import { db } from "@/lib/db";
 import { readFanSession } from "@/lib/fanAuth";
-import { isEditableByOrganizer, slugify } from "@/lib/pageant";
-import { folderForKind, assetPath, CANDIDATE_ASSET_KINDS } from "@/lib/assets";
+import { isEditableByOrganizer } from "@/lib/pageant";
+import { CANDIDATE_ASSET_KINDS } from "@/lib/assets";
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 const ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+const MAX_DIM = 1600;
 
-// POST (multipart) — upload a candidate image of a given kind into the pageant asset folder.
-// Dev writes to web/public/assets/... (served statically). Prod: swap for Supabase Storage / Pinata.
+// POST (multipart) — upload a candidate image of a given kind. Stored in Postgres and served
+// from /api/images/[id] (disk writes don't survive on serverless — same fix as /api/upload).
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string; cid: string }> }) {
   const { id, cid } = await ctx.params;
 
@@ -33,15 +34,27 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!ALLOWED.includes(file.type)) return NextResponse.json({ error: "invalid_file_type" }, { status: 400 });
   if (file.size > MAX_BYTES) return NextResponse.json({ error: "file_too_large" }, { status: 400 });
 
-  const candSlug = `${slugify(candidate.fullName)}-${cid.slice(-6)}`;
-  const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
-  const filename = `${folderForKind(kind)}.${ext}`;
-
   try {
-    const dir = path.join(process.cwd(), "public", "assets", "pageants", pageant.slug, "candidates", candSlug, folderForKind(kind));
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
-    const url = assetPath(pageant.slug, candSlug, kind, filename);
+    const raw = Buffer.from(await file.arrayBuffer());
+    // GIFs pass through (re-encoding flattens animation); everything else → downscaled WebP.
+    let mime: string;
+    let out: Buffer;
+    if (file.type === "image/gif") {
+      mime = "image/gif";
+      out = raw;
+    } else {
+      mime = "image/webp";
+      out = await sharp(raw)
+        .rotate()
+        .resize({ width: MAX_DIM, height: MAX_DIM, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer();
+    }
+    const img = await db.storedImage.create({
+      data: { id: randomBytes(12).toString("hex"), mime, bytes: out },
+      select: { id: true },
+    });
+    const url = `/api/images/${img.id}`;
 
     // Record the image + set the convenience fields the UI reads directly.
     await db.candidateImage.upsert({
