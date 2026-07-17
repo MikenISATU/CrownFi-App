@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState, ReactNode } fro
 import { connectFreighter, getConnectedAddress, getConnectedNetworkPassphrase, signFanMessage, TESTNET_PASSPHRASE } from "@/wallet/freighter";
 import { messageFor } from "@/lib/messages";
 
-export type Fan = { id: string; handle: string; walletAddress: string; points: number };
+export type Fan = { id: string; handle: string; walletAddress: string; points: number; authProvider?: string | null };
 
 type Ctx = {
   fan: Fan | null;

@@ -72,8 +72,8 @@ export default function MarketDetail() {
       }
 
       // 2) Sign the stake in Freighter (authorizes the USDC transfer into escrow).
-      const { signWithFreighter } = await import("@/wallet/freighter");
-      const signed = await signWithFreighter(pd.xdr, fan.walletAddress);
+      const { signTx } = await import("@/wallet/sign");
+      const signed = await signTx(pd.xdr, fan);
       if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
 
       // 3) Submit + record on-chain.
@@ -117,8 +117,10 @@ export default function MarketDetail() {
       const pr = await fetch(`/api/markets/${id}/prepare-unstake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ option }) });
       const pd = await pr.json().catch(() => ({}));
       if (!pr.ok) { flash(messageFor(pd.error, "Could not start cancellation."), "err"); return; }
-      const { signWithFreighter } = await import("@/wallet/freighter");
-      const signed = await signWithFreighter(pd.xdr, fan.walletAddress);
+      // Off-chain market: the server already reversed the position — nothing to sign.
+      if (pd.mock) { flash("Position cancelled."); load(); refreshBalance(); return; }
+      const { signTx } = await import("@/wallet/sign");
+      const signed = await signTx(pd.xdr, fan);
       if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
       const cr = await fetch(`/api/markets/${id}/confirm-unstake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
       const cd = await cr.json().catch(() => ({}));
@@ -138,8 +140,8 @@ export default function MarketDetail() {
       const pr = await fetch(`/api/markets/${id}/prepare-claim`, { method: "POST" });
       const pd = await pr.json().catch(() => ({}));
       if (!pr.ok) { flash(messageFor(pd.error, "Could not start your claim."), "err"); return; }
-      const { signWithFreighter } = await import("@/wallet/freighter");
-      const signed = await signWithFreighter(pd.xdr, fan.walletAddress);
+      const { signTx } = await import("@/wallet/sign");
+      const signed = await signTx(pd.xdr, fan);
       if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
       const cr = await fetch(`/api/markets/${id}/confirm-claim`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
       const cd = await cr.json().catch(() => ({}));

@@ -5,7 +5,7 @@ import { useSession } from "@/session/SessionProvider";
 import { Toast } from "@/components/ui";
 import { getJson, postJson } from "@/lib/api";
 import { messageFor } from "@/lib/messages";
-import { signWithFreighter } from "@/wallet/freighter";
+import { signTx } from "@/wallet/sign";
 import { TIER_LIST } from "@/lib/tiers";
 import { TicketHero } from "@/components/tickets/TicketHero";
 import { TicketTierSelector } from "@/components/tickets/TicketTierSelector";
@@ -125,7 +125,7 @@ function TicketsPageInner() {
         return;
       }
 
-      const signed = await signWithFreighter((prep.data as any).xdr, address);
+      const signed = await signTx((prep.data as any).xdr, fan);
       if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
 
       const conf = await postJson<any>("/api/tickets/confirm-buy", {

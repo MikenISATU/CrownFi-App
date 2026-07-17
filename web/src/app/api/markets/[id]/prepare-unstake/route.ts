@@ -18,10 +18,16 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const market = await db.predictionMarket.findUnique({ where: { id } });
   if (!market) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (market.status !== "open" || market.closeTime.getTime() <= Date.now()) return NextResponse.json({ error: "market_closed" }, { status: 409 });
-  if (!marketConfigured() || market.chainMarketId == null) return NextResponse.json({ error: "not_onchain" }, { status: 409 });
 
   const pos = await db.prediction.findFirst({ where: { marketId: id, fanId: auth.fanId, option, status: "active" } });
   if (!pos) return NextResponse.json({ error: "nothing_to_unstake" }, { status: 409 });
+
+  // Off-chain market: the stake was recorded via the mock /predict path (no USDC moved), so
+  // the cancel is a plain DB reversal — nothing to sign. Mirrors the stake path's mock branch.
+  if (!marketConfigured() || market.chainMarketId == null) {
+    await db.prediction.deleteMany({ where: { marketId: id, fanId: auth.fanId, option, status: "active" } });
+    return NextResponse.json({ mock: true, ok: true });
+  }
 
   try {
     const { xdr, txHash } = await buildUnstakeTx({ fanAddress: auth.address, marketId: market.chainMarketId, option });

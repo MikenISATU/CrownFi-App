@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { isLikelyStellarAddress } from "@/lib/adminAuth";
 import { createFanSession, setFanCookie } from "@/lib/fanAuth";
 import { clientIpHash } from "@/lib/ip";
-import { privyConfigured, resolvePrivyStellarIdentity } from "@/lib/privyServer";
+import { privyConfigured, resolvePrivyStellarIdentity, ensureFundedOnTestnet } from "@/lib/privyServer";
 
 const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
 
@@ -34,6 +34,13 @@ export async function POST(req: NextRequest) {
   if (!isLikelyStellarAddress(address)) {
     return NextResponse.json({ error: "privy_error" }, { status: 502 });
   }
+
+  // Testnet: the Privy wallet must exist ON-CHAIN before it can source any transaction.
+  // Idempotent (friendbot once, then a no-op) — covers new signups AND pre-existing accounts
+  // created before funding was wired in. Best-effort: login should not fail if friendbot is down.
+  await ensureFundedOnTestnet(address).catch((e) =>
+    console.warn("[api/fans/privy-connect] funding skipped:", e?.message ?? e)
+  );
 
   const ipHash = clientIpHash(req);
 

@@ -8,7 +8,7 @@ import { Toast } from "@/components/ui";
 import { short } from "@/lib/format";
 import { getJson, postJson } from "@/lib/api";
 import { messageFor } from "@/lib/messages";
-import { signWithFreighter } from "@/wallet/freighter";
+import { signTx } from "@/wallet/sign";
 
 type Collectible = {
   id: string; title: string; priceUsdc: number; metadataUri: string;
@@ -88,7 +88,7 @@ export default function CandidatePage() {
 
       setPhase("signing");
       const { xdr } = prep.data as any;
-      const signed = await signWithFreighter(xdr, address);
+      const signed = await signTx(xdr, fan);
       if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
 
       setPhase("confirming");

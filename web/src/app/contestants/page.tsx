@@ -8,7 +8,7 @@ import { Toast } from "@/components/ui";
 import { short } from "@/lib/format";
 import { getJson, postJson } from "@/lib/api";
 import { messageFor } from "@/lib/messages";
-import { signWithFreighter } from "@/wallet/freighter";
+import { signTx } from "@/wallet/sign";
 
 type Collectible = { id: string; title: string; priceUsdc: number; metadataUri: string; imageUrl?: string | null; tokenId?: string; contestant: { id: string; name: string; country: string; sash: string; portraitUrl?: string | null } };
 
@@ -61,7 +61,7 @@ export default function CollectPage() {
 
       // Step 2 — buyer approves the USDC payment in Freighter.
       const { xdr, priceUsdc } = prep.data as any;
-      const signed = await signWithFreighter(xdr, address);
+      const signed = await signTx(xdr, fan);
       if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
 
       // Step 3 — submit + mint the NFT.

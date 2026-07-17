@@ -62,3 +62,26 @@ export async function resolvePrivyStellarIdentity(token: string): Promise<PrivyS
   dbg("resolved identity · email =", email ?? "(none)", "· address =", address);
   return { userId, email, address };
 }
+
+// NOTE on signing: Privy Stellar wallets here are USER-owned (created with owner.userId), so
+// the server cannot sign for them — by design. Signing happens client-side via
+// useSignRawHash (see session/PrivySignerBridge.tsx + api/wallet/privy-sign).
+
+// Testnet: make sure the Stellar account exists on-chain (friendbot-fund it once) so it can
+// be a transaction source and pay fees. Idempotent — a fast no-op for funded accounts.
+export async function ensureFundedOnTestnet(address: string): Promise<void> {
+  const S: any = await import("@stellar/stellar-sdk");
+  const rpc = new S.rpc.Server(process.env.STELLAR_RPC_URL ?? "https://soroban-testnet.stellar.org");
+  try {
+    await rpc.getAccount(address);
+    return; // already exists
+  } catch {
+    /* not found — fund below */
+  }
+  const r = await fetch(`https://friendbot.stellar.org/?addr=${encodeURIComponent(address)}`);
+  if (!r.ok && r.status !== 400) {
+    // 400 = already funded (race) — anything else is a real failure worth surfacing.
+    throw new Error(`friendbot_${r.status}`);
+  }
+}
+

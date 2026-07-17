@@ -1,6 +1,7 @@
 "use client";
 import { ReactNode } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
+import { PrivySignerBridge } from "./PrivySignerBridge";
 
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
@@ -21,6 +22,7 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
         appearance: { theme: "light", accentColor: "#d4af37", logo: "/brand/logo.png" },
       }}
     >
+      <PrivySignerBridge />
       {children}
     </PrivyProvider>
   );
