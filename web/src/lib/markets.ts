@@ -86,15 +86,16 @@ export function computeMarketView(
   };
 }
 
-// Estimated NET payout (after the platform fee on winnings) for a stake of `amount` on
-// `option`, given current pools (pro-rata). The fee applies to the gross payout only —
-// the stake is never charged a fee.
+// Estimated NET payout for a stake of `amount` on `option`, given current pools (pro-rata).
+// The fee applies to WINNINGS only (gross minus your stake back), matching the contract —
+// a sole winner pays no fee and simply gets their stake back.
 export function estimateReward(view: { options: { pool: number }[]; totalPool: number }, option: number, amount: number, feeBps = PLATFORM_FEE_BPS): number {
   const opt = view.options[option];
   if (!opt || amount <= 0) return 0;
   const newTotal = view.totalPool + amount;
   const newOptionPool = opt.pool + amount;
   const gross = (amount * newTotal) / newOptionPool;
-  const net = gross * (1 - feeBps / 10000);
+  const profit = Math.max(0, gross - amount);
+  const net = amount + profit * (1 - feeBps / 10000);
   return Math.round(net * 100) / 100;
 }

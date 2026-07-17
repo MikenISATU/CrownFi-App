@@ -269,8 +269,11 @@ impl PredictionMarket {
         let winning_pool = pool(&e, market_id, m.winning_option);
         // gross = stake * total_pool / winning_pool  (checked math)
         let gross: i128 = stake.checked_mul(m.total_pool).unwrap() / winning_pool;
+        // The fee applies to WINNINGS only (gross minus the winner's own stake back) —
+        // never to the stake itself. A sole winner therefore pays no fee at all.
         let fee_bps: u32 = e.storage().instance().get(&DataKey::FeeBps).unwrap_or(0);
-        let fee: i128 = gross * (fee_bps as i128) / BPS_DENOM;
+        let profit: i128 = gross - stake;
+        let fee: i128 = if profit > 0 { profit * (fee_bps as i128) / BPS_DENOM } else { 0 };
         let net = gross - fee;
 
         e.storage().persistent().set(&DataKey::Claimed(market_id, from.clone()), &true);

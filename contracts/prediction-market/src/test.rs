@@ -9,6 +9,7 @@ struct Fixture<'a> {
     e: Env,
     client: PredictionMarketClient<'a>,
     token: token::Client<'a>,
+    treasury: Address,
 }
 
 fn setup<'a>(fee_bps: u32) -> Fixture<'a> {
@@ -27,7 +28,7 @@ fn setup<'a>(fee_bps: u32) -> Fixture<'a> {
     let client = PredictionMarketClient::new(&e, &id);
     client.initialize(&admin, &token_addr, &treasury, &fee_bps);
 
-    Fixture { e, client, token }
+    Fixture { e, client, token, treasury }
 }
 
 fn fund(f: &Fixture, who: &Address, amt: i128) {
@@ -79,9 +80,27 @@ fn fee_goes_to_treasury() {
     f.client.stake(&alice, &mid, &0, &100);
     f.client.stake(&bob, &mid, &1, &100);
     f.client.resolve_market(&mid, &0);
-    // gross = 100 * 200 / 100 = 200; fee = 2%; net = 196
+    // gross = 100 * 200 / 100 = 200; profit = 100; fee = 2% of PROFIT = 2; net = 198.
+    // (The stake itself is never charged a fee.)
     let net = f.client.claim(&alice, &mid);
-    assert_eq!(net, 196);
+    assert_eq!(net, 198);
+    assert_eq!(f.token.balance(&f.treasury), 2);
+}
+
+#[test]
+fn sole_winner_pays_no_fee() {
+    // Only staker on the winning side of a one-sided market: gross == stake, profit == 0,
+    // so the fee must be zero and they get exactly their stake back.
+    let f = setup(200); // 2%
+    let mid = f.client.create_market(&String::from_str(&f.e, "Solo?"), &String::from_str(&f.e, "general"), &2, &2_000);
+    let alice = Address::generate(&f.e);
+    fund(&f, &alice, 1_000);
+    f.client.stake(&alice, &mid, &0, &100);
+    f.client.resolve_market(&mid, &0);
+    let net = f.client.claim(&alice, &mid);
+    assert_eq!(net, 100);
+    assert_eq!(f.token.balance(&alice), 1_000);
+    assert_eq!(f.token.balance(&f.treasury), 0);
 }
 
 #[test]
