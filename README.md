@@ -18,11 +18,19 @@ Beyond the mainline voting/ticketing/collectibles, this build adds:
 
 ### Deployed testnet contracts (2026-07)
 
-| Contract | ID |
-|---|---|
-| Prediction market | `CCYBJ3RO45I6IWMJ7YE4PNXPJ4TD64U4EWQD6PPWJ76RO7NKUTXPQGIW` |
-| Pageant NFT | `CCONZKTIQHR5UE4AKROICICZ2JSWDAXYBNYDCKDIMRFSIK37PND5PMQW` |
-| Prediction treasury (fee sink) | `GC3PXGAWQWHHV6M6AKR3LSZZ7RNYZXASGNJM7BSU3EMWI5KG2R5QSIY3` |
+All seven Soroban contracts are deployed and live on Stellar testnet:
+
+| Contract | Purpose | ID |
+|---|---|---|
+| Audit anchor | Seals each closed round's Merkle root (tamper-evident tallies) | `CAC7AX3PFJ5NC43BB5TRWY4QTKLSPBVK3DT5GTLH5N6Y3TIYK5GLOVNV` |
+| Ticket | Event tickets as verifiable passes (tier + seat) | `CA7M6UH55Z4UBQKBZNZBFFU3PWI3XI3BH46LMHSUINWJHTRG7CYDLH6N` |
+| Collectible | Original contestant collectible primitive (mainline) | `CAZOOO3AUNGKDE6XTQNHETSBJGU33I2OCNREZ63GTUTDRPYBUS2R4LZX` |
+| Sale splitter | On-chain USDC payment split; ticket listings **101–104** (Silver/Gold/Diamond/Platinum) registered | `CATCOIVWAVVXBNLPOXBVN3WQ26UNAVLUVSRYBNQWIII75I5QK4YV2KU3` |
+| Test USDC | Mintable demo token everything settles in (faucet source) | `CAE2GXXU4BPLRX5DHLFJKUR7AP5ETPIERGTFNCY7PEFCEL5H3G3RG6LW` |
+| Pageant NFT | Finale-build candidate NFTs: per-candidate IPFS metadata, one mint per wallet, admin-signed mint | `CCONZKTIQHR5UE4AKROICICZ2JSWDAXYBNYDCKDIMRFSIK37PND5PMQW` |
+| Prediction market | Pooled markets: stake / unstake / resolve / claim, 2% fee on winnings | `CCYBJ3RO45I6IWMJ7YE4PNXPJ4TD64U4EWQD6PPWJ76RO7NKUTXPQGIW` |
+
+The prediction **treasury** (fee recipient) is a regular wallet, not a contract: `GC3PXGAWQWHHV6M6AKR3LSZZ7RNYZXASGNJM7BSU3EMWI5KG2R5QSIY3`.
 
 Runbooks: [`contracts/DeploySC.md`](contracts/DeploySC.md) (deploy/init), [`docs/setup/deploy-nft-5-contestants.md`](docs/setup/deploy-nft-5-contestants.md) (Pinata + NFT), and the GCash steps in the PR description.
 
@@ -232,11 +240,13 @@ Contracts live in [`contracts/`](contracts/).
 
 ```text
 contracts/
-├── audit-anchor/    # voting round checkpoints / Merkle roots
-├── ticket/          # ticket asset primitive
-├── collectible/     # contestant collectible primitive
-├── sale-splitter/   # listing-based payment split primitive
-└── usdc-test/       # mintable test token for demos
+├── audit-anchor/       # voting round checkpoints / Merkle roots
+├── ticket/             # ticket asset primitive
+├── collectible/        # contestant collectible primitive (mainline)
+├── sale-splitter/      # listing-based payment split primitive
+├── usdc-test/          # mintable test token for demos
+├── pageant-nft/        # finale build: per-candidate NFTs (IPFS metadata, 1 mint/wallet)
+└── prediction-market/  # finale build: pooled prediction markets (stake/unstake/claim)
 ```
 
 ### Contract checks
