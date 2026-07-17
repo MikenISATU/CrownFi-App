@@ -1,6 +1,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { isLikelyStellarAddress } from "@/lib/adminAuth";
+import { signToken, verifyToken } from "@/lib/statelessToken";
 
 // Fan (voter) authentication. Same shape as adminAuth, but there is no allowlist:
 // any wallet that proves control of its Stellar address (SEP-53 signature) gets a
@@ -25,10 +26,13 @@ function appOrigin(req: NextRequest): string {
   );
 }
 
+// The nonce is a stateless HMAC token carrying {address, expiry} — any server instance can
+// verify it without shared memory (the old Map broke on serverless: challenge and connect
+// can hit different instances). The Map below remains only as a same-instance replay guard.
 export function createFanChallenge(address: string, req: NextRequest): { nonce: string; message: string; expiresAt: number } {
-  const nonce = randomBytes(24).toString("base64url");
   const now = Date.now();
   const expiresAt = now + CHALLENGE_TTL_MS;
+  const nonce = signToken({ a: address, e: expiresAt, r: randomBytes(8).toString("base64url") });
   challenges.set(nonce, { address, expiresAt });
 
   const message = [
@@ -44,7 +48,7 @@ export function createFanChallenge(address: string, req: NextRequest): { nonce: 
 }
 
 function extractNonce(message: string): string | null {
-  const match = message.match(/^Nonce: ([A-Za-z0-9_-]+)$/m);
+  const match = message.match(/^Nonce: ([A-Za-z0-9_.-]+)$/m);
   return match?.[1] ?? null;
 }
 
@@ -83,10 +87,18 @@ export async function verifyFanSignature(params: {
   const nonce = extractNonce(message);
   if (!nonce) return { ok: false, error: "missing_nonce", status: 400 };
 
-  const challenge = challenges.get(nonce);
-  challenges.delete(nonce); // one-time use
-  if (!challenge || challenge.address !== address) return { ok: false, error: "invalid_challenge", status: 401 };
-  if (Date.now() > challenge.expiresAt) return { ok: false, error: "challenge_expired", status: 401 };
+  // Same-instance path: consume from the Map (strict one-time use). Cross-instance path
+  // (serverless): fall back to verifying the nonce's own HMAC payload.
+  const local = challenges.get(nonce);
+  challenges.delete(nonce);
+  if (local) {
+    if (local.address !== address) return { ok: false, error: "invalid_challenge", status: 401 };
+    if (Date.now() > local.expiresAt) return { ok: false, error: "challenge_expired", status: 401 };
+  } else {
+    const payload = verifyToken<{ a: string; e: number }>(nonce);
+    if (!payload || payload.a !== address) return { ok: false, error: "invalid_challenge", status: 401 };
+    if (Date.now() > payload.e) return { ok: false, error: "challenge_expired", status: 401 };
+  }
 
   try {
     const sdk: any = await import("@stellar/stellar-sdk");

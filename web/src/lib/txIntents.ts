@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { signToken, verifyToken } from "@/lib/statelessToken";
 
 const INTENT_TTL_MS = 10 * 60 * 1000;
 
@@ -28,17 +28,35 @@ type NewTxIntent =
 
 const intents = new Map<string, TxIntent>();
 
+// The intent id IS the intent: an HMAC-signed token carrying the full payload, so the
+// confirm route can verify it on ANY server instance (the Map alone broke on serverless —
+// prepare and confirm can land on different instances that share no memory). The Map stays
+// as a same-instance replay guard; across instances, replaying a consumed intent just
+// re-submits the same signed transaction, which the chain rejects (sequence already used).
 export function createTxIntent(intent: NewTxIntent): TxIntent {
-  const id = randomBytes(24).toString("base64url");
-  const stored = { ...intent, id, expiresAt: Date.now() + INTENT_TTL_MS } as TxIntent;
+  const payload = { ...intent, expiresAt: Date.now() + INTENT_TTL_MS };
+  const id = signToken(payload);
+  const stored = { ...payload, id } as TxIntent;
   intents.set(id, stored);
   return stored;
 }
 
+const consumed = new Set<string>();
+
 export function consumeTxIntent(id: string): TxIntent | null {
-  const intent = intents.get(id);
+  // Same-instance fast path (strict one-time use).
+  const local = intents.get(id);
   intents.delete(id);
-  if (!intent) return null;
-  if (Date.now() > intent.expiresAt) return null;
-  return intent;
+  if (local) {
+    if (Date.now() > local.expiresAt) return null;
+    consumed.add(id);
+    return local;
+  }
+  // Cross-instance path: the token authenticates itself.
+  if (consumed.has(id)) return null; // same-instance replay of an already-used intent
+  const payload = verifyToken<Omit<TxIntent, "id">>(id);
+  if (!payload) return null;
+  if (Date.now() > payload.expiresAt) return null;
+  consumed.add(id);
+  return { ...payload, id } as TxIntent;
 }

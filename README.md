@@ -359,6 +359,7 @@ GitHub Actions run checks that avoid requiring special repository permissions. C
 | Document | Purpose |
 |---|---|
 | [`docs/README.md`](docs/README.md) | Documentation map |
+| [`docs/DEMO_QA.md`](docs/DEMO_QA.md) | Q&A prep — likely judge/investor questions with our answers |
 | [`docs/overview/hackathon-pitch.md`](docs/overview/hackathon-pitch.md) | Hackathon/project narrative |
 | [`docs/architecture/current-platform.md`](docs/architecture/current-platform.md) | Current mainline architecture |
 | [`docs/features/voting.md`](docs/features/voting.md) | Voting flow and constraints |

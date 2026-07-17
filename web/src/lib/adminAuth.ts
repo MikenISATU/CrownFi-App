@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { signToken, verifyToken } from "@/lib/statelessToken";
 
 const COOKIE = "crownfi_admin";
 const SESSION_TTL_MS = 15 * 60 * 1000;
@@ -34,10 +35,12 @@ function appOrigin(req: NextRequest): string {
   );
 }
 
+// Stateless nonce (HMAC token) so any serverless instance can verify — the Map is only a
+// same-instance replay guard. See lib/statelessToken.ts for the rationale.
 export function createAdminChallenge(address: string, req: NextRequest): { nonce: string; message: string; expiresAt: number } {
-  const nonce = randomBytes(24).toString("base64url");
   const now = Date.now();
   const expiresAt = now + CHALLENGE_TTL_MS;
+  const nonce = signToken({ a: address, e: expiresAt, r: randomBytes(8).toString("base64url") });
   challenges.set(nonce, { address, expiresAt });
 
   const message = [
@@ -53,7 +56,7 @@ export function createAdminChallenge(address: string, req: NextRequest): { nonce
 }
 
 function extractNonce(message: string): string | null {
-  const match = message.match(/^Nonce: ([A-Za-z0-9_-]+)$/m);
+  const match = message.match(/^Nonce: ([A-Za-z0-9_.-]+)$/m);
   return match?.[1] ?? null;
 }
 
@@ -98,10 +101,18 @@ export async function verifyAdminSignature(params: {
   const nonce = extractNonce(message);
   if (!nonce) return { ok: false, error: "missing_nonce", status: 400 };
 
-  const challenge = challenges.get(nonce);
+  // Same-instance: strict one-time use via the Map. Cross-instance (serverless): verify the
+  // nonce's own HMAC payload instead.
+  const local = challenges.get(nonce);
   challenges.delete(nonce); // one-time use, successful or not
-  if (!challenge || challenge.address !== address) return { ok: false, error: "invalid_challenge", status: 401 };
-  if (Date.now() > challenge.expiresAt) return { ok: false, error: "challenge_expired", status: 401 };
+  if (local) {
+    if (local.address !== address) return { ok: false, error: "invalid_challenge", status: 401 };
+    if (Date.now() > local.expiresAt) return { ok: false, error: "challenge_expired", status: 401 };
+  } else {
+    const payload = verifyToken<{ a: string; e: number }>(nonce);
+    if (!payload || payload.a !== address) return { ok: false, error: "invalid_challenge", status: 401 };
+    if (Date.now() > payload.e) return { ok: false, error: "challenge_expired", status: 401 };
+  }
 
   try {
     const sdk: any = await import("@stellar/stellar-sdk");
