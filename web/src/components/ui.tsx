@@ -14,43 +14,45 @@ export function SectionHeading({ eyebrow, title, sub }: { eyebrow?: string; titl
 export function CountUp({ to, suffix = "" }: { to: number; suffix?: string }) {
   const [n, setN] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
-  const done = useRef(false);
+  const seen = useRef(false); // already scrolled into view at least once
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Show the real number without animating when animating isn't possible or wanted:
+    // reduced-motion, or a tab that isn't visible (a hidden tab suspends BOTH rAF and
+    // IntersectionObserver, so the counter would otherwise sit on 0 showing a wrong figure).
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { setN(to); return; }
+    if (reduce || document.visibilityState !== "visible") { setN(to); return; }
+
+    let raf = 0;
+    let settle: ReturnType<typeof setTimeout>;
+    const dur = 1200;
+    const run = () => {
+      const start = performance.now();
+      const tick = (t: number) => {
+        const p = Math.min(1, (t - start) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setN(Math.round(to * eased));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+      // Browsers pause rAF in background/throttled tabs, which would strand the counter on 0
+      // and quietly show the wrong number. Land on the real value regardless.
+      settle = setTimeout(() => setN(to), dur + 250);
+    };
+
+    // Counters mount with `to` at 0 and get their real value once the fetch lands. If that
+    // happens after we were already on screen, animate straight away — otherwise the counter
+    // would sit on 0 forever, having "counted up" to nothing.
+    if (seen.current) { run(); return () => { cancelAnimationFrame(raf); clearTimeout(settle); }; }
+
     const io = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !done.current) {
-        done.current = true;
-        const start = performance.now();
-        const dur = 1200;
-        const tick = (t: number) => {
-          const p = Math.min(1, (t - start) / dur);
-          const eased = 1 - Math.pow(1 - p, 3);
-          setN(Math.round(to * eased));
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      }
+      if (entries[0].isIntersecting && !seen.current) { seen.current = true; run(); }
     }, { threshold: 0.4 });
     io.observe(el);
-    return () => io.disconnect();
+    return () => { io.disconnect(); cancelAnimationFrame(raf); clearTimeout(settle); };
   }, [to]);
   return <span ref={ref}>{n.toLocaleString()}{suffix}</span>;
-}
-
-export function Marquee({ items }: { items: string[] }) {
-  const doubled = [...items, ...items];
-  return (
-    <div className="relative overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
-      <div className="flex w-max animate-marquee gap-8">
-        {doubled.map((s, i) => (
-          <span key={i} className="whitespace-nowrap text-sm text-[#8a8779]">{s}</span>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export function Toast({ msg, tone = "ok" }: { msg: string; tone?: "ok" | "err" }) {

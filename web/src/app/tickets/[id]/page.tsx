@@ -291,7 +291,8 @@ export default function TicketPrintPage() {
             {/* Divider */}
             <div className="w-full my-5 flex items-center gap-3">
               <div className="flex-1 border-t border-dashed border-[#dcd6c6]"></div>
-              <Icons.Crown size={14} className="text-[#c9a227] shrink-0" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/logo.png" alt="" className="h-4 w-4 shrink-0 object-contain" />
               <div className="flex-1 border-t border-dashed border-[#dcd6c6]"></div>
             </div>
 
@@ -346,7 +347,8 @@ export default function TicketPrintPage() {
           {/* Issuer line */}
           <div className="flex items-center justify-between border-t border-[#eee6d3] pt-3">
             <div className="flex items-center gap-2">
-              <Icons.Crown size={14} strokeWidth={1.75} className="text-[#c9a227]" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/logo.png" alt="CrownFi" className="h-4 w-4 object-contain" />
               <span className="text-[10px] font-bold text-[#9a968b] tracking-wider uppercase">CrownFi — Powered by Stellar</span>
             </div>
             <div className="mono text-[9px] text-[#b8b0a0]">Page 1 / 1</div>

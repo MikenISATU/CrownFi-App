@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
-import { connectFreighter, getConnectedAddress, signFanMessage } from "@/wallet/freighter";
+import { connectFreighter, getConnectedAddress, getConnectedNetworkPassphrase, signFanMessage, TESTNET_PASSPHRASE } from "@/wallet/freighter";
 import { messageFor } from "@/lib/messages";
 
 export type Fan = { id: string; handle: string; walletAddress: string; points: number };
@@ -34,6 +34,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const addressRef = useRef<string | null>(null);
   addressRef.current = address;
+  const wrongNetwork = useRef(false);
 
   // Full wallet sign-in: prove control of the address with a Freighter signature,
   // then the server issues an httpOnly fan-session cookie. Returns true on success.
@@ -131,21 +132,40 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // While signed in, detect a Freighter account switch and require a fresh sign-in
-  // (the old session belongs to a different wallet). A locked wallet is ignored — the
-  // server session remains the source of truth for identity.
+  // While signed in, watch Freighter for two things that silently invalidate the session:
+  //
+  //   1. An account switch — the server session belongs to the previous wallet, so sign in again.
+  //   2. A network switch — connect() enforces Testnet, but nothing stops the user changing it
+  //      afterwards. Every signature we request is pinned to the Testnet passphrase, so on the
+  //      wrong network they'd fail with a raw wallet error at the worst moment (mid-purchase).
+  //      Say so up front instead.
+  //
+  // A locked wallet reports neither, and is ignored — the server session stays the source of truth.
   useEffect(() => {
     if (!address) return;
     let cancelled = false;
     const iv = setInterval(async () => {
       const cur = await getConnectedAddress();
-      if (cancelled || !cur) return;
-      if (cur !== addressRef.current) {
+      if (cancelled) return;
+      if (cur && cur !== addressRef.current) {
         setFan(null);
         setAddress(null);
         localStorage.removeItem("crownfi.addr");
         fetch("/api/fans/logout", { method: "POST" }).catch(() => {});
         setError("Freighter account changed — connect again to sign in as the new wallet.");
+        return;
+      }
+
+      const net = await getConnectedNetworkPassphrase();
+      if (cancelled || !net) return;
+      const wrong = net !== TESTNET_PASSPHRASE;
+      // Only fire on the transition, so a dismissed banner doesn't reappear every 4s.
+      if (wrong && !wrongNetwork.current) {
+        wrongNetwork.current = true;
+        setError("Freighter is on the wrong network. Switch it back to Testnet — signing won’t work until you do.");
+      } else if (!wrong && wrongNetwork.current) {
+        wrongNetwork.current = false;
+        setError("");
       }
     }, 4000);
     return () => { cancelled = true; clearInterval(iv); };

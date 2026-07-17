@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
         instagram: b?.instagram ? String(b.instagram).slice(0, 300) : null,
         socials: b?.socials ? String(b.socials).slice(0, 500) : null,
         verification: b?.verification ? String(b.verification).slice(0, 500) : null,
+        driveUrl: b?.driveUrl ? String(b.driveUrl).slice(0, 500) : null,
         description: b?.description ? String(b.description).slice(0, 2000) : null,
         venue: b?.venue ? String(b.venue).slice(0, 300) : null,
         eventDate: b?.eventDate ? new Date(b.eventDate) : null,

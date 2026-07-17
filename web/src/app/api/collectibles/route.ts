@@ -5,6 +5,7 @@ import { buyCollectible } from "@/lib/stellar";
 import { requireFan } from "@/lib/fanAuth";
 import { tryAwardPoints, COLLECTIBLE_POINTS } from "@/lib/loyalty";
 import { ROSTER } from "@/lib/roster";
+import { cached } from "@/lib/serverCache";
 
 const LIVE = (process.env.STELLAR_MODE ?? "mock") === "live";
 
@@ -21,7 +22,10 @@ const ROSTER_AS_COLLECTIBLES = ROSTER.map((r) => ({
 
 export async function GET() {
   try {
-    const rows = await db.collectible.findMany({ orderBy: { createdAt: "desc" }, include: { contestant: true } });
+    // Collectible rows only change when an admin adds a contestant (which invalidates this).
+    const rows = await cached("collectibles", 30_000, () =>
+      db.collectible.findMany({ orderBy: { createdAt: "desc" }, include: { contestant: true } })
+    );
     return NextResponse.json(rows.length ? rows : ROSTER_AS_COLLECTIBLES);
   } catch {
     console.warn("[api/collectibles] database unavailable — serving static roster.");

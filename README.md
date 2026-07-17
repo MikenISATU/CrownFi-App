@@ -4,15 +4,17 @@ CrownFi is a hackathon/testnet MVP for pageant voting, ticketing, fan rewards, c
 
 > **Status:** hackathon MVP. This repository is suitable for demos, review, and iteration. It is **not** production-ready voting infrastructure, mainnet financial infrastructure, or a replacement for legal tabulation/compliance systems.
 
-## What's new on this branch (`finale-platform`)
+## What's new in the finale build (merged to `main`)
 
 Beyond the mainline voting/ticketing/collectibles, this build adds:
 
 - **Prediction markets** — Polymarket-style pooled markets on pageant outcomes (or any topic via a "General" category). Any connected user *or* admin can create a market with per-outcome inputs; fans stake USDC, **cancel positions** before close, and **claim** a pro-rata share of the pool. A **2% fee on winnings only** goes to a treasury. Includes a live **odds-over-time chart** and a **tabular outcomes** view (Chance / Pool / To-win).
 - **Reusable pageant NFT contract (`pageant-nft`)** — one instance per pageant, **per-candidate IPFS metadata** (Pinata), effectively unlimited supply, **one mint per wallet**, and **admin-signed minting** so buyers sign only the payment. In-app **NFT gallery** on `/me` (token id + art + explorer link).
-- **Per-category voting** — each pageant stage (Top 20 Swimsuit, Top 10 Long Gown, Top 5 Q&A, Overall Winner) is its **own round with its own tally**, with optional per-category candidate photos (`web/public/candidates/<stage>/`).
-- **UX** — Light/Night mode, mobile burger nav, sticky market filters, browser-side image auto-optimization, and a **Privy (email/Google) Web2 login** path alongside Freighter.
+- **Per-category voting & leaderboards** — each pageant stage (Top 20 Swimsuit, Top 10 Long Gown, Top 5 Q&A, Overall Winner) is its **own round with its own tally** and per-category candidate photos (`web/public/candidates/<stage>/`). The leaderboard has **Swimsuit / Long Gown / Overall** boards; closed rounds use the anchored tally. The Vote tab shows the wallet's **existing vote** as locked-in.
+- **Organizer submissions** — organizers register a pageant, add candidates with photos, and link a **Google Drive folder** of required files (permits, roster, hi-res photos); admins preview everything in the review modal.
+- **UX** — gold design system (molten-gold buttons, cards and step chips), looping delegates filmstrip, mobile burger nav, sticky market filters, browser-side image auto-optimization, and a **Privy (email/Google) Web2 login** path alongside Freighter. (A night-mode theme exists but is currently hidden — see the note in `web/src/app/layout.tsx`.)
 - **Payments admin** — master enable/disable, **maintenance mode**, and a scaffolded **GCash (via PayMongo)** checkout path (disabled until keys are set).
+- **Performance** — in-memory TTL caches on both the client (`web/src/lib/api.ts`) and the hot read APIs (`web/src/lib/serverCache.ts`), so tab navigation doesn't re-hit Postgres.
 
 ### Deployed testnet contracts (2026-07)
 
@@ -143,6 +145,26 @@ For Supabase/Postgres, configure `web/.env`:
 DATABASE_URL="postgresql://...pooler.supabase.com:6543/postgres?pgbouncer=true"
 DIRECT_URL="postgresql://...pooler.supabase.com:5432/postgres"
 ```
+
+> Local-only note: for a long-running `npm run dev` server, the direct `5432` URL is ~3.5× faster
+> per query than the pooler. On Vercel (serverless) you **must** use the pooled `6543` URL above,
+> or concurrent functions will exhaust the database's connections.
+
+## Deploy to Vercel
+
+1. **Import the repo** and set **Root Directory = `web`** (the app is not at the repo root).
+   The build command is the default `npm run build` (it runs `prisma generate` first).
+2. **Set the function region to Tokyo (`hnd1`)** — Project → Settings → Functions. The Supabase
+   database is in `ap-northeast-1`; leaving functions in the default US East adds ~150–200 ms to
+   every query.
+3. **Environment variables** — copy every key from `web/.env.example` into Vercel and fill in the
+   values from your local `web/.env`, with two changes:
+   - `DATABASE_URL` → the **pooled 6543** URL with `?pgbouncer=true` (see note above).
+   - `NEXT_PUBLIC_APP_ORIGIN` → your Vercel URL (e.g. `https://crownfi.vercel.app`).
+4. **Do not run migrations from Vercel.** Apply schema changes locally with
+   `npx prisma db push` / `prisma migrate deploy` against `DIRECT_URL`; the deployed app only reads.
+5. After the first deploy, click through one paid flow (faucet → buy a Silver ticket) — Stellar
+   testnet calls and the database are shared with local dev, so no reseeding is needed.
 
 Use [`docs/setup/supabase.md`](docs/setup/supabase.md) for the team’s Supabase path. A self-hosted Postgres instance can also work as long as the Prisma connection strings are set correctly.
 

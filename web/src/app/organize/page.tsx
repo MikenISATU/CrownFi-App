@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { Icons } from "@/components/icons";
 
 export default function OrganizePage() {
   const [f, setF] = useState({ orgName: "", contactName: "", email: "", pageantName: "", country: "", message: "" });
@@ -21,9 +20,12 @@ export default function OrganizePage() {
   if (sent) {
     return (
       <div className="glass mx-auto max-w-lg p-8 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full surface-soft text-[#a97f16]"><Icons.Crown size={22} strokeWidth={1.75} /></div>
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full surface-soft">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo.png" alt="CrownFi" className="h-7 w-7 object-contain" />
+        </div>
         <h1 className="mt-3 font-display text-2xl text-[#23252f]">Request received</h1>
-        <p className="mt-2 text-sm text-[#5f6172]">Thank you. The CrownFi team will review your pageant and get back to you at {f.email}.</p>
+        <p className="mt-2 text-sm text-[#5f6172]">Thanks — we’ll review your pageant and reply at {f.email}, usually within 2–3 business days.</p>
       </div>
     );
   }
@@ -33,7 +35,7 @@ export default function OrganizePage() {
       <div className="mb-8">
         <div className="eyebrow mb-2">For organizers</div>
         <h1 className="font-display text-4xl font-semibold text-[#23252f]">Run your pageant on CrownFi</h1>
-        <p className="mt-2 text-sm text-[#5f6172]">Apply to host voting, ticketing, and collectibles for your event. Our team reviews every request before granting organizer access.</p>
+        <p className="mt-2 text-sm text-[#5f6172]">Apply to host voting, ticketing, and collectibles for your event. We review every request before granting access.</p>
       </div>
       <div className="glass grid gap-4 p-6">
         <div className="grid gap-4 sm:grid-cols-2">

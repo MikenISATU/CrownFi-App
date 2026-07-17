@@ -5,8 +5,9 @@ import { useState, useEffect } from "react";
 import { useSession } from "@/session/SessionProvider";
 import { Icons } from "./icons";
 import { WalletConnect } from "./WalletConnect";
-import { ThemeToggle } from "./ThemeToggle";
+// import { ThemeToggle } from "./ThemeToggle"; — night mode hidden for now
 
+// Full list (mobile burger drawer shows everything).
 const USER_LINKS = [
   { href: "/", label: "Home" },
   { href: "/vote", label: "Vote" },
@@ -18,6 +19,20 @@ const USER_LINKS = [
   { href: "/loyalty", label: "Rewards" },
   { href: "/organizer", label: "Organizer" },
   { href: "/me", label: "Me" },
+];
+// Desktop header shows only the core flows; the rest live under "More".
+const PRIMARY_LINKS = [
+  { href: "/vote", label: "Vote" },
+  { href: "/tickets", label: "Tickets" },
+  { href: "/contestants", label: "Collect" },
+  { href: "/leaderboard", label: "Leaderboard" },
+];
+const MORE_LINKS = [
+  { href: "/predictions", label: "Predict" },
+  { href: "/verify", label: "Verify" },
+  { href: "/loyalty", label: "Rewards" },
+  { href: "/organizer", label: "Organizer" },
+  { href: "/me", label: "My account" },
 ];
 
 const TABS = [
@@ -66,36 +81,36 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
 function SiteFooter() {
   const [subscribed, setSubscribed] = useState(false);
   return (
-    <footer className="mt-24 text-white" style={{ background: "linear-gradient(165deg, #e9c65e 0%, #d4af37 30%, #bd952f 66%, #9c7714 100%)" }}>
-      {/* Top hairline for a crisper edge against the page. */}
-      <div className="h-px w-full bg-white/25" />
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <footer className="mt-24 bg-[#14172a] text-[#c7cad8]">
+      {/* Thin gold accent line grounds the dark footer against the light page. */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-70" />
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           {/* Brand + newsletter */}
-          <div>
+          <div className="max-w-xs">
             <div className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo.png" alt="CrownFi" className="h-9 w-9 object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.25)]" />
-              <span className="font-display text-2xl font-semibold tracking-wide text-white">CrownFi</span>
+              <img src="/brand/logo.png" alt="CrownFi" className="h-8 w-8 object-contain" />
+              <span className="font-display text-2xl font-semibold tracking-wide text-[#e6c65a]">CrownFi</span>
             </div>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/85">
-              Blockchain-powered voting, ticketing, and prediction markets for pageants — built on Stellar.
+            <p className="mt-4 text-sm leading-relaxed text-[#9aa0b4]">
+              Blockchain-powered voting, tickets, and prediction markets for pageants — built on Stellar.
             </p>
-            <form className="mt-5 max-w-xs" onSubmit={(e) => { e.preventDefault(); setSubscribed(true); }}>
+            <form className="mt-5" onSubmit={(e) => { e.preventDefault(); setSubscribed(true); }}>
               {subscribed ? (
-                <div className="rounded-xl bg-white/20 px-3 py-2.5 text-sm text-white">Thanks — you’re subscribed. ✓</div>
+                <div className="rounded-xl bg-white/5 px-3.5 py-2.5 text-sm text-[#c7cad8] ring-1 ring-white/10">Thanks — you’re subscribed. ✓</div>
               ) : (
-                <div className="flex overflow-hidden rounded-xl bg-white shadow-sm">
+                <div className="flex items-center gap-2">
                   <input type="email" required placeholder="Email for updates" aria-label="Email"
-                    className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-[#23252f] outline-none placeholder-[#9a968b]" />
-                  <button type="submit" className="shrink-0 bg-[#9c7714] px-4 text-sm font-semibold text-white transition hover:bg-[#8a680f]">Join</button>
+                    className="min-w-0 flex-1 rounded-xl bg-white/[0.06] px-3.5 py-2.5 text-sm text-white outline-none ring-1 ring-white/10 transition placeholder-[#6b7086] focus:ring-[#d4af37]/50" />
+                  <button type="submit" className="btn-gold shrink-0 !min-h-[40px] !px-5 !py-2">Join</button>
                 </div>
               )}
             </form>
             <div className="mt-5 flex items-center gap-2">
               {SOCIALS.map(({ href, label, Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-white/40 bg-white/10 text-white transition hover:bg-white hover:text-[#9c7714]">
+                  className="grid h-9 w-9 place-items-center rounded-full text-[#9aa0b4] ring-1 ring-white/15 transition hover:bg-[#e6c65a] hover:text-[#1a1f35] hover:ring-transparent">
                   <Icon />
                 </a>
               ))}
@@ -105,19 +120,31 @@ function SiteFooter() {
           {/* Link columns */}
           {FOOTER_COLS.map((col) => (
             <div key={col.title}>
-              <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">{col.title}</div>
-              <ul className="space-y-2.5 text-sm text-white/90">
+              <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b8fa3]">{col.title}</div>
+              <ul className="space-y-2.5 text-sm text-[#c7cad8]">
                 {col.links.map(([h, l]) => (
-                  <li key={h + l}><Link href={h} className="transition hover:text-white hover:underline underline-offset-4">{l}</Link></li>
+                  <li key={h + l}><Link href={h} className="transition hover:text-white">{l}</Link></li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
 
-        <div className="mt-14 flex flex-col items-start justify-between gap-3 border-t border-white/25 pt-6 text-xs text-white/80 sm:flex-row sm:items-center">
-          <span>© 2026 CrownFi · Testnet demo — not for real-money use</span>
-          <span className="text-white/70">Crown your queen, on-chain.</span>
+        <div className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-white/10 pt-6 text-xs text-[#8b8fa3]">
+          <span className="inline-flex items-center gap-2">We accept
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <span className="inline-flex items-center rounded-md bg-white px-2 py-1"><img src="/brand/gcash.svg" alt="GCash" className="h-5 w-auto" /></span>
+          </span>
+          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] ring-1 ring-white/10">Built on Stellar</span>
+          <span className="ml-auto text-[#6b7086]">Crown your queen, on-chain.</span>
+        </div>
+
+        <div className="mt-4 flex flex-col items-start justify-between gap-2 text-xs text-[#6b7086] sm:flex-row sm:items-center">
+          <span>© 2026 CrownFi · Testnet demo — not for real-money use.</span>
+          <span className="flex gap-4">
+            <Link href="/faq#legal" className="transition hover:text-[#c7cad8]">Privacy</Link>
+            <Link href="/faq#legal" className="transition hover:text-[#c7cad8]">Terms</Link>
+          </span>
         </div>
       </div>
     </footer>
@@ -127,15 +154,18 @@ function SiteFooter() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [drawer, setDrawer] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
   const { isAdmin, error, needsInstall, clearError } = useSession();
+  const moreLinks = isAdmin ? [...MORE_LINKS, { href: "/admin", label: "Admin" }] : MORE_LINKS;
 
   // Reflect the admin "Maintenance mode" switch with a site-wide banner.
+  // Fetch ONCE per session — not per navigation (that cost a DB round-trip on every tab change).
   useEffect(() => {
     let on = true;
     fetch("/api/payment-method").then((r) => r.json()).then((d) => on && setMaintenance(!!d.maintenance)).catch(() => {});
     return () => { on = false; };
-  }, [path]);
+  }, []);
 
   const links = isAdmin ? [...USER_LINKS, { href: "/admin", label: "Admin" }] : USER_LINKS;
 
@@ -143,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
         <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-between rounded-2xl border border-[#efe4c2] bg-white/80 px-4 py-2.5 shadow-[0_18px_44px_-26px_rgba(120,100,40,0.55)] backdrop-blur-xl sm:px-6">
+          <div className="flex items-center justify-between rounded-2xl border border-[#ece6d8] bg-white/85 px-4 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_30px_-16px_rgba(16,24,40,0.18)] backdrop-blur-xl sm:px-6">
             <div className="flex items-center gap-2">
               <button className="btn-ghost h-9 w-9 !px-0 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
@@ -156,16 +186,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <nav className="hidden items-center gap-1 text-sm sm:flex">
-              {links.map((l) => (
+              {PRIMARY_LINKS.map((l) => (
                 <Link key={l.href} href={l.href}
                   className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-gradient-to-b from-[#d4af37] to-[#b8912f] text-[#1a1f35]" : "text-[#5f6172] hover:bg-[#faf6ea] hover:text-[#23252f]"}`}>
                   {l.label}
                 </Link>
               ))}
+              {/* More — secondary destinations in a dropdown to keep the header uncluttered. */}
+              <div className="relative">
+                <button onClick={() => setMoreOpen((v) => !v)} aria-expanded={moreOpen} aria-haspopup="menu"
+                  className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${moreLinks.some((l) => l.href === path) ? "bg-[#faf6ea] text-[#a97f16]" : "text-[#5f6172] hover:bg-[#faf6ea] hover:text-[#23252f]"}`}>
+                  More <Icons.ChevronDown size={14} strokeWidth={2} className={`transition ${moreOpen ? "rotate-180" : ""}`} />
+                </button>
+                {moreOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
+                    <div role="menu" className="glass absolute right-0 z-50 mt-2 w-44 p-1.5">
+                      {moreLinks.map((l) => (
+                        <Link key={l.href} href={l.href} onClick={() => setMoreOpen(false)} role="menuitem"
+                          className={`block rounded-lg px-3 py-2 text-sm transition ${path === l.href ? "bg-[#faf6ea] font-medium text-[#a97f16]" : "text-[#3a3f52] hover:bg-[#faf6ea]"}`}>
+                          {l.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </nav>
 
             <div className="flex items-center gap-2">
-              <ThemeToggle />
+              {/* <ThemeToggle /> — night mode hidden for now (see the theme note in layout.tsx). */}
               <WalletConnect />
             </div>
           </div>

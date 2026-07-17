@@ -23,14 +23,19 @@ const DEFAULTS: Omit<Settings, "id"> = {
   providerConfig: null,
 };
 
+// Settings are read on nearly every request but change rarely, so cache them briefly in memory.
+// (Reads used to be an upsert — a DB WRITE on every read, ~900ms per call.)
+let cache: { at: number; val: Settings } | null = null;
+const CACHE_MS = 30_000;
+
 export async function getSettings(): Promise<Settings> {
+  if (cache && Date.now() - cache.at < CACHE_MS) return cache.val;
   try {
-    const s = await db.platformSettings.upsert({
-      where: { id: "singleton" },
-      update: {},
-      create: { id: "singleton" },
-    });
-    return s as unknown as Settings;
+    const found = await db.platformSettings.findUnique({ where: { id: "singleton" } });
+    const s = found ?? (await db.platformSettings.create({ data: { id: "singleton" } }));
+    const val = s as unknown as Settings;
+    cache = { at: Date.now(), val };
+    return val;
   } catch {
     return { id: "singleton", ...DEFAULTS };
   }
@@ -56,5 +61,6 @@ export async function updateSettings(patch: Record<string, any>): Promise<Settin
     update: data,
     create: { id: "singleton", ...data },
   });
+  cache = { at: Date.now(), val: s as unknown as Settings }; // keep the read cache in sync
   return s as unknown as Settings;
 }

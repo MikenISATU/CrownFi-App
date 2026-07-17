@@ -57,7 +57,20 @@ export default function PredictionsLanding() {
         <div>
           <div className="eyebrow mb-2">Prediction markets</div>
           <h1 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the crown</h1>
-          <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Back your call on pageant outcomes. Browse freely; connect a wallet only when you predict.</p>
+          <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Back your call on pageant outcomes. Browse freely — connect only when you stake.</p>
+          {markets !== null && markets.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <span className="chip tabular-nums">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#c0392b]" />
+                </span>
+                {markets.filter((m) => m.live).length} live
+              </span>
+              <span className="chip tabular-nums">{markets.reduce((s, m) => s + m.totalPool, 0).toLocaleString()} USDC pooled</span>
+              <span className="chip tabular-nums">{markets.reduce((s, m) => s + m.participants, 0)} predicting</span>
+            </div>
+          )}
         </div>
         {fan ? (
           <button className="btn-gold" onClick={() => setShowCreate((s) => !s)}>{showCreate ? "Close" : "Create a prediction"}</button>
@@ -77,14 +90,14 @@ export default function PredictionsLanding() {
         </div>
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 no-scrollbar">
           {CATEGORIES.map((c) => (
-            <button key={c} onClick={() => setCat(c)} className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm transition ${cat === c ? "bg-gradient-to-b from-[#d4af37] to-[#b8912f] text-[#1a1f35]" : "border border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
+            <button key={c} onClick={() => setCat(c)} aria-pressed={cat === c} className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition ${cat === c ? "border-[#a97f16]/40 bg-gradient-to-b from-[#e4c358] to-[#c39a2c] text-[#1a1f35] shadow-sm" : "border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
               {c === "all" ? "All categories" : (CATEGORY_LABEL[c] ?? c)}
             </button>
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {STATUSES.map((s) => (
-            <button key={s.key} onClick={() => setStatus(s.key)} className={`rounded-full px-3 py-1 text-xs transition ${status === s.key ? "bg-[#23252f] text-white" : "border border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
+            <button key={s.key} onClick={() => setStatus(s.key)} aria-pressed={status === s.key} className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${status === s.key ? "border-[#a97f16]/50 bg-[rgba(0,0,0,0.842)] text-[#ffd277]" : "border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
               {s.label}
             </button>
           ))}
@@ -111,7 +124,13 @@ export default function PredictionsLanding() {
       {/* Featured live */}
       {markets !== null && status === "all" && cat === "all" && !q && live.length > 0 && (
         <section>
-          <h2 className="mb-3 flex items-center gap-2 font-display text-2xl font-semibold text-[#23252f]"><span className="inline-block h-2 w-2 rounded-full bg-[#c0392b]" /> Live now</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-display text-2xl font-semibold text-[#23252f]">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c0392b]" />
+            </span>
+            Live now
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {live.slice(0, 3).map((m) => <MarketCard key={m.id} m={m} />)}
           </div>
@@ -190,7 +209,7 @@ function CreateMarket({ onCreated, onError }: { onCreated: () => void; onError: 
   }
 
   return (
-    <div className="glass space-y-3 p-5">
+    <div className="card-gold space-y-3 p-5">
       <h3 className="font-display text-xl font-semibold text-[#23252f]">Create a market</h3>
       <input className="field" placeholder="Question (e.g. Who wins the Q&A round?)" value={question} onChange={(e) => setQuestion(e.target.value)} />
       <select className="field" value={category} onChange={(e) => setCategory(e.target.value)}>

@@ -97,9 +97,9 @@ export default function LoyaltyPage() {
           <h1 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Loyalty</h1>
           <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Earn points by voting, collecting, and completing social tasks. Redeem them for perks. Support and points never change vote power.</p>
         </div>
-        <div className="glass px-6 py-4 text-center">
+        <div className="card-gold px-6 py-4 text-center">
           <div className="text-xs uppercase tracking-wider text-[#7a7768]">Your balance</div>
-          <div className="font-display text-4xl font-semibold text-[#b8912f]">{points.toLocaleString()}</div>
+          <div className="font-display text-4xl font-semibold tabular-nums text-[#b8912f]">{points.toLocaleString()}</div>
           <div className="text-xs text-[#7a7768]">points</div>
         </div>
       </header>
@@ -118,7 +118,7 @@ export default function LoyaltyPage() {
           <h2 className="mb-4 font-display text-2xl font-semibold text-[#23252f]">Earn points</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {tasks.map((t) => (
-              <div key={t.key} className="glass flex items-center gap-4 p-4">
+              <div key={t.key} className="card-gold flex items-center gap-4 p-4">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl surface-soft text-[#a97f16]"><Ic name={t.icon} /></div>
                 <div className="min-w-0 flex-1">
                   <div className="font-display text-base text-[#23252f]">{t.title}</div>
@@ -149,7 +149,7 @@ export default function LoyaltyPage() {
             const soldOut = rw.remaining != null && rw.remaining <= 0;
             const cant = !fan || points < rw.cost || soldOut;
             return (
-              <div key={rw.key} className="glass flex flex-col p-5">
+              <div key={rw.key} className="card-gold flex flex-col p-5">
                 <div className="grid h-11 w-11 place-items-center rounded-xl surface-soft text-[#a97f16]"><Ic name={rw.icon} /></div>
                 <div className="mt-3 font-display text-lg text-[#23252f]">{rw.title}</div>
                 <div className="mt-1 flex-1 text-xs text-[#7a7768]">{rw.description}</div>

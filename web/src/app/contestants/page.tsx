@@ -1,27 +1,26 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSession } from "@/session/SessionProvider";
-import { SpotlightCarousel, Slide } from "@/components/Carousel";
-import { Portrait } from "@/components/Portrait";
+import { LoopCarousel } from "@/components/LoopCarousel";
+import { Flag } from "@/components/Flag";
 import { Toast } from "@/components/ui";
 import { short } from "@/lib/format";
 import { getJson, postJson } from "@/lib/api";
 import { messageFor } from "@/lib/messages";
 import { signWithFreighter } from "@/wallet/freighter";
 
-type Collectible = { id: string; title: string; priceUsdc: number; metadataUri: string; tokenId?: string; contestant: { id: string; name: string; country: string; sash: string; portraitUrl?: string | null } };
+type Collectible = { id: string; title: string; priceUsdc: number; metadataUri: string; imageUrl?: string | null; tokenId?: string; contestant: { id: string; name: string; country: string; sash: string; portraitUrl?: string | null } };
 
 export default function CollectPage() {
-  const router = useRouter();
   const { fan, address } = useSession();
   const [items, setItems] = useState<Collectible[]>([]);
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [balance, setBalance] = useState<number | null>(null);
   const [toast, setToast] = useState({ msg: "", tone: "ok" as "ok" | "err" });
 
-  function load() { getJson<Collectible[]>("/api/collectibles", []).then(setItems); }
+  function load() { getJson<Collectible[]>("/api/collectibles", []).then((d) => { setItems(d); setLoading(false); }); }
   useEffect(load, []);
 
   const refreshBalance = useCallback(() => {
@@ -34,8 +33,6 @@ export default function CollectPage() {
     setToast({ msg, tone });
     setTimeout(() => setToast({ msg: "", tone: "ok" }), 3200);
   }
-
-  const slides: Slide[] = items.map((c) => ({ id: c.contestant.id, name: c.contestant.name, country: c.contestant.country, sash: c.contestant.sash, portraitUrl: c.contestant.portraitUrl }));
 
   async function getTestUsdc() {
     if (!address) { flash("Connect your Freighter wallet first.", "err"); return; }
@@ -80,47 +77,126 @@ export default function CollectPage() {
   }
 
   return (
-    <div>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-10">
+      {/* ── Header + wallet ─────────────────────────────── */}
+      <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
-          <div className="eyebrow mb-2">Support the crown</div>
-          <h1 className="font-display text-4xl font-semibold text-[#23252f]">Collectibles that fund contestants</h1>
-          <p className="mt-2 text-sm text-[#5f6172]">Buy an official portrait in <b>USDC</b>. The payment is split on-chain — the contestant gets her cut instantly. <span className="tag-on ml-1">on-chain</span></p>
+          <div className="eyebrow mb-2">Collect</div>
+          <h1 className="font-display text-4xl font-semibold text-[#23252f]">Collectibles that fund delegates</h1>
+          <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
+            One official portrait per delegate, minted on Stellar. The payment splits on-chain — her cut lands
+            instantly. One per wallet.
+          </p>
         </div>
-        {address && (
-          <div className="glass px-4 py-3 text-right">
-            <div className="text-xs uppercase tracking-wider text-[#7a7768]">Your test USDC</div>
-            <div className="font-display text-2xl font-semibold text-[#b8912f]">{balance == null ? "…" : balance.toFixed(2)}</div>
-            <button className="btn-ghost mt-2 !px-3 !py-1.5 text-xs" disabled={busy === "faucet"} onClick={getTestUsdc}>
-              {busy === "faucet" ? "Sending…" : "Get test USDC"}
+
+        {address ? (
+          <div className="card-gold w-full px-5 py-4 sm:w-auto sm:min-w-[13rem]">
+            <div className="text-[11px] uppercase tracking-wider text-[#7a7768]">Your test USDC</div>
+            <div className="font-display text-3xl font-semibold tabular-nums text-[#b8912f]">
+              {balance == null ? "—" : balance.toFixed(2)}
+            </div>
+            <button className="btn-ghost mt-2 w-full !px-3 !py-1.5 text-xs" disabled={busy === "faucet"} onClick={getTestUsdc}>
+              {busy === "faucet" ? "Sending…" : "Get 50 test USDC"}
             </button>
+          </div>
+        ) : (
+          <div className="card-gold w-full px-5 py-4 text-sm text-[#5f6172] sm:w-auto sm:max-w-[15rem]">
+            Connect your Freighter wallet to see your balance and start collecting.
           </div>
         )}
       </div>
 
-      <SpotlightCarousel slides={slides} cta="View profile" onSelect={(cid) => router.push(`/contestants/${cid}`)} />
-
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((c) => (
-          <div key={c.id} className="glass overflow-hidden p-3">
-            <Link href={`/contestants/${c.contestant.id}`} className="block">
-              <Portrait id={c.contestant.id} name={c.contestant.name} sash={c.contestant.sash} portraitUrl={c.contestant.portraitUrl} />
-            </Link>
-            <div className="px-1 pt-3">
-              <Link href={`/contestants/${c.contestant.id}`} className="font-display text-lg text-[#23252f] hover:text-[#a97f16]">{c.contestant.name}</Link>
-              <div className="text-xs text-[#7a7768]">{c.title}</div>
-              <div className="mt-1"><span className="rounded-full bg-[#faf0d2] px-2 py-0.5 text-[10px] font-semibold text-[#8a6d1f]">1 per wallet</span></div>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="font-semibold text-[#b8912f]">{c.priceUsdc} USDC</span>
-                <button className="btn-gold !px-4 !py-2" disabled={busy === c.id} onClick={() => buy(c)}>
-                  {busy === c.id ? "Confirm in wallet…" : "Collect"}
-                </button>
-              </div>
-              {c.tokenId && <div className="mono mt-2 text-[11px] text-emerald">NFT {short(c.tokenId, 6)}</div>}
+      {/* ── How it works ────────────────────────────────── */}
+      <section className="grid gap-3 sm:grid-cols-3">
+        {[
+          { n: "1", t: "Top up test USDC", d: "One tap funds your wallet. Testnet money — nothing real is spent." },
+          { n: "2", t: "Pick your delegate", d: "Every portrait is 50 USDC, one per wallet." },
+          { n: "3", t: "Confirm in Freighter", d: "Approve once — the NFT lands in your wallet, her cut pays out on-chain." },
+        ].map((s) => (
+          <div key={s.n} className="card-gold p-5">
+            <div className="flex items-center gap-2">
+              <span className="num-gold">{s.n}</span>
+              <span className="font-display text-base text-[#23252f]">{s.t}</span>
             </div>
+            <p className="mt-2 text-xs leading-relaxed text-[#5f6172]">{s.d}</p>
           </div>
         ))}
-      </div>
+      </section>
+
+      {/* ── The collectibles themselves ─────────────────── */}
+      <section>
+        <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-display text-2xl font-semibold text-[#23252f]">Available to collect</h2>
+          {!loading && items.length > 0 && (
+            <span className="text-sm text-[#7a7768]">{items.length} collectible{items.length === 1 ? "" : "s"} · 1 per wallet</span>
+          )}
+        </div>
+
+        {loading && (
+          <div className="flex items-center justify-center gap-5">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className={`glass p-3 ${i === 1 ? "w-72 sm:w-80" : "hidden w-56 opacity-60 sm:block"}`}>
+                <div className="aspect-square w-full animate-pulse rounded-xl bg-[#efe9d8]" />
+                <div className="mx-auto mt-3 h-4 w-32 animate-pulse rounded bg-[#efe9d8]" />
+                <div className="mx-auto mt-2 h-3 w-20 animate-pulse rounded bg-[#efe9d8]" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && items.length === 0 && (
+          <div className="glass p-10 text-center">
+            <div className="font-display text-xl text-[#23252f]">Nothing to collect yet</div>
+            <p className="mt-2 text-sm text-[#7a7768]">Collectibles go live once a pageant is approved. Check back shortly.</p>
+          </div>
+        )}
+
+        {!loading && items.length > 0 && (
+          <LoopCarousel
+            items={items}
+            ariaLabel="Candidate collectibles"
+            render={(c, { center }) => {
+              const collected = Boolean(c.tokenId);
+              const affordable = balance == null || balance >= c.priceUsdc;
+              return (
+                <div className={`glass overflow-hidden p-3 ${center ? "shadow-spot ring-1 ring-[#e3cf8f]" : ""}`}>
+                  {/* The NFT artwork itself — the resolved image from the token's metadata. */}
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#faf7ef]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={c.imageUrl ?? c.contestant.portraitUrl ?? ""}
+                      alt={c.title}
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    {collected && <span className="tag-on absolute left-2 top-2">Minted</span>}
+                  </div>
+
+                  <div className="px-1 pb-1 pt-3 text-center">
+                    <div className="truncate font-display text-lg font-semibold text-[#23252f]">{c.contestant.name}</div>
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-[#6f6c5f]">
+                      <Flag sash={c.contestant.sash} /> {c.contestant.country}
+                    </div>
+
+                    <div className="mt-2 font-display text-xl font-semibold tabular-nums text-[#b8912f]">{c.priceUsdc} USDC</div>
+                    {address && !affordable && <div className="text-[11px] text-[#9a5a12]">Top up to collect</div>}
+
+                    {/* Profile button sits under every collectible. */}
+                    <div className="mt-3 flex flex-col gap-2">
+                      <button className="btn-gold w-full" disabled={busy === c.id} onClick={() => buy(c)}>
+                        {busy === c.id ? "Confirm in wallet…" : "Collect"}
+                      </button>
+                      <Link href={`/contestants/${c.contestant.id}`} className="btn-ghost w-full">View profile</Link>
+                    </div>
+
+                    {c.tokenId && <div className="mono mt-2 text-[11px] text-emerald">NFT {short(c.tokenId, 6)}</div>}
+                  </div>
+                </div>
+              );
+            }}
+          />
+        )}
+      </section>
 
       <Toast msg={toast.msg} tone={toast.tone} />
     </div>

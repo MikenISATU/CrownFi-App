@@ -158,11 +158,10 @@ export default function CandidatePage() {
           <div className="eyebrow mb-3">Exclusive drop</div>
           <h1 className="font-display text-5xl font-semibold text-[#c8a233] sm:text-6xl">Support Your Queen</h1>
           <p className="mt-5 max-w-lg text-[#5f6172]">
-            Every official candidate portrait has been transformed into an exclusive NFT-inspired digital collectible.
-            Mint your favorite queen on Stellar and own a timeless piece of digital history.
+            Every official candidate portrait is a digital collectible on Stellar. Mint your favorite queen to own it.
           </p>
           <p className="mt-3 max-w-lg text-sm text-[#7a7768]">
-            Your support directly helps fund her pageant journey, empower her advocacies, and bring her dreams to life.
+            Your payment goes directly to the delegate you back.
           </p>
 
           {col && (
@@ -268,7 +267,8 @@ export default function CandidatePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/40" onClick={() => setGcashOpen(false)} />
           <div className="relative z-10 w-full max-w-sm glass p-6 text-center">
-            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-[#0d6efd] text-lg font-bold text-white">G</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/gcash.svg" alt="GCash" className="mx-auto mb-3 h-10 w-auto" />
             <div className="font-display text-xl text-[#23252f]">Pay with GCash</div>
             <p className="mt-2 text-sm text-[#5f6172]">Collect <b>{col.title}</b> for <b>{col.priceUsdc} USDC</b>, paid via GCash.</p>
             <button className="btn-gold mt-4 w-full" disabled={gcashBusy} onClick={() => payGcash(col)}>{gcashBusy ? "Starting GCash…" : `Pay ${col.priceUsdc} USDC with GCash`}</button>

@@ -18,8 +18,9 @@ type Detail = MarketView & {
 
 export default function MarketDetail() {
   const { id } = useParams<{ id: string }>();
-  const { fan, connect, connecting } = useSession();
+  const { fan, address, connect, connecting } = useSession();
   const [m, setM] = useState<Detail | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [pick, setPick] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
@@ -36,6 +37,16 @@ export default function MarketDetail() {
       setState("ready");
     } catch { setState("error"); }
   }, [id]);
+
+  // Same wallet balance the Collect and Tickets tabs show, so stakes are never a guess.
+  const refreshBalance = useCallback(async () => {
+    if (!address) { setBalance(null); return; }
+    try {
+      const r = await fetch(`/api/usdc-balance?address=${address}`, { cache: "no-store" });
+      if (r.ok) setBalance((await r.json()).balanceUsdc ?? 0);
+    } catch { /* leave the last known balance in place */ }
+  }, [address]);
+  useEffect(() => { refreshBalance(); }, [refreshBalance]);
 
   useEffect(() => { load(); const iv = setInterval(() => { if (document.visibilityState === "visible") load(); }, 10000); return () => clearInterval(iv); }, [load]);
 
@@ -55,7 +66,7 @@ export default function MarketDetail() {
       if (pd.mock) {
         const r = await fetch(`/api/markets/${id}/predict`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ option: pick, amount: Number(amount) }) });
         const d = await r.json().catch(() => ({}));
-        if (r.ok) { flash(`Prediction placed! +${d.pointsAwarded ?? 0} points`); reset(); load(); }
+        if (r.ok) { flash(`Prediction placed! +${d.pointsAwarded ?? 0} points`); reset(); load(); refreshBalance(); }
         else flash(messageFor(d.error, "Could not place prediction."), "err");
         return;
       }
@@ -68,7 +79,7 @@ export default function MarketDetail() {
       // 3) Submit + record on-chain.
       const cr = await fetch(`/api/markets/${id}/confirm-stake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
       const cd = await cr.json().catch(() => ({}));
-      if (cr.ok) { flash(`Staked ${amount} USDC on-chain! +${cd.pointsAwarded ?? 0} points`); reset(); load(); }
+      if (cr.ok) { flash(`Staked ${amount} USDC on-chain! +${cd.pointsAwarded ?? 0} points`); reset(); load(); refreshBalance(); }
       else flash(messageFor(cd.error, "Could not confirm your stake."), "err");
     } catch {
       flash("Something went wrong. Please try again.", "err");
@@ -89,7 +100,7 @@ export default function MarketDetail() {
     try {
       const r = await fetch("/api/faucet", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amountUsdc: 50 }) });
       const d = await r.json().catch(() => ({}));
-      if (r.ok) flash("Sent 50 test USDC to your wallet. You can stake now.");
+      if (r.ok) { flash("Sent 50 test USDC to your wallet. You can stake now."); refreshBalance(); }
       else flash(messageFor(d.error, "The faucet couldn’t send test USDC right now."), "err");
     } catch {
       flash("Something went wrong. Please try again.", "err");
@@ -111,7 +122,7 @@ export default function MarketDetail() {
       if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
       const cr = await fetch(`/api/markets/${id}/confirm-unstake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
       const cd = await cr.json().catch(() => ({}));
-      if (cr.ok) { flash("Position cancelled — USDC refunded to your wallet."); load(); }
+      if (cr.ok) { flash("Position cancelled — USDC refunded to your wallet."); load(); refreshBalance(); }
       else flash(messageFor(cd.error, "Could not cancel your position."), "err");
     } catch {
       flash("Something went wrong. Please try again.", "err");
@@ -132,7 +143,7 @@ export default function MarketDetail() {
       if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
       const cr = await fetch(`/api/markets/${id}/confirm-claim`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
       const cd = await cr.json().catch(() => ({}));
-      if (cr.ok) { flash("Winnings claimed to your wallet! 🎉"); load(); }
+      if (cr.ok) { flash("Winnings claimed to your wallet! 🎉"); load(); refreshBalance(); }
       else flash(messageFor(cd.error, "Could not claim your winnings."), "err");
     } catch {
       flash("Something went wrong. Please try again.", "err");
@@ -235,6 +246,14 @@ export default function MarketDetail() {
                       ))}
                       <button type="button" onClick={getTestUsdc} disabled={busy} className="ml-auto text-xs text-[#a97f16] hover:underline disabled:opacity-50">Get test USDC</button>
                     </div>
+                    {address && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-[#9a968b]">Wallet balance</span>
+                        <span className={`font-semibold tabular-nums ${balance != null && Number(amount) > balance ? "text-[#9a5a12]" : "text-[#5f6172]"}`}>
+                          {balance == null ? "—" : `${balance.toFixed(2)} USDC`}
+                        </span>
+                      </div>
+                    )}
                     {pick != null && Number(amount) > 0 && (
                       <>
                         <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-[#eee6d3]">

@@ -59,7 +59,7 @@ const GROUPS: Group[] = [
 function Item({ qa }: { qa: QA }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="glass overflow-hidden">
+    <div className="card-gold">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left">
         <span className="font-display text-base font-semibold text-[#23252f]">{qa.q}</span>
         <ChevronDown size={18} className={`shrink-0 text-[#a97f16] transition-transform ${open ? "rotate-180" : ""}`} />

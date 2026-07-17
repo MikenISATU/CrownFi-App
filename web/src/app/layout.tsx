@@ -16,10 +16,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Apply the saved theme before paint to avoid a flash of the wrong mode. */}
+        {/*
+          Night mode is hidden for now — the app is light-only. This clears the `dark` class and
+          any saved choice before paint, so anyone already in night mode (or on an OS that prefers
+          dark) lands on the light theme instead of being stuck with no toggle to escape it.
+
+          To bring night mode back: restore the line below and re-add <ThemeToggle /> in AppShell.
+          The html.dark rules in globals.css and ThemeToggle.tsx are left intact for that.
+            var t=localStorage.getItem('crownfi.theme');
+            if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}
+        */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('crownfi.theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+            __html: `(function(){try{document.documentElement.classList.remove('dark');localStorage.removeItem('crownfi.theme');}catch(e){}})();`,
           }}
         />
       </head>

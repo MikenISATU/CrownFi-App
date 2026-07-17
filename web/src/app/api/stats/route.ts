@@ -1,8 +1,11 @@
 import { db } from "@/lib/db";
 import { readJson } from "@/lib/http";
+import { cached } from "@/lib/serverCache";
 
+// Aggregate counts across five tables — the most expensive read in the app, hit on every
+// home visit. Nothing here needs to be fresher than a few seconds.
 export async function GET() {
-  return readJson(async () => {
+  return readJson(() => cached("stats", 15_000, async () => {
   const [votes, tickets, purchases, contestants, rounds] = await Promise.all([
     db.vote.count(),
     db.ticket.count(),
@@ -39,5 +42,5 @@ export async function GET() {
     gmv: Math.round(gmv),
     topContestants,
   };
-  });
+  }));
 }

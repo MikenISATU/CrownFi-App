@@ -16,8 +16,8 @@ export function TicketTierSelector({ tiers, selectedTier, onSelectTier }: Ticket
           <button
             key={t.name}
             onClick={() => onSelectTier(t.name)}
-            className={`glass p-5 text-left transition ${
-              selectedTier === t.name ? "shadow-spot ring-1 ring-gold bg-[#faf7ef]" : "glass-hover"
+            className={`card-gold p-5 text-left transition active:scale-[0.99] ${
+              selectedTier === t.name ? "card-gold-active shadow-spot" : ""
             }`}
           >
             <div className="flex items-center justify-between">

@@ -13,11 +13,14 @@ export function SpotlightCarousel({
   slides,
   onSelect,
   selectedId,
+  votedId,
   cta = "Select",
 }: {
   slides: Slide[];
   onSelect?: (id: string) => void;
   selectedId?: string;
+  /** Locked-in choice (e.g. a vote already cast by this wallet) — shown as Voted, not re-pickable. */
+  votedId?: string;
   cta?: string;
 }) {
   const [active, setActive] = useState(0);
@@ -48,6 +51,7 @@ export function SpotlightCarousel({
           const offset = i - active;
           const norm = ((offset + slides.length + Math.floor(slides.length / 2)) % slides.length) - Math.floor(slides.length / 2);
           const isCenter = i === active;
+          const isVoted = votedId === s.id;
           // Show exactly 3 (center + one on each side) on desktop; just the center on mobile.
           const hide = Math.abs(norm) > 1;
           const hideOnMobile = Math.abs(norm) > 0;
@@ -64,7 +68,8 @@ export function SpotlightCarousel({
               ].join(" ")}
               style={{ transform: `scale(${isCenter ? 1 : 0.82})` }}
             >
-              <div className={`glass relative overflow-hidden p-2 ${isCenter ? "shadow-spot" : ""} ${selectedId === s.id ? "ring-2 ring-gold" : ""}`}>
+              <div className={`glass relative overflow-hidden p-2 ${isCenter ? "shadow-spot" : ""} ${isVoted ? "ring-2 ring-[#0f6e56]" : selectedId === s.id ? "ring-2 ring-gold" : ""}`}>
+                {isVoted && <span className="tag-on absolute right-2 top-2 z-10">Voted</span>}
                 {isCenter && (
                   <>
                     <span className="pointer-events-none absolute left-1 top-1 z-10 h-5 w-5 border-l-2 border-t-2 border-[#c8a233]" />
@@ -78,8 +83,8 @@ export function SpotlightCarousel({
                   <div className="truncate font-display text-lg font-semibold text-[#23252f]">{s.name}</div>
                   <div className="flex items-center justify-center gap-1.5 text-xs text-[#6f6c5f]"><Flag sash={s.sash} /> {s.country}</div>
                   {isCenter && (
-                    <span className="mt-2 inline-block rounded-full bg-gradient-to-b from-gold to-gold-deep px-3 py-1 text-xs font-semibold text-ink">
-                      {selectedId === s.id ? "Selected" : cta}
+                    <span className="btn-gold mt-3 !min-h-[34px] !px-4 !py-1.5 !text-xs">
+                      {isVoted ? "Voted" : selectedId === s.id ? "Selected" : cta}
                     </span>
                   )}
                 </div>

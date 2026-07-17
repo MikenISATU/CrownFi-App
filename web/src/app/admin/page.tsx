@@ -418,7 +418,10 @@ function Pageants({ pageants, locked, onUnlock, onReview }: any) {
               <div className="font-display text-lg text-[#23252f]">{p.title}</div>
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CHIP[p.status]}`}>{STATUS_LABEL[p.status]}</span>
             </div>
-            <div className="text-xs text-[#7a7768]">{p.orgName} · {p.contactName} ({p.email}) · {p._count?.candidates ?? 0} candidates</div>
+            <div className="text-xs text-[#7a7768]">
+              {p.orgName} · {p.contactName} ({p.email}) · {p._count?.candidates ?? 0} candidates ·{" "}
+              <span className={p.driveUrl ? "text-[#3f7d4e]" : "text-[#9a5a12]"}>{p.driveUrl ? "files linked" : "no files"}</span>
+            </div>
           </div>
           <button className="btn-gold !px-4 !py-1.5" onClick={() => onReview(p.id)}>Review</button>
         </div>
@@ -450,12 +453,30 @@ function ReviewModal({ pageant, onClose, onDecide }: { pageant: any; onClose: ()
           <button onClick={onClose} className="rounded-full p-1.5 text-[#7a7768] hover:bg-[#faf7ef]"><Icons.X size={18} /></button>
         </div>
 
+        {/* Required files — the organizer's Drive folder */}
+        <div className={`mb-4 rounded-xl border p-3 ${pageant.driveUrl ? "border-[#efe4c2] bg-[#faf7ef]" : "border-[#f0d9a0] bg-[#fff8e6]"}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-[#7a7768]">Required files</div>
+              <div className="text-sm text-[#23252f]">
+                {pageant.driveUrl ? "Google Drive folder submitted by the organizer" : "No Drive folder linked — ask for permits, roster and hi-res photos."}
+              </div>
+            </div>
+            {pageant.driveUrl && (
+              <a href={pageant.driveUrl} target="_blank" rel="noopener noreferrer" className="btn-ghost !px-4 !py-2 shrink-0">Open Drive folder ↗</a>
+            )}
+          </div>
+          {pageant.driveUrl && <div className="mt-2 break-all text-xs text-[#7a7768]">{pageant.driveUrl}</div>}
+        </div>
+
         {/* Organizer + event info */}
         <div className="grid gap-3 sm:grid-cols-2">
           <Info label="Contact" value={`${pageant.contactName} · ${pageant.email}`} />
+          <Info label="Organization" value={pageant.orgName} />
           <Info label="Venue" value={pageant.venue ?? "—"} />
           <Info label="Event date" value={pageant.eventDate ? new Date(pageant.eventDate).toLocaleDateString() : "—"} />
           <Info label="Candidates" value={String(pageant.candidates?.length ?? 0)} />
+          <Info label="Submitted" value={pageant.createdAt ? new Date(pageant.createdAt).toLocaleDateString() : "—"} />
         </div>
         {pageant.description && <p className="mt-3 rounded-lg surface-soft px-3 py-2 text-sm text-[#3a3f52]">{pageant.description}</p>}
 
@@ -467,17 +488,25 @@ function ReviewModal({ pageant, onClose, onDecide }: { pageant: any; onClose: ()
           </div>
         )}
 
-        {/* Candidates + images */}
+        {/* Candidates + images (click a photo to open it full size) */}
         <h4 className="mt-5 mb-2 font-display text-lg text-[#23252f]">Candidates</h4>
         <div className="space-y-3">
           {(pageant.candidates ?? []).map((c: any) => (
             <div key={c.id} className="rounded-xl border border-[#eee6d3] p-3">
-              <div className="text-sm font-semibold text-[#23252f]">{c.fullName} <span className="text-xs font-normal text-[#7a7768]">· {c.location ?? "—"} · supply {c.maxSupply}</span></div>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="text-sm font-semibold text-[#23252f]">
+                {c.number != null && <span className="mr-1.5 text-[#a97f16]">#{c.number}</span>}
+                {c.fullName}{" "}
+                <span className="text-xs font-normal text-[#7a7768]">· {c.location ?? "—"} · supply {c.maxSupply}</span>
+              </div>
+              {c.bio && <p className="mt-1 text-xs leading-relaxed text-[#5f6172]">{c.bio}</p>}
+              <div className="mt-2 flex flex-wrap gap-3">
                 {(c.images ?? []).length === 0 && <span className="text-xs text-[#9a968b]">No images uploaded</span>}
                 {(c.images ?? []).map((img: any) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={img.categoryKey} src={img.url} alt={img.categoryKey} title={img.categoryKey} className="h-16 w-16 rounded-lg object-cover ring-1 ring-[#eee6d3]" />
+                  <a key={img.categoryKey} href={img.url} target="_blank" rel="noopener noreferrer" className="group" title="Open full size">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.url} alt={img.categoryKey} className="h-20 w-20 rounded-lg object-cover ring-1 ring-[#eee6d3] transition group-hover:ring-[#c9a227]" />
+                    <div className="mt-1 text-center text-[10px] uppercase tracking-wider text-[#7a7768]">{img.categoryKey.replace("_", " ")}</div>
+                  </a>
                 ))}
               </div>
             </div>

@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_address" }, { status: 400 });
 
   const body = await req.json().catch(() => null);
+  // Cap matches the priciest thing you can buy in one go (a 200 USDC Diamond ticket),
+  // so a single top-up always covers the tab you're standing on. Testnet play money.
   const amountUsdc = Number(body?.amountUsdc ?? 50);
-  if (!Number.isFinite(amountUsdc) || amountUsdc <= 0 || amountUsdc > 100)
+  if (!Number.isFinite(amountUsdc) || amountUsdc <= 0 || amountUsdc > 200)
     return NextResponse.json({ error: "invalid_amount" }, { status: 400 });
   try {
     const res = await mintTestUsdc({ toAddress: walletAddress, amountUsdc });

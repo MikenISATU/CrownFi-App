@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   }
 }
 
-const EDITABLE_FIELDS = ["title", "orgName", "contactName", "email", "website", "facebook", "instagram", "socials", "verification", "description", "venue", "bannerUrl"] as const;
+const EDITABLE_FIELDS = ["title", "orgName", "contactName", "email", "website", "facebook", "instagram", "socials", "verification", "driveUrl", "description", "venue", "bannerUrl"] as const;
 
 // PATCH — organizer edits (while editable) or submits for review.
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

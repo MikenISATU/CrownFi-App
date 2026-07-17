@@ -1,40 +1,52 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { SpotlightCarousel, Slide } from "@/components/Carousel";
+import type { Slide } from "@/components/Carousel";
+import { Filmstrip } from "@/components/Filmstrip";
 import { CountUp } from "@/components/ui";
-import { MarketCard, MarketView, CATEGORY_LABEL, timeLeft } from "@/components/MarketCard";
-import { categoryImage } from "@/lib/segments";
+import type { MarketView } from "@/components/MarketCard";
 import { getJson } from "@/lib/api";
 
 type Stats = { votes: number; tickets: number; collectiblesSold: number; contestants: number };
 
 export default function Home() {
-  const router = useRouter();
   const [slides, setSlides] = useState<Slide[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [markets, setMarkets] = useState<MarketView[]>([]);
 
   useEffect(() => {
-    getJson<any[]>("/api/contestants", []).then((cs) =>
+    getJson<any[]>("/api/contestants", [], { ttl: 60_000 }).then((cs) =>
       setSlides(cs.map((c: any) => ({ id: c.id, name: c.name, country: c.country, sash: c.sash, portraitUrl: c.portraitUrl }))));
-    getJson<Stats | null>("/api/stats", null).then(setStats);
-    getJson<MarketView[]>("/api/markets", []).then(setMarkets);
+    getJson<Stats | null>("/api/stats", null, { ttl: 30_000 }).then(setStats);
+    getJson<MarketView[]>("/api/markets", [], { ttl: 30_000 }).then(setMarkets);
   }, []);
 
-  // Official first, then live, then by pool size — so the marquee always leads with the strongest market.
-  const sorted = [...markets].sort((a, b) =>
-    (Number(b.official) - Number(a.official)) ||
-    (Number(b.live) - Number(a.live)) ||
-    (b.totalPool - a.totalPool));
-  const spotlight = sorted.find((m) => m.official && m.live) ?? sorted[0] ?? null;
-  const rest = sorted.filter((m) => m.id !== spotlight?.id).slice(0, 3);
+  // The home page only previews the markets — the numbers below, never the markets themselves.
+  const liveMarkets = markets.filter((m) => m.live).length;
+  const pooled = markets.reduce((sum, m) => sum + m.totalPool, 0);
+  const predictors = markets.reduce((sum, m) => sum + m.participants, 0);
 
   return (
     <div className="space-y-24">
+      {/* ─── SASHES FOR LIFE BANNER ───────────────────────── */}
+      <section className="group relative -mt-2 overflow-hidden rounded-[2rem] border border-[#e7d9a8] shadow-[0_30px_70px_-42px_rgba(184,145,47,0.85)]">
+        <div className="sfl-band absolute inset-0" />
+        <div className="relative flex h-60 items-center justify-center sm:h-[27rem]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/sfl.gif"
+            alt="Sashes for Life"
+            className="h-full w-auto max-w-full object-contain transition-transform duration-[900ms] ease-out group-hover:scale-[1.02]"
+          />
+        </div>
+        {/* vignette + gold sheen sweep */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_75%_at_50%_50%,transparent_45%,rgba(35,37,47,0.14)_100%)]" />
+        <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 animate-sheen bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent" />
+      </section>
+
       {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="hero-band relative -mt-2 overflow-hidden rounded-[2rem] border border-[#e7d9a8] px-6 py-20 text-center sm:px-10 sm:py-28"
+      <section className="hero-band relative overflow-hidden rounded-[2rem] border border-[#e7d9a8] px-6 py-20 text-center sm:px-10 sm:py-28"
         style={{ background: "radial-gradient(120% 90% at 50% -10%, #fbf4dd 0%, #ffffff 45%, #faf7ef 100%)" }}>
         {/* Gold aura */}
         <div className="pointer-events-none absolute inset-0 opacity-90"
@@ -50,10 +62,10 @@ export default function Home() {
             CrownFi <span className="italic text-[#c8a233]">App</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl font-display text-lg uppercase tracking-[0.28em] text-[#a97f16] sm:text-xl">
-            The ultimate blockchain-powered platform for pageants
+            Blockchain-powered voting, tickets & predictions for pageants
           </p>
           <p className="mx-auto mt-6 max-w-xl text-[#5f6172]">
-            Cast your vote securely, purchase verified seats, and collect limited memorabilia to fund the pageant queens you love.
+            Vote, reserve your seat, and collect your queen — all on Stellar.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link href="/tickets" className="btn-gold !px-8 !py-3 text-base">Buy Tickets</Link>
@@ -62,46 +74,58 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── PREDICTION MARKETS ───────────────────────────── */}
-      <section>
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      {/* ─── PREDICTION MARKETS (preview only — full markets live on /predictions) ─── */}
+      <section className="relative overflow-hidden rounded-[2rem] border border-[#efe4c2] bg-white">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d4af37]/10 blur-3xl" />
+
+        {/* Prediction market artwork — a wide banner, so it runs the full width of the card. */}
+        <div className="relative border-b border-[#efe4c2]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/prediction-market.webp" alt="CrownFi prediction markets" className="h-full w-full object-cover" />
+        </div>
+
+        <div className="relative grid items-center gap-9 p-7 sm:p-10 lg:grid-cols-2">
           <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#efe4c2] bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#a97f16]">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#efe4c2] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#a97f16]">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c0392b]" />
               </span>
-              Live prediction markets
+              Prediction markets
             </div>
             <h2 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the crown</h2>
-            <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Back your call on each stage of the night. Browse freely; connect only to participate — anyone can open a market.</p>
+            <p className="mt-3 max-w-lg text-[#5f6172]">
+              Call the swimsuit round, the long gown, the Q&amp;A — or the crown itself. Winnings settle in test USDC
+              the moment a market resolves.
+            </p>
+            <ul className="mt-5 space-y-2.5">
+              {[
+                "Stake on any outcome — cancel any time before the market locks.",
+                "Odds move live with the crowd.",
+                "Anyone can open a market. Official ones carry a star.",
+              ].map((line) => (
+                <li key={line} className="flex gap-2.5 text-sm text-[#5f6172]">
+                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#d4af37]" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <Link href="/predictions" className="btn-gold mt-7 inline-flex !px-8 !py-3 text-base">Open prediction markets</Link>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/predictions" className="btn-gold !px-7 !py-3">Explore markets</Link>
-            <Link href="/predictions" className="btn-ghost !px-6 !py-3">Create a prediction</Link>
+
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "Markets live", value: liveMarkets },
+              { label: "USDC pooled", value: pooled },
+              { label: "Predicting", value: predictors },
+            ].map((s) => (
+              <div key={s.label} className="card-gold p-5 text-center">
+                <div className="font-display text-3xl font-semibold tabular-nums text-[#b8912f] sm:text-4xl"><CountUp to={s.value} /></div>
+                <div className="mt-1 text-[11px] uppercase tracking-wider text-[#7a7768]">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
-
-        {spotlight ? (
-          <div className="grid gap-4 lg:grid-cols-5">
-            <SpotlightMarket m={spotlight} />
-            <div className="grid content-start gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
-              {rest.map((m) => <MarketCard key={m.id} m={m} />)}
-              {rest.length === 0 && (
-                <Link href="/predictions" className="glass glass-hover flex h-full min-h-[8rem] flex-col items-center justify-center gap-2 p-6 text-center">
-                  <span className="font-display text-lg text-[#23252f]">More markets inside</span>
-                  <span className="text-xs text-[#7a7768]">Browse every open market, or open your own →</span>
-                </Link>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="glass p-10 text-center">
-            <div className="font-display text-xl text-[#23252f]">Markets open soon</div>
-            <p className="mt-2 text-sm text-[#7a7768]">Prediction markets go live as pageants are approved. Anyone can open the first one from the Predict page.</p>
-            <Link href="/predictions" className="btn-gold mt-4 inline-block">Visit prediction markets</Link>
-          </div>
-        )}
       </section>
 
       {/* ─── MEET THE DELEGATES ───────────────────────────── */}
@@ -110,10 +134,10 @@ export default function Home() {
           <div className="eyebrow mb-2">Delegate roster</div>
           <h2 className="font-display text-4xl font-semibold text-[#c8a233] sm:text-6xl">Meet the Delegates</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-[#5f6172]">
-            Vote for the NEXT Queen onchain. Help your favorite candidate advance to the next level using your power to vote.
+            Five delegates, one crown. Send your favorite to the next stage — one vote per wallet, per round.
           </p>
         </div>
-        <SpotlightCarousel slides={slides} cta="View profile" onSelect={(id) => router.push(`/contestants/${id}`)} />
+        <Filmstrip slides={slides} />
         <div className="mt-8 text-center">
           <Link href="/vote" className="btn-gold !px-8 !py-3 text-base">Vote Now</Link>
         </div>
@@ -125,8 +149,8 @@ export default function Home() {
           <div className="eyebrow mb-3">Exclusive collectibles</div>
           <h2 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Own a piece of the crown</h2>
           <p className="mt-4 max-w-lg text-[#5f6172]">
-            Every official candidate portrait becomes a limited, NFT-inspired digital collectible on Stellar. Mint your
-            favorite queen, fund her journey, and hold a timeless piece of pageant history.
+            Every official candidate portrait becomes a digital collectible on Stellar. Mint your favorite queen and
+            support her directly.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/contestants" className="btn-gold !px-8 !py-3 text-base">Explore collectibles</Link>
@@ -143,8 +167,18 @@ export default function Home() {
       <section className="relative overflow-hidden rounded-[2rem] border border-[#e7d9a8]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/stadium/stage.png" alt="CrownFi arena" className="h-64 w-full object-cover sm:h-96" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-t from-black/45 via-transparent to-transparent px-6 text-center">
-          <h2 className="font-display text-4xl font-semibold text-white drop-shadow-lg sm:text-6xl">Reserve your seat</h2>
+        {/* Full scrim, not just a bottom fade — the heading sits mid-frame over a bright stage. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/45 to-black/30" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
+          <h2
+            className="font-display text-4xl font-semibold text-white sm:text-6xl"
+            style={{ textShadow: "0 2px 4px rgba(0,0,0,0.55), 0 8px 28px rgba(0,0,0,0.65)" }}
+          >
+            Reserve your seat
+          </h2>
+          <p className="max-w-md text-sm text-white/85" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
+            Every seat is a verified ticket on Stellar — scannable at the door, impossible to duplicate.
+          </p>
           <Link href="/tickets" className="btn-gold !px-10 !py-3 text-lg shadow-2xl">Buy Tickets</Link>
         </div>
       </section>
@@ -157,8 +191,8 @@ export default function Home() {
           { label: "Collectibles sold", value: stats?.collectiblesSold ?? 0 },
           { label: "Delegates", value: stats?.contestants ?? slides.length },
         ].map((s) => (
-          <div key={s.label} className="glass p-5 text-center">
-            <div className="font-display text-4xl font-semibold text-[#b8912f]"><CountUp to={s.value} /></div>
+          <div key={s.label} className="card-gold p-5 text-center">
+            <div className="font-display text-4xl font-semibold tabular-nums text-[#b8912f]"><CountUp to={s.value} /></div>
             <div className="mt-1 text-xs uppercase tracking-wider text-[#7a7768]">{s.label}</div>
           </div>
         ))}
@@ -172,13 +206,13 @@ export default function Home() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {[
-            { n: "01", title: "Vote in a heartbeat", body: "Cast your vote instantly. Intake and de-duplication run off-chain, so the platform never buckles when millions rush in.", tag: "off-chain" },
-            { n: "02", title: "Anchored to Stellar", body: "When a round closes, the tally is sealed into a Merkle root and anchored on Stellar. Tamper-evident, forever.", tag: "on-chain" },
-            { n: "03", title: "Verify your receipt", body: "Get a cryptographic receipt proving your vote is in the official count. No trust required, and no identity exposed.", tag: "on-chain" },
+            { n: "1", title: "Vote in a heartbeat", body: "Voting is instant — intake runs off-chain, so the site never buckles on finale night.", tag: "off-chain" },
+            { n: "2", title: "Anchored to Stellar", body: "When a round closes, the tally is sealed into a Merkle root on Stellar. Tamper-evident, forever.", tag: "on-chain" },
+            { n: "3", title: "Verify your receipt", body: "A cryptographic receipt proves your vote is in the official count — no trust required.", tag: "on-chain" },
           ].map((s) => (
-            <div key={s.n} className="glass glass-hover p-6">
+            <div key={s.n} className="card-gold p-6">
               <div className="flex items-center justify-between">
-                <span className="font-display text-2xl text-[#b8912f]/70">{s.n}</span>
+                <span className="num-gold">{s.n}</span>
                 <span className={s.tag === "on-chain" ? "tag-on" : "tag-off"}>{s.tag}</span>
               </div>
               <h3 className="mt-3 font-display text-xl text-[#23252f]">{s.title}</h3>
@@ -205,56 +239,6 @@ export default function Home() {
   );
 }
 
-// Large "spotlight" treatment for the leading market on the home page.
-function SpotlightMarket({ m }: { m: MarketView }) {
-  const top = [...m.options].sort((a, b) => b.percent - a.percent).slice(0, 3);
-  return (
-    <Link
-      href={`/predictions/${m.id}`}
-      className="group relative col-span-1 flex flex-col overflow-hidden rounded-2xl border border-[#efe4c2] bg-white shadow-[0_24px_60px_-30px_rgba(184,145,47,0.6)] ring-1 ring-[#d4af37]/40 transition hover:-translate-y-0.5 lg:col-span-3"
-    >
-      {/* Banner */}
-      <div className="relative h-40 w-full sm:h-48">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#eacb63] via-[#d4af37] to-[#b8912f]" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={m.bannerUrl ?? categoryImage(m.category)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-        <div className="absolute left-3 top-3 flex items-center gap-1.5">
-          {m.official && <span className="rounded-full bg-[#1a1f35] px-2.5 py-1 text-[11px] font-semibold text-[#f4e29a]">★ Official</span>}
-          {m.live && (
-            <span className="flex items-center gap-1 rounded-full bg-[#fdeaea] px-2 py-1 text-[11px] font-semibold text-[#c0392b]">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#c0392b]" /> Live
-            </span>
-          )}
-        </div>
-        <span className="absolute bottom-3 left-3 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">{CATEGORY_LABEL[m.category] ?? m.category}</span>
-        <span className="absolute bottom-3 right-3 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-semibold text-[#5f6172] backdrop-blur">{m.status === "resolved" ? "Resolved" : timeLeft(m.endsInMs)}</span>
-      </div>
-
-      <div className="flex flex-1 flex-col p-5">
-        <div className="font-display text-2xl leading-snug text-[#23252f]">{m.question}</div>
-        <div className="mt-4 flex-1 space-y-2.5">
-          {top.map((o) => (
-            <div key={o.index}>
-              <div className="flex justify-between text-sm text-[#5f6172]">
-                <span className="truncate pr-2">{o.label}</span>
-                <span className="font-semibold text-[#a97f16]">{o.percent}%</span>
-              </div>
-              <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#efe9d8]">
-                <div className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912f]" style={{ width: `${o.percent}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-5 flex items-center justify-between border-t border-[#eee6d3] pt-4 text-sm">
-          <span className="text-[#7a7768]">{m.totalPool.toLocaleString()} USDC pooled · {m.participants} predicting</span>
-          <span className="font-semibold text-[#a97f16] transition group-hover:translate-x-0.5">Predict →</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 const HOME_FAQ = [
   { q: "How do I sign in?", a: "No passwords — click Connect Freighter, approve the popup, and sign a one-time message. Your Stellar wallet address is your identity." },
   { q: "How does voting work?", a: "Votes are taken off-chain for speed, one per wallet per round. When a round closes, the tally is sealed into a Merkle root and anchored on Stellar so you can verify your vote." },
@@ -265,7 +249,7 @@ const HOME_FAQ = [
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="glass overflow-hidden">
+    <div className="card-gold">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left">
         <span className="font-display text-base font-semibold text-[#23252f]">{q}</span>
         <span className={`shrink-0 font-display text-xl text-[#a97f16] transition-transform ${open ? "rotate-45" : ""}`}>+</span>

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "@/session/SessionProvider";
 import { SpotlightCarousel, Slide } from "@/components/Carousel";
 import { Toast } from "@/components/ui";
@@ -21,6 +21,7 @@ export default function VotePage() {
   const [picked, setPicked] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [board, setBoard] = useState<Board | null>(null);
+  const [myVotes, setMyVotes] = useState<Record<string, string>>({}); // roundId → contestantId
   const [toast, setToast] = useState<{ msg: string; tone: "ok" | "err" }>({ msg: "", tone: "ok" });
 
   // The round you vote in = the open round for the selected category (else its latest round).
@@ -44,13 +45,28 @@ export default function VotePage() {
     getJson<Board | null>("/api/leaderboard", null).then((b) => b && setBoard(b));
   }
 
+  // What this wallet has already voted for, keyed by round. Re-read whenever the wallet
+  // changes so switching accounts never shows the previous wallet's ballot.
+  const loadMyVotes = useCallback(async () => {
+    if (!fan) { setMyVotes({}); return; }
+    const d = await getJson<{ votes: { roundId: string; contestantId: string }[] }>("/api/vote", { votes: [] });
+    setMyVotes(Object.fromEntries(d.votes.map((v) => [v.roundId, v.contestantId])));
+  }, [fan]);
+  useEffect(() => { loadMyVotes(); }, [loadMyVotes]);
+
   useEffect(() => {
-    getJson<any[]>("/api/contestants", []).then(setCons);
-    getJson<Round[]>("/api/rounds", []).then(setRounds);
+    getJson<any[]>("/api/contestants", [], { ttl: 60_000 }).then(setCons);
+    getJson<Round[]>("/api/rounds", [], { ttl: 30_000 }).then(setRounds);
     loadTotals();
     const iv = setInterval(loadTotals, 8000); // live vote totals
     return () => clearInterval(iv);
   }, []);
+
+  // The candidate this wallet already backed in the round on screen (empty if it hasn't voted).
+  const votedFor = round ? myVotes[round.id] ?? "" : "";
+
+  // Show that existing vote as the selection, so the card reads as already chosen.
+  useEffect(() => { setPicked(votedFor); }, [votedFor, activeCat]);
 
   function flash(msg: string, tone: "ok" | "err") {
     setToast({ msg, tone });
@@ -63,7 +79,7 @@ export default function VotePage() {
     const { ok, data } = await postJson<{ error?: string; pointsAwarded?: number }>("/api/vote", { roundId: round.id, contestantId: picked });
     setBusy(false);
     const err = (data as any)?.error;
-    if (ok) { flash(`Vote recorded (+${(data as any)?.pointsAwarded ?? 0} points). Verify it once the round closes.`, "ok"); loadTotals(); }
+    if (ok) { flash(`Vote recorded (+${(data as any)?.pointsAwarded ?? 0} points). Verify it once the round closes.`, "ok"); loadTotals(); loadMyVotes(); }
     else flash(messageFor(err, "Could not record your vote."), "err");
   }
 
@@ -74,6 +90,10 @@ export default function VotePage() {
       <div className="mb-6">
         <div className="eyebrow mb-2">Cast your vote</div>
         <h1 className="font-display text-4xl font-semibold text-[#23252f]">Who wears the crown?</h1>
+        <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
+          Pick a stage, crown your queen — one vote per wallet, per round. Closed rounds are anchored on Stellar, so
+          every tally can be verified.
+        </p>
         <p className="mt-2 text-sm text-[#5f6172]">
           {round ? `${round.title} · ${round.status}` : "Not open for voting yet"}
           <span className="tag-off ml-2">off-chain intake</span>
@@ -106,12 +126,29 @@ export default function VotePage() {
         </div>
       ) : (
         <>
-          <SpotlightCarousel slides={slides} onSelect={setPicked} selectedId={picked} cta="Pick" />
+          <SpotlightCarousel
+            slides={slides}
+            onSelect={votedFor ? undefined : setPicked}
+            selectedId={picked}
+            votedId={votedFor}
+            cta="Pick"
+          />
           <div className="mt-8 flex flex-col items-center gap-3">
-            <button className="btn-gold" disabled={busy || !fan || !picked || round.status !== "open"} onClick={cast}>
-              {busy ? "Submitting..." : round.status !== "open" ? "Voting closed for this stage" : picked ? `Vote in ${CATEGORY_LABEL[activeCat]}` : "Select a contestant"}
-            </button>
-            <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Already voted? Verify your receipt</Link>
+            {votedFor ? (
+              <>
+                <div className="rounded-xl border border-[#e6f6ef] bg-[#e6f6ef] px-4 py-2.5 text-sm font-semibold text-[#0f6e56]">
+                  You’ve voted in {CATEGORY_LABEL[activeCat]} — one vote per wallet.
+                </div>
+                <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Verify your receipt</Link>
+              </>
+            ) : (
+              <>
+                <button className="btn-gold" disabled={busy || !fan || !picked || round.status !== "open"} onClick={cast}>
+                  {busy ? "Submitting..." : round.status !== "open" ? "Voting closed for this stage" : picked ? `Vote in ${CATEGORY_LABEL[activeCat]}` : "Select a contestant"}
+                </button>
+                <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Already voted? Verify your receipt</Link>
+              </>
+            )}
           </div>
         </>
       )}

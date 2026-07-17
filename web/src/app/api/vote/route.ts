@@ -6,6 +6,23 @@ import { clientIp } from "@/lib/ip";
 import { requireFan } from "@/lib/fanAuth";
 import { tryAwardPoints, VOTE_POINTS } from "@/lib/loyalty";
 
+// GET — the signed-in wallet's own votes, so the Vote tab can show what it already picked
+// instead of offering a choice the server will reject. Session-derived: a wallet can only ever
+// read its own ballot.
+export async function GET(req: NextRequest) {
+  const auth = requireFan(req);
+  if (auth instanceof NextResponse) return auth;
+  try {
+    const votes = await db.vote.findMany({
+      where: { fanId: auth.fanId },
+      select: { roundId: true, contestantId: true, createdAt: true },
+    });
+    return NextResponse.json({ votes });
+  } catch {
+    return NextResponse.json({ votes: [] });
+  }
+}
+
 // Off-chain vote intake. Fast path: rate limit, quota check, then a single insert whose
 // unique constraint (roundId, fanId) is the real duplicate-vote guard.
 // fanId is derived from the verified wallet session — never trusted from the body — so

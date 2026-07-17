@@ -27,10 +27,6 @@ export default {
         sans: ['"Times New Roman"', "Times", "Georgia", "serif"],
       },
       keyframes: {
-        marquee: {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(-50%)" },
-        },
         floatUp: {
           from: { opacity: "0", transform: "translate(-50%, 8px)" },
           to: { opacity: "1", transform: "translate(-50%, 0)" },
@@ -45,7 +41,6 @@ export default {
         },
       },
       animation: {
-        marquee: "marquee 26s linear infinite",
         floatUp: "floatUp 0.28s cubic-bezier(0.16,1,0.3,1) both",
         fadeSlideUp: "fadeSlideUp 0.3s ease-out both",
         float: "float 5s ease-in-out infinite",

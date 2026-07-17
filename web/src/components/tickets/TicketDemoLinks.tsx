@@ -13,8 +13,8 @@ export function TicketDemoLinks() {
         or the{" "}
         <Link href="/tickets/verify/demo-ticket-12345" className="text-[#b8912f] font-semibold underline hover:text-[#a97f16]">
           {TICKETING_COPY.verifyDemoLink}
-        </Link>{" "}
-        (where you can scan and mark it as redeemed).
+        </Link>
+        .
       </p>
     </div>
   );

@@ -237,6 +237,7 @@ model Pageant {
   instagram     String?
   socials       String? // other social links (freeform / comma-separated)
   verification  String? // supporting verification links
+  driveUrl      String? // Google Drive folder holding the required files (permits, roster, hi-res photos)
 
   // Event info
   title         String

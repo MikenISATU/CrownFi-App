@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
 import { ROSTER } from "@/lib/roster";
+import { cached, invalidate } from "@/lib/serverCache";
 
 // Roster shaped like a Contestant row, for the no-database fallback.
 const ROSTER_AS_CONTESTANTS = ROSTER.map((r) => ({
@@ -15,7 +16,11 @@ const ROSTER_AS_CONTESTANTS = ROSTER.map((r) => ({
 
 export async function GET() {
   try {
-    const rows = await db.contestant.findMany({ orderBy: { name: "asc" } });
+    // The roster changes only when an admin edits it, and POST below invalidates the cache —
+    // so every tab that shows contestants shares one DB read per 30s window.
+    const rows = await cached("contestants", 30_000, () =>
+      db.contestant.findMany({ orderBy: { name: "asc" } })
+    );
     // If the DB is reachable but empty (not seeded yet), still show the roster.
     return NextResponse.json(rows.length ? rows : ROSTER_AS_CONTESTANTS);
   } catch {
@@ -49,6 +54,8 @@ export async function POST(req: NextRequest) {
         edition: 1,
       },
     });
+    invalidate("contestants"); // the new contestant + collectible show up immediately, not after the TTL
+    invalidate("collectibles");
     return NextResponse.json(contestant);
   } catch {
     return NextResponse.json({ error: "sash_taken" }, { status: 409 });
