@@ -28,7 +28,7 @@ All seven Soroban contracts are deployed and live on Stellar testnet:
 | Sale splitter | On-chain USDC payment split; ticket listings **101–104** (Silver/Gold/Diamond/Platinum) registered | `CATCOIVWAVVXBNLPOXBVN3WQ26UNAVLUVSRYBNQWIII75I5QK4YV2KU3` |
 | Test USDC | Mintable demo token everything settles in (faucet source) | `CAE2GXXU4BPLRX5DHLFJKUR7AP5ETPIERGTFNCY7PEFCEL5H3G3RG6LW` |
 | Pageant NFT | Finale-build candidate NFTs: per-candidate IPFS metadata, one mint per wallet, admin-signed mint | `CCONZKTIQHR5UE4AKROICICZ2JSWDAXYBNYDCKDIMRFSIK37PND5PMQW` |
-| Prediction market | Pooled markets: stake / unstake / resolve / claim, 2% fee on winnings | `CCYBJ3RO45I6IWMJ7YE4PNXPJ4TD64U4EWQD6PPWJ76RO7NKUTXPQGIW` |
+| Prediction market | Pooled markets: stake / unstake / resolve / claim, 2% fee on winnings | `CDF3R2LUIZJUXCFUBXP62F25M2BYUJT6OT3QYR46MWWBUFEXEAY25POO` |
 
 The prediction **treasury** (fee recipient) is a regular wallet, not a contract: `GC3PXGAWQWHHV6M6AKR3LSZZ7RNYZXASGNJM7BSU3EMWI5KG2R5QSIY3`.
 
@@ -88,7 +88,7 @@ Important framing:
 | Database | Prisma + Postgres; Supabase is the team-supported hosted Postgres path |
 | Wallet | Freighter for Stellar wallet connection/signing; mock/demo session paths still exist |
 | Blockchain | Stellar Testnet + Soroban Rust contracts where `STELLAR_MODE=live` is configured |
-| Contracts | `audit-anchor`, `ticket`, `collectible`, `sale-splitter`, `usdc-test` |
+| Contracts | `audit-anchor`, `ticket`, `collectible`, `sale-splitter`, `usdc-test`, `pageant-nft`, `prediction-market` |
 | CI/security | npm audit, TypeScript, Merkle tests, Rust format/tests/audit, secret smoke test, best-effort CodeQL |
 
 ## What the app currently does

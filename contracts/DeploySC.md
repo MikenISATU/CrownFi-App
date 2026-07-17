@@ -6,7 +6,7 @@ Deployment runbook for the CrownFi platform contracts: the reusable **pageant-nf
 ## ✅ Already deployed (testnet, 2026-07-12) — in `web/.env`
 | Contract | ID |
 |---|---|
-| Prediction Market | `CCYBJ3RO45I6IWMJ7YE4PNXPJ4TD64U4EWQD6PPWJ76RO7NKUTXPQGIW` |
+| Prediction Market | `CDF3R2LUIZJUXCFUBXP62F25M2BYUJT6OT3QYR46MWWBUFEXEAY25POO` |
 | Pageant NFT | `CCONZKTIQHR5UE4AKROICICZ2JSWDAXYBNYDCKDIMRFSIK37PND5PMQW` |
 | Prediction treasury | `GC3PXGAWQWHHV6M6AKR3LSZZ7RNYZXASGNJM7BSU3EMWI5KG2R5QSIY3` |
 

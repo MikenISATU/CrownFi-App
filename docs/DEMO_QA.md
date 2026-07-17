@@ -94,12 +94,16 @@ architecture means chain downtime degrades us to "normal pageant platform" rathe
 A: Pool-based, like Polymarket. A market has outcomes; fans stake test USDC on one; the pool's
 distribution *is* the live odds. When the pageant resolves the market, winners split the losers'
 pool pro-rata. Stake, unstake (before close), resolve and claim are all on-chain contract calls
-the user signs in their own wallet — we never hold funds.
+the user signs in their own wallet — Freighter users in the extension, email/Google users through
+their Privy-held key. Funds sit in the contract, never with us.
 
 **Q: What does the platform earn from markets?**
-A: 2% of winnings only, sent to a treasury wallet by the contract at claim time. Nothing on
-stakes, nothing from losers — you only pay a fee on money you won. It's visible in the contract
-source.
+A: 2% of **profit only**, sent to a treasury wallet by the contract at claim time. The math is
+`fee = 2% × (payout − your stake)` — the stake itself is never charged, losers pay nothing, and
+a sole winner pays zero fee and gets their stake back to the cent. This is enforced in the
+contract's `claim` function, pinned by unit tests, and we've verified it live on testnet: a
+two-sided market paid out exactly 14.90 on a 10-USDC winning stake over a 5-USDC losing pool
+(5 profit × 2% = 0.10 fee).
 
 **Q: Isn't this gambling? Is it legal?**
 A: Today it runs exclusively on testnet with valueless demo USDC — it's a mechanics demo, not a
@@ -204,7 +208,7 @@ intake for finals, a dispute window, KYC tiers, and a licensed payments partner 
 | Fact | Value |
 |---|---|
 | Contracts deployed | 7 (all live on Stellar testnet) |
-| Market fee | 2% of winnings only |
+| Market fee | 2% of profit only — stake never charged, sole winner pays 0 |
 | NFT price / rule | 50 USDC · one mint per wallet |
 | Ticket tiers | Silver 50 / Gold 100 / Platinum 150 / Diamond 200 USDC |
 | Vote rule | 1 vote per wallet, per round, per stage |
