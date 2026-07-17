@@ -27,7 +27,7 @@ export default function Home() {
   const predictors = markets.reduce((sum, m) => sum + m.participants, 0);
 
   return (
-    <div className="space-y-24">
+    <div className="space-y-14 sm:space-y-20">
       {/* ─── SASHES FOR LIFE BANNER ───────────────────────── */}
       <section className="group relative -mt-2 overflow-hidden rounded-[2rem] border border-[#e7d9a8] shadow-[0_30px_70px_-42px_rgba(184,145,47,0.85)]">
         <div className="sfl-band absolute inset-0" />
@@ -46,7 +46,7 @@ export default function Home() {
       </section>
 
       {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="hero-band relative overflow-hidden rounded-[2rem] border border-[#e7d9a8] px-6 py-20 text-center sm:px-10 sm:py-28"
+      <section className="hero-band relative overflow-hidden rounded-[2rem] border border-[#e7d9a8] px-5 py-12 text-center sm:px-10 sm:py-24"
         style={{ background: "radial-gradient(120% 90% at 50% -10%, #fbf4dd 0%, #ffffff 45%, #faf7ef 100%)" }}>
         {/* Gold aura */}
         <div className="pointer-events-none absolute inset-0 opacity-90"

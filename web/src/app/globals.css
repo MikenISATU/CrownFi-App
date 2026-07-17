@@ -210,16 +210,18 @@ body {
   justify-content: start;
   gap: 0.25rem;
   width: var(--fs-w);
-  min-height: 200px;
   padding: 1em;
   z-index: 2;
   position: absolute;
-  top: 0;
-  left: 0;
-  background-image: radial-gradient(ellipse at 0 0, rgba(20, 23, 42, 0.62) 20%, transparent 58%);
-  background-size: 170% 220px;
+  inset: 0; /* span the card: name/country shade at the top, CTA pinned to the bottom shade */
+  background-image:
+    radial-gradient(ellipse at 0 0, rgba(20, 23, 42, 0.62) 20%, transparent 58%),
+    linear-gradient(to top, rgba(20, 23, 42, 0.55) 0%, transparent 26%);
+  background-size: 170% 220px, 100% 100%;
   background-repeat: no-repeat;
+  pointer-events: none; /* the card handles clicks; only the CTA link is interactive */
 }
+.filmstrip__contents > * { pointer-events: auto; }
 .filmstrip__name,
 .filmstrip__country {
   margin: 0;
@@ -246,7 +248,8 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
 }
-.filmstrip__cta { opacity: 0; transform: translateX(-200px); transition-duration: 1s; margin-top: 0.6rem; align-self: start; }
+/* CTA rides the bottom of the card, clear of the delegate's face. */
+.filmstrip__cta { opacity: 0; transform: translateX(-200px); transition-duration: 1s; margin-top: auto; align-self: start; }
 
 [data-active] .filmstrip__contents .filmstrip__name,
 [data-active] .filmstrip__contents .filmstrip__country,
