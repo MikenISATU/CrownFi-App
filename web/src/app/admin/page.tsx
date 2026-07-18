@@ -207,7 +207,7 @@ export default function AdminPage() {
       </div>
 
       {tab === "overview" && <Overview stats={stats} />}
-      {tab === "rounds" && <Rounds rounds={rounds} busy={busy} onClose={closeRound} onCreate={createRound} />}
+      {tab === "rounds" && <Rounds rounds={rounds} contestants={contestants} busy={busy} onClose={closeRound} onCreate={createRound} />}
       {tab === "contestants" && <Contestants contestants={contestants} onCreate={createContestant} />}
       {tab === "requests" && <Requests requests={requests} locked={requestsLocked} onUnlock={unlockRequests} onReview={setReviewingRequest} />}
       {reviewingRequest && <RequestModal req={reviewingRequest} onClose={() => setReviewingRequest(null)} onDecide={(id: string, status: string) => { decideRequest(id, status); setReviewingRequest(null); }} />}
@@ -263,7 +263,7 @@ function Overview({ stats }: { stats: any }) {
   );
 }
 
-function Rounds({ rounds, busy, onClose, onCreate }: any) {
+function Rounds({ rounds, contestants, busy, onClose, onCreate }: any) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(PAGEANT_SEGMENTS[0].key as string);
   return (
@@ -276,22 +276,120 @@ function Rounds({ rounds, busy, onClose, onCreate }: any) {
         <button className="btn-gold shrink-0" disabled={!title} onClick={() => { onCreate(title, category); setTitle(""); }}>Create round</button>
       </div>
       {rounds.map((r: any) => (
-        <div key={r.id} className="glass flex flex-wrap items-center justify-between gap-3 p-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="font-display text-lg text-[#23252f]">{r.title}</div>
-              {r.category && <span className="rounded-full bg-[#faf0d2] px-2 py-0.5 text-[11px] font-semibold text-[#8a6d1f]">{CATEGORY_LABEL[r.category] ?? r.category}</span>}
+        <div key={r.id} className="glass p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="font-display text-lg text-[#23252f]">{r.title}</div>
+                {r.category && <span className="rounded-full bg-[#faf0d2] px-2 py-0.5 text-[11px] font-semibold text-[#8a6d1f]">{CATEGORY_LABEL[r.category] ?? r.category}</span>}
+              </div>
+              <div className="text-xs text-[#7a7768]">
+                <span className={r.status === "open" ? "text-emerald" : "text-[#7a7768]"}>{r.status}</span> · {r._count?.votes ?? 0} votes
+                {r.checkpoint && <span className="mono ml-2 text-emerald">root {short(r.checkpoint.merkleRoot, 6)}</span>}
+              </div>
             </div>
-            <div className="text-xs text-[#7a7768]">
-              <span className={r.status === "open" ? "text-emerald" : "text-[#7a7768]"}>{r.status}</span> · {r._count?.votes ?? 0} votes
-              {r.checkpoint && <span className="mono ml-2 text-emerald">root {short(r.checkpoint.merkleRoot, 6)}</span>}
-            </div>
+            <button className="btn-gold" disabled={r.status === "closed" || busy === r.id} onClick={() => onClose(r.id)}>
+              {busy === r.id ? "Anchoring..." : r.status === "closed" ? "Anchored" : "Close + anchor"}
+            </button>
           </div>
-          <button className="btn-gold" disabled={r.status === "closed" || busy === r.id} onClick={() => onClose(r.id)}>
-            {busy === r.id ? "Anchoring..." : r.status === "closed" ? "Anchored" : "Close + anchor"}
-          </button>
+          {r.status === "closed" && <AnchorPanel roundId={r.id} contestants={contestants} />}
         </div>
       ))}
+    </div>
+  );
+}
+
+// Admin view of a closed round: the sealed results + the on-chain anchor that locks them.
+// This is the flip side of the fan-facing Verify tab — fans prove THEIR vote is in the
+// sealed count; the admin sees the whole sealed count and the transaction that sealed it.
+function AnchorPanel({ roundId, contestants }: { roundId: string; contestants: any[] }) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState<any>(null);
+
+  async function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && !data) {
+      const r = await fetch(`/api/rounds/${roundId}/results`);
+      if (r.ok) setData(await r.json());
+    }
+  }
+
+  const nameOf = (id: string) => contestants.find((c: any) => c.id === id)?.name ?? short(id, 4);
+  const cp = data?.checkpoint;
+  const tally = cp ? [...cp.tally].sort((a: any, b: any) => b.votes - a.votes) : [];
+  const maxVotes = Math.max(1, ...tally.map((t: any) => t.votes));
+
+  return (
+    <div className="mt-3 border-t border-[#eee6d3] pt-3">
+      <button onClick={toggle} className="flex items-center gap-2 text-sm font-semibold text-[#a97f16] hover:underline">
+        <Icons.ChevronDown size={14} strokeWidth={2} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        {open ? "Hide sealed results" : "View sealed results & anchor"}
+      </button>
+
+      {open && !data && <div className="mt-3 text-xs text-[#7a7768]">Loading…</div>}
+
+      {open && data && !cp && (
+        <div className="mt-3 text-xs text-[#9a5a12]">Closed, but no checkpoint found — this round was closed before anchoring existed.</div>
+      )}
+
+      {open && cp && (
+        <div className="mt-3 grid gap-4 lg:grid-cols-2">
+          {/* The seal */}
+          <div className="rounded-xl surface-soft p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#0f6e56]">
+              <span className="grid h-5 w-5 place-items-center rounded-full bg-[#e6f6ef]"><Icons.Check size={12} strokeWidth={3} /></span>
+              Sealed on Stellar — results can no longer be altered
+            </div>
+            <div className="mt-3 space-y-2 text-xs">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[#7a7768]">Anchor transaction</span>
+                {cp.anchorTx ? (
+                  <a href={`https://stellar.expert/explorer/testnet/tx/${cp.anchorTx}`} target="_blank" rel="noopener noreferrer" className="mono text-[#a97f16] hover:underline">
+                    {short(cp.anchorTx, 8)} ↗
+                  </a>
+                ) : <span className="text-[#9a968b]">—</span>}
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[#7a7768]">Merkle root</span>
+                <span className="mono text-[#23252f]">{short(cp.merkleRoot, 8)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[#7a7768]">Votes sealed</span>
+                <span className="font-semibold tabular-nums text-[#23252f]">{cp.totalVotes}</span>
+              </div>
+              {data.round?.closedAt && (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[#7a7768]">Closed at</span>
+                  <span className="text-[#23252f]">{new Date(data.round.closedAt).toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-[#7a7768]">
+              Fans verify against this same root on the Verify tab — a green check there means their
+              vote is inside this sealed count.
+            </p>
+          </div>
+
+          {/* The sealed tally */}
+          <div className="rounded-xl surface-soft p-4">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#7a7768]">Sealed results</div>
+            {tally.length === 0 && <div className="text-xs text-[#9a968b]">No votes were cast in this round.</div>}
+            <div className="space-y-2">
+              {tally.map((t: any, i: number) => (
+                <div key={t.contestantId} className="flex items-center gap-2 text-sm">
+                  <span className={`w-5 text-right font-display ${i === 0 ? "text-[#b8912f]" : "text-[#9a968b]"}`}>{i + 1}</span>
+                  <span className={`min-w-0 flex-1 truncate ${i === 0 ? "font-semibold text-[#23252f]" : "text-[#5f6172]"}`}>{t.name ?? nameOf(t.contestantId)}</span>
+                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[#efe9d8]">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912f]" style={{ width: `${Math.round((t.votes / maxVotes) * 100)}%` }} />
+                  </div>
+                  <span className="w-8 text-right font-semibold tabular-nums text-[#b8912f]">{t.votes}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -36,7 +36,11 @@ export default function VerifyPage() {
       <div className="mb-8">
         <div className="eyebrow mb-2">Proof of vote</div>
         <h1 className="font-display text-4xl font-semibold text-[#23252f]">Verify your receipt</h1>
-        <p className="mt-2 text-sm text-[#5f6172]">A Merkle inclusion proof against the root anchored on Stellar. <span className="tag-on ml-1">on-chain</span></p>
+        <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
+          When a round closes, every vote is sealed and the seal is written to Stellar. A{" "}
+          <b>green check</b> here means your vote is inside that sealed count — nobody, including
+          us, could have removed or changed it. <span className="tag-on ml-1">on-chain</span>
+        </p>
       </div>
 
       <div className="glass max-w-xl p-5">
@@ -60,6 +64,11 @@ export default function VerifyPage() {
               <div className="text-xs text-[#7a7768]">{result.proof.length} proof steps</div>
             </div>
           </div>
+          <p className="mt-3 rounded-lg surface-soft px-3 py-2 text-xs leading-relaxed text-[#5f6172]">
+            {result.verified
+              ? "In plain terms: this round is closed, its results are locked on the Stellar blockchain, and your vote is provably part of the official count."
+              : "This receipt doesn’t match the sealed count. If you voted in this round, contact us — this should never happen."}
+          </p>
           <dl className="mt-4 space-y-2.5 text-sm">
             {[
               ["Anchor tx", result.anchorTx],
