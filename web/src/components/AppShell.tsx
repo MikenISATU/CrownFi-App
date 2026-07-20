@@ -13,6 +13,7 @@ const USER_LINKS = [
   { href: "/vote", label: "Vote" },
   { href: "/predictions", label: "Predict" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/winners", label: "Winners" },
   { href: "/verify", label: "Verify" },
   { href: "/tickets", label: "Tickets" },
   { href: "/contestants", label: "Collect" },
@@ -28,6 +29,7 @@ const PRIMARY_LINKS = [
   { href: "/leaderboard", label: "Leaderboard" },
 ];
 const MORE_LINKS = [
+  { href: "/winners", label: "Winners" },
   { href: "/predictions", label: "Predict" },
   { href: "/verify", label: "Verify" },
   { href: "/loyalty", label: "Rewards" },

@@ -683,6 +683,7 @@ function Payments({ data, locked, onUnlock, onSave }: any) {
         <Toggle label="KYC verification enabled" hint="Turn on identity verification for paid actions" checked={form.kycEnabled} onChange={() => toggle("kycEnabled")} />
         <Toggle label="KYC mandatory" hint="Require KYC (vs optional prompt) for paid actions" checked={form.kycMandatory} disabled={!form.kycEnabled} onChange={() => toggle("kycMandatory")} />
         <Toggle label="Maintenance mode" hint="Temporarily pause the platform for users" checked={form.maintenanceMode} onChange={() => toggle("maintenanceMode")} />
+        <Toggle label="Announce winners" hint="Reveals the Winners page to everyone — flip at the coronation moment. Results stay sealed on-chain either way." checked={form.winnersAnnounced} onChange={() => toggle("winnersAnnounced")} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm"><div className="mb-1 text-[#5f6172]">Environment</div>

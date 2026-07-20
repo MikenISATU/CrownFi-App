@@ -339,6 +339,7 @@ model PlatformSettings {
   environment     String   @default("testnet") // testnet | production
   activeProvider  String   @default("testnet_usdc")
   maintenanceMode Boolean  @default(false)
+  winnersAnnounced Boolean @default(false) // coronation switch: reveals /winners to the public
   providerConfig  String? // JSON blob for the active provider's non-secret config
   updatedAt       DateTime @updatedAt
 }

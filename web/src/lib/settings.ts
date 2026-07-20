@@ -10,6 +10,7 @@ export type Settings = {
   environment: string; // testnet | production
   activeProvider: string;
   maintenanceMode: boolean;
+  winnersAnnounced: boolean;
   providerConfig: string | null;
 };
 
@@ -20,6 +21,7 @@ const DEFAULTS: Omit<Settings, "id"> = {
   environment: "testnet",
   activeProvider: "testnet_usdc",
   maintenanceMode: false,
+  winnersAnnounced: false,
   providerConfig: null,
 };
 
@@ -50,7 +52,7 @@ export async function paymentsAllowed(): Promise<{ ok: true } | { ok: false; rea
   return { ok: true };
 }
 
-const EDITABLE = ["paymentsEnabled", "kycEnabled", "kycMandatory", "environment", "activeProvider", "maintenanceMode", "providerConfig"] as const;
+const EDITABLE = ["paymentsEnabled", "kycEnabled", "kycMandatory", "environment", "activeProvider", "maintenanceMode", "winnersAnnounced", "providerConfig"] as const;
 
 export async function updateSettings(patch: Record<string, any>): Promise<Settings> {
   const data: Record<string, any> = {};
