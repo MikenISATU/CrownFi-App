@@ -370,6 +370,15 @@ GitHub Actions run checks that avoid requiring special repository permissions. C
 | [`docs/setup/supabase.md`](docs/setup/supabase.md) | Supabase/Postgres setup |
 | [`docs/security/security-audit.md`](docs/security/security-audit.md) | Security audit notes and remaining risks |
 
+## Roadmap
+
+| Phase | When | What |
+|---|---|---|
+| **Shipped** | Now | Full testnet platform: 7 deployed contracts, anchored verifiable voting, prediction markets, NFTs, ticketing, Google/email onboarding with real wallets |
+| **Next** | Q3 2026 | Pilot regional pageant runs a live anchored round · GCash live via PayMongo · external contract audit + multisig admin · Stellar Community Fund application |
+| **Planned** | Q4 2026 | Staged mainnet (audit-anchor first, commerce after audit) · sponsored reserves · free-play predictions with loyalty points |
+| **Planned** | 2027 | Licensed real-money markets (PAGCOR-compliant partner) · talent shows / esports / fan awards on the same rails · self-serve organizer platform |
+
 ## MVP boundaries
 
 CrownFi should be presented as:

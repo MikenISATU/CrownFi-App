@@ -21,20 +21,36 @@ const USER_LINKS = [
   { href: "/organizer", label: "Organizer" },
   { href: "/me", label: "Me" },
 ];
-// Desktop header shows only the core flows; the rest live under "More".
-const PRIMARY_LINKS = [
+// Desktop header: the two core actions as direct links, everything else grouped into
+// labeled dropdowns (reference-style categorized nav).
+const NAV_DIRECT = [
   { href: "/vote", label: "Vote" },
-  { href: "/tickets", label: "Tickets" },
-  { href: "/contestants", label: "Collect" },
-  { href: "/leaderboard", label: "Leaderboard" },
 ];
-const MORE_LINKS = [
-  { href: "/winners", label: "Winners" },
-  { href: "/predictions", label: "Predict" },
-  { href: "/verify", label: "Verify" },
-  { href: "/loyalty", label: "Rewards" },
-  { href: "/organizer", label: "Organizer" },
-  { href: "/me", label: "My account" },
+const NAV_GROUPS: { label: string; links: { href: string; label: string }[] }[] = [
+  {
+    label: "Experience",
+    links: [
+      { href: "/predictions", label: "Predict" },
+      { href: "/tickets", label: "Tickets" },
+      { href: "/contestants", label: "Collect" },
+      { href: "/loyalty", label: "Rewards" },
+    ],
+  },
+  {
+    label: "Results",
+    links: [
+      { href: "/leaderboard", label: "Leaderboard" },
+      { href: "/winners", label: "Winners" },
+      { href: "/verify", label: "Verify a vote" },
+    ],
+  },
+  {
+    label: "Account",
+    links: [
+      { href: "/organizer", label: "Organizer" },
+      { href: "/me", label: "My account" },
+    ],
+  },
 ];
 
 const TABS = [
@@ -86,7 +102,7 @@ function SiteFooter() {
     <footer className="mt-24 bg-[#14172a] text-[#c7cad8]">
       {/* Thin gold accent line grounds the dark footer against the light page. */}
       <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-70" />
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           {/* Brand + newsletter */}
           <div className="max-w-xs">
@@ -156,10 +172,13 @@ function SiteFooter() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [drawer, setDrawer] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [maintenance, setMaintenance] = useState(false);
   const { isAdmin, error, needsInstall, clearError } = useSession();
-  const moreLinks = isAdmin ? [...MORE_LINKS, { href: "/admin", label: "Admin" }] : MORE_LINKS;
+  // Admin slots into the Account group when the wallet is on the allowlist.
+  const navGroups = isAdmin
+    ? NAV_GROUPS.map((g) => (g.label === "Account" ? { ...g, links: [...g.links, { href: "/admin", label: "Admin" }] } : g))
+    : NAV_GROUPS;
 
   // Reflect the admin "Maintenance mode" switch with a site-wide banner.
   // Fetch ONCE per session — not per navigation (that cost a DB round-trip on every tab change).
@@ -169,12 +188,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => { on = false; };
   }, []);
 
+  // Scroll reveal: fade sections in as they enter the viewport, on every page. Skipped
+  // entirely (content stays visible) under reduced-motion or in a hidden tab, where
+  // IntersectionObserver is suspended and hiding content would strand it invisible.
+  useEffect(() => {
+    if (
+      typeof IntersectionObserver === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      document.visibilityState !== "visible"
+    ) return;
+    const els = Array.from(document.querySelectorAll("main section")).filter((el) => !el.classList.contains("reveal-in"));
+    if (!els.length) return;
+    els.forEach((el) => el.classList.add("reveal-init"));
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("reveal-in");
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -30px 0px" }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => {
+      io.disconnect();
+      // Never leave anything hidden behind when navigating away mid-reveal.
+      els.forEach((el) => el.classList.add("reveal-in"));
+    };
+  }, [path]);
+
   const links = isAdmin ? [...USER_LINKS, { href: "/admin", label: "Admin" }] : USER_LINKS;
 
   return (
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-7xl">
           <div className="flex items-center justify-between rounded-2xl border border-[#ece6d8] bg-white/85 px-4 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_30px_-16px_rgba(16,24,40,0.18)] backdrop-blur-xl sm:px-6">
             <div className="flex items-center gap-2">
               <button className="btn-ghost h-9 w-9 !px-0 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
@@ -188,32 +238,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <nav className="hidden items-center gap-1 text-sm sm:flex">
-              {PRIMARY_LINKS.map((l) => (
+              {NAV_DIRECT.map((l) => (
                 <Link key={l.href} href={l.href}
                   className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-gradient-to-b from-[#d4af37] to-[#b8912f] text-[#1a1f35]" : "text-[#5f6172] hover:bg-[#faf6ea] hover:text-[#23252f]"}`}>
                   {l.label}
                 </Link>
               ))}
-              {/* More — secondary destinations in a dropdown to keep the header uncluttered. */}
-              <div className="relative">
-                <button onClick={() => setMoreOpen((v) => !v)} aria-expanded={moreOpen} aria-haspopup="menu"
-                  className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${moreLinks.some((l) => l.href === path) ? "bg-[#faf6ea] text-[#a97f16]" : "text-[#5f6172] hover:bg-[#faf6ea] hover:text-[#23252f]"}`}>
-                  More <Icons.ChevronDown size={14} strokeWidth={2} className={`transition ${moreOpen ? "rotate-180" : ""}`} />
-                </button>
-                {moreOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
-                    <div role="menu" className="glass absolute right-0 z-50 mt-2 w-44 p-1.5">
-                      {moreLinks.map((l) => (
-                        <Link key={l.href} href={l.href} onClick={() => setMoreOpen(false)} role="menuitem"
-                          className={`block rounded-lg px-3 py-2 text-sm transition ${path === l.href ? "bg-[#faf6ea] font-medium text-[#a97f16]" : "text-[#3a3f52] hover:bg-[#faf6ea]"}`}>
-                          {l.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
+              {/* Categorized dropdowns — grouped destinations, reference-style. */}
+              {navGroups.map((g) => {
+                const active = g.links.some((l) => l.href === path);
+                const open = openGroup === g.label;
+                return (
+                  <div key={g.label} className="relative">
+                    <button onClick={() => setOpenGroup(open ? null : g.label)} aria-expanded={open} aria-haspopup="menu"
+                      className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${active ? "bg-[#faf6ea] text-[#a97f16]" : "text-[#5f6172] hover:bg-[#faf6ea] hover:text-[#23252f]"}`}>
+                      {g.label} <Icons.ChevronDown size={14} strokeWidth={2} className={`transition ${open ? "rotate-180" : ""}`} />
+                    </button>
+                    {open && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setOpenGroup(null)} />
+                        <div role="menu" className="glass absolute right-0 z-50 mt-2 w-44 p-1.5">
+                          {g.links.map((l) => (
+                            <Link key={l.href} href={l.href} onClick={() => setOpenGroup(null)} role="menuitem"
+                              className={`block rounded-lg px-3 py-2 text-sm transition ${path === l.href ? "bg-[#faf6ea] font-medium text-[#a97f16]" : "text-[#3a3f52] hover:bg-[#faf6ea]"}`}>
+                              {l.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </nav>
 
             <div className="flex items-center gap-2">
@@ -241,7 +297,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Connection feedback — so a failed connect never looks like a dead button. */}
       {error && (
-        <div className="mx-auto mt-3 max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto mt-3 max-w-7xl px-4 sm:px-6">
           <div className="flex items-start justify-between gap-3 rounded-xl border border-[#f0d9a0] bg-[#fff8e6] px-4 py-3 text-sm text-[#6b5410]">
             <div className="flex items-start gap-2">
               <Icons.Wallet size={16} strokeWidth={2} className="mt-0.5 shrink-0" />
@@ -263,7 +319,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {maintenance && (
-        <div className="mx-auto mt-3 max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto mt-3 max-w-7xl px-4 sm:px-6">
           <div className="flex items-center gap-2 rounded-xl border border-[#f0d9a0] bg-[#fff8e6] px-4 py-2.5 text-sm text-[#6b5410]">
             <Icons.Lock size={15} strokeWidth={2} className="shrink-0" />
             <span><b>Maintenance mode.</b> Buying tickets and collectibles is paused right now — browsing stays open. Please check back soon.</span>
@@ -271,7 +327,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">{children}</main>
 
       <SiteFooter />
 

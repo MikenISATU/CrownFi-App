@@ -7,7 +7,7 @@ import { CountUp } from "@/components/ui";
 import type { MarketView } from "@/components/MarketCard";
 import { getJson } from "@/lib/api";
 
-type Stats = { votes: number; tickets: number; collectiblesSold: number; contestants: number };
+type Stats = { votes: number; tickets: number; collectiblesSold: number; contestants: number; fans: number; predictions: number };
 
 export default function Home() {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -70,6 +70,36 @@ export default function Home() {
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link href="/tickets" className="btn-gold !px-8 !py-3 text-base">Buy Tickets</Link>
             <Link href="/vote" className="btn-ghost !px-7 !py-3 text-base">Cast your vote</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── PLATFORM IN NUMBERS ──────────────────────────── */}
+      <section>
+        <div className="mb-8 text-center">
+          <div className="eyebrow mb-2">Platform pulse</div>
+          <h2 className="font-display text-3xl font-semibold text-[#23252f] sm:text-4xl">CrownFi in numbers</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#5f6172]">Live from the platform — every figure below is a real record, not a projection.</p>
+        </div>
+
+        {/* One clean strip: dark digits, gold accent, plain labels. */}
+        <div className="card-gold px-6 py-10 sm:px-10 sm:py-12">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 text-center sm:grid-cols-3 lg:grid-cols-6">
+            {[
+              { label: "Users registered", value: stats?.fans ?? 0 },
+              { label: "Votes cast", value: stats?.votes ?? 0 },
+              { label: "Predictions made", value: stats?.predictions ?? 0 },
+              { label: "NFTs collected", value: stats?.collectiblesSold ?? 0 },
+              { label: "Tickets minted", value: stats?.tickets ?? 0 },
+              { label: "Delegates", value: stats?.contestants ?? slides.length },
+            ].map((s) => (
+              <div key={s.label}>
+                <div className="font-display text-5xl font-semibold tabular-nums text-[#23252f] sm:text-6xl">
+                  <CountUp to={s.value} /><span className="text-[#c8a233]">+</span>
+                </div>
+                <div className="mt-2 text-sm text-[#7a7768]">{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -183,21 +213,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── STATS ────────────────────────────────────────── */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: "Votes cast", value: stats?.votes ?? 0 },
-          { label: "Tickets minted", value: stats?.tickets ?? 0 },
-          { label: "Collectibles sold", value: stats?.collectiblesSold ?? 0 },
-          { label: "Delegates", value: stats?.contestants ?? slides.length },
-        ].map((s) => (
-          <div key={s.label} className="card-gold p-5 text-center">
-            <div className="font-display text-4xl font-semibold tabular-nums text-[#b8912f]"><CountUp to={s.value} /></div>
-            <div className="mt-1 text-xs uppercase tracking-wider text-[#7a7768]">{s.label}</div>
-          </div>
-        ))}
-      </section>
-
       {/* ─── HOW IT WORKS ─────────────────────────────────── */}
       <section>
         <div className="mb-6 text-center">
@@ -222,6 +237,46 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ─── ROADMAP ──────────────────────────────────────── */}
+      <section>
+        <div className="mb-10 text-center">
+          <div className="eyebrow mb-2">Where this goes</div>
+          <h2 className="font-display text-3xl font-semibold text-[#23252f] sm:text-4xl">Roadmap</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#5f6172]">Shipped first, promises second — everything in phase one is live today.</p>
+        </div>
+
+        <div className="relative mx-auto max-w-4xl">
+          {/* The timeline spine */}
+          <div className="absolute left-4 top-1 h-full w-px bg-gradient-to-b from-[#d4af37] via-[#e4c358] to-transparent sm:left-1/2" />
+
+          {ROADMAP.map((p, i) => {
+            const leftSide = i % 2 === 0;
+            return (
+              <div key={p.title} className="relative pb-10 last:pb-0">
+                <span className="num-gold absolute left-4 top-1 z-10 -translate-x-1/2 sm:left-1/2">{i + 1}</span>
+                <div className={`ml-12 sm:ml-0 sm:w-1/2 ${leftSide ? "sm:pr-10" : "sm:ml-auto sm:pl-10"}`}>
+                  <div className="card-gold p-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-[#faf0d2] px-2.5 py-0.5 text-[11px] font-semibold text-[#8a6d1f]">{p.period}</span>
+                      <span className={p.status === "Shipped" ? "tag-on" : "tag-off"}>{p.status}</span>
+                    </div>
+                    <h3 className="mt-2 font-display text-xl font-semibold text-[#23252f]">{p.title}</h3>
+                    <ul className="mt-2.5 space-y-1.5">
+                      {p.items.map((it) => (
+                        <li key={it} className="flex gap-2 text-xs leading-relaxed text-[#5f6172]">
+                          <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#d4af37]" />
+                          {it}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* ─── FAQ ──────────────────────────────────────────── */}
       <section id="faq">
         <div className="mb-6 text-center">
@@ -238,6 +293,44 @@ export default function Home() {
     </div>
   );
 }
+
+const ROADMAP: { period: string; status: "Shipped" | "Next" | "Planned"; title: string; items: string[] }[] = [
+  {
+    period: "Now", status: "Shipped", title: "Testnet platform — live",
+    items: [
+      "Seven Soroban contracts deployed and verified",
+      "Anchored, tamper-evident voting with fan receipts",
+      "Prediction markets, candidate NFTs and on-chain ticketing",
+      "Google/email onboarding with real self-custodial wallets",
+    ],
+  },
+  {
+    period: "Q3 2026", status: "Next", title: "First real pageant",
+    items: [
+      "Pilot regional pageant runs a live anchored round",
+      "GCash payments go live via PayMongo",
+      "External contract audit and multisig admin keys",
+      "Stellar Community Fund application",
+    ],
+  },
+  {
+    period: "Q4 2026", status: "Planned", title: "Staged mainnet",
+    items: [
+      "Audit-anchor to mainnet first — it holds no funds",
+      "Commerce contracts follow after the audit",
+      "Sponsored reserves, so fans never need XLM",
+      "Free-play predictions with loyalty points (license-free)",
+    ],
+  },
+  {
+    period: "2027", status: "Planned", title: "Beyond pageants",
+    items: [
+      "Licensed real-money markets with a PAGCOR-compliant partner",
+      "Talent shows, esports and fan awards on the same rails",
+      "Self-serve organizer platform",
+    ],
+  },
+];
 
 const HOME_FAQ = [
   { q: "How do I sign in?", a: "No passwords — click Connect Freighter, approve the popup, and sign a one-time message. Your Stellar wallet address is your identity." },

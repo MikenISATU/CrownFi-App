@@ -275,6 +275,15 @@ body {
 /* Home banner: warm frame behind the looping GIF (dark variant lives with the other html.dark rules). */
 .sfl-band { background: radial-gradient(120% 120% at 50% 0%, #fdf6e2 0%, #f6eed6 55%, #efe4c2 100%); }
 
+/* Scroll reveal: sections start lowered + transparent, then rise into place the first time
+   they enter the viewport (classes applied by the AppShell effect). Content is fully visible
+   by default — the effect only hides things when it is actually able to reveal them again. */
+.reveal-init { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease-out, transform 0.7s ease-out; }
+.reveal-init.reveal-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-init { opacity: 1; transform: none; transition: none; }
+}
+
 /* Slow light sweep across the home banner. */
 @keyframes sheen {
   0%        { transform: translateX(0) skewX(-14deg); }

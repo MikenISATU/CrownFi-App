@@ -79,6 +79,22 @@ export default function PredictionsLanding() {
         )}
       </header>
 
+      {/* How it works — numbered walk-through, reference-style */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { n: "01", t: "Pick a market", d: "Each pageant stage gets a market. The percentages are live odds — the crowd's money talking." },
+          { n: "02", t: "Stake USDC", d: "Back an outcome with test USDC. You approve every stake in your own wallet; funds sit in the contract." },
+          { n: "03", t: "Watch it move", d: "Odds shift as fans take sides. Change your mind? Cancel any position before close for a full refund." },
+          { n: "04", t: "Claim winnings", d: "When the result is resolved on-chain, winners split the whole pool. Fee is 2% of profit only." },
+        ].map((s) => (
+          <div key={s.n} className="card-gold p-5">
+            <div className="font-display text-sm font-semibold tabular-nums text-[#a97f16]">{s.n}</div>
+            <div className="mt-1 font-display text-2xl font-semibold text-[#23252f]">{s.t}</div>
+            <p className="mt-2 text-xs leading-relaxed text-[#5f6172]">{s.d}</p>
+          </div>
+        ))}
+      </section>
+
       {showCreate && fan && <CreateMarket onCreated={() => { setShowCreate(false); load(); flash("Prediction market created!"); }} onError={(m) => flash(m, "err")} />}
 
       {/* Search + filters (sticky so they stay reachable while scrolling the grid) */}
