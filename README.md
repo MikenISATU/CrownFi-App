@@ -379,4 +379,4 @@ GitHub Actions run checks that avoid requiring special repository permissions. C
 | **Planned** | Q4 2026 | Staged mainnet (audit-anchor first, commerce after audit) · sponsored reserves · free-play predictions with loyalty points |
 | **Planned** | 2027 | Licensed real-money markets (PAGCOR-compliant partner) · talent shows / esports / fan awards on the same rails · self-serve organizer platform |
 
-
+**X account:** [https://x.com/CrownFi_app]
