@@ -379,17 +379,6 @@ GitHub Actions run checks that avoid requiring special repository permissions. C
 | **Planned** | Q4 2026 | Staged mainnet (audit-anchor first, commerce after audit) · sponsored reserves · free-play predictions with loyalty points |
 | **Planned** | 2027 | Licensed real-money markets (PAGCOR-compliant partner) · talent shows / esports / fan awards on the same rails · self-serve organizer platform |
 
-## MVP boundaries
+## Socials
 
-CrownFi should be presented as:
-
-> A scalable off-chain voting MVP with Stellar-anchored audit proofs, Stellar/Soroban ticket and collectible primitives, and testnet/mock payment flows.
-
-CrownFi should **not** be presented as:
-
-- a production voting authority;
-- a mainnet-ready financial application;
-- a system where Stellar directly processes every vote;
-- a complete replacement for legal tabulation, identity verification, or event ticketing compliance.
-
-Keep demos on testnet/mock mode until the remaining production risks are addressed.
+**X account:** [https://x.com/CrownFi_app]
