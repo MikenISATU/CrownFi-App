@@ -78,7 +78,7 @@ export default function TicketPrintPage() {
         <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-red-50 text-red-500">
           <Icons.X size={26} strokeWidth={2.5} />
         </div>
-        <h2 className="font-display text-2xl font-bold text-[#23252f]">Voucher Not Found</h2>
+        <h2 className="tracking-tight text-2xl font-bold text-[#23252f]">Voucher Not Found</h2>
         <p className="mt-2 text-sm text-[#7a7768]">{error || "Could not retrieve the claim voucher."}</p>
         <button onClick={() => router.push("/tickets")} className="btn-ghost mt-6">Back to Tickets</button>
       </div>
@@ -104,7 +104,7 @@ export default function TicketPrintPage() {
           <Link href="/tickets" className="inline-flex items-center gap-1.5 text-sm text-[#7a7768] hover:text-[#23252f] transition">
             <Icons.Prev size={14} /> Back to My Tickets
           </Link>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-[#23252f]">Claim Ticket Voucher</h1>
+          <h1 className="mt-1 tracking-tight text-3xl font-semibold text-[#23252f]">Claim Ticket Voucher</h1>
           <p className="mt-1 text-xs text-[#7a7768]">Print or save as PDF to present at the venue entrance.</p>
         </div>
         <button onClick={handlePrint} className="btn-gold !gap-2 !px-6">

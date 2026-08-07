@@ -35,7 +35,7 @@ export default function VerifyPage() {
     <div>
       <div className="mb-8">
         <div className="eyebrow mb-2">Proof of vote</div>
-        <h1 className="font-display text-4xl font-semibold text-[#23252f]">Verify your receipt</h1>
+        <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Verify your receipt</h1>
         <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
           When a round closes, every vote is sealed and the seal is written to Stellar. A{" "}
           <b>green check</b> here means your vote is inside that sealed count — nobody, including

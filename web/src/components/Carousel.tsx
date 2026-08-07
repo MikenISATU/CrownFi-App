@@ -4,7 +4,13 @@ import { Icons } from "./icons";
 import { Portrait } from "./Portrait";
 import { Flag } from "./Flag";
 
-export type Slide = { id: string; name: string; country: string; sash: string; portraitUrl?: string | null; fallbackUrl?: string | null };
+export type Slide = {
+  id: string; name: string; country: string; sash: string;
+  portraitUrl?: string | null; fallbackUrl?: string | null;
+  /** Live standing shown on the focused card (votes, rank, share of the round). */
+  meta?: { votes: number; rank: number; pct: number };
+  profileHref?: string;
+};
 
 // The signature element: a pageant "spotlight" carousel. The centered card is lit and raised,
 // neighbors dim, evoking a stage spotlight sweeping across contestants. Auto-advances, and is
@@ -15,6 +21,7 @@ export function SpotlightCarousel({
   selectedId,
   votedId,
   cta = "Select",
+  ariaLabel = "Candidates",
 }: {
   slides: Slide[];
   onSelect?: (id: string) => void;
@@ -22,6 +29,7 @@ export function SpotlightCarousel({
   /** Locked-in choice (e.g. a vote already cast by this wallet) — shown as Voted, not re-pickable. */
   votedId?: string;
   cta?: string;
+  ariaLabel?: string;
 }) {
   const [active, setActive] = useState(0);
   const paused = useRef(false);
@@ -43,6 +51,11 @@ export function SpotlightCarousel({
   return (
     <div
       className="relative"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={ariaLabel}
+      tabIndex={0}
+      onKeyUp={(e) => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); }}
       onMouseEnter={() => (paused.current = true)}
       onMouseLeave={() => (paused.current = false)}
     >
@@ -56,12 +69,15 @@ export function SpotlightCarousel({
           const hide = Math.abs(norm) > 1;
           const hideOnMobile = Math.abs(norm) > 0;
           return (
-            <button
+            <div
               key={s.id}
+              role="button"
+              tabIndex={hide || hideOnMobile ? -1 : 0}
               onClick={() => (isCenter ? onSelect?.(s.id) : setActive(i))}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); isCenter ? onSelect?.(s.id) : setActive(i); } }}
               aria-label={isCenter ? `${cta} ${s.name}` : `Focus ${s.name}`}
               className={[
-                "shrink-0 transition-all duration-500 ease-out",
+                "shrink-0 cursor-pointer transition-all duration-500 ease-out",
                 isCenter ? "w-72 sm:w-96" : "w-44 opacity-55 sm:w-60",
                 hide ? "hidden" : "",
                 hideOnMobile ? "hidden sm:block" : "",
@@ -82,6 +98,20 @@ export function SpotlightCarousel({
                 <div className="px-1 pb-1 pt-3 text-center">
                   <div className="truncate font-display text-lg font-semibold text-[#23252f]">{s.name}</div>
                   <div className="flex items-center justify-center gap-1.5 text-xs text-[#6f6c5f]"><Flag sash={s.sash} /> {s.country}</div>
+                  {isCenter && s.meta && (
+                    <div className="mt-2">
+                      <div className="flex items-center justify-center gap-2 text-[11px] text-[#7a7768]">
+                        <span className="rounded-full bg-[#faf0d2] px-2 py-0.5 font-semibold text-[#8a6d1f]">#{s.meta.rank}</span>
+                        <span className="tabular-nums"><b className="text-[#b8912f]">{s.meta.votes.toLocaleString()}</b> votes · {s.meta.pct}%</span>
+                      </div>
+                      <div className="mx-auto mt-1.5 h-1 w-3/4 overflow-hidden rounded-full bg-[#efe9d8]">
+                        <div className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912f] transition-all duration-500" style={{ width: `${s.meta.pct}%` }} />
+                      </div>
+                    </div>
+                  )}
+                  {isCenter && s.profileHref && (
+                    <a href={s.profileHref} onClick={(e) => e.stopPropagation()} className="mt-1.5 inline-block text-[11px] font-semibold text-[#a97f16] underline-offset-2 hover:underline">View profile</a>
+                  )}
                   {isCenter && (
                     <span className="btn-gold mt-3 !min-h-[34px] !px-4 !py-1.5 !text-xs">
                       {isVoted ? "Voted" : selectedId === s.id ? "Selected" : cta}
@@ -89,7 +119,7 @@ export function SpotlightCarousel({
                   )}
                 </div>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

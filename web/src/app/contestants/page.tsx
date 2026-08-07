@@ -82,7 +82,7 @@ export default function CollectPage() {
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <div className="eyebrow mb-2">Collect</div>
-          <h1 className="font-display text-4xl font-semibold text-[#23252f]">Collectibles that fund delegates</h1>
+          <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Collectibles that fund <span className="font-display italic text-[#c8a233]">delegates</span></h1>
           <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
             One official portrait per delegate, minted on Stellar. The payment splits on-chain — her cut lands
             instantly. One per wallet.
@@ -126,7 +126,7 @@ export default function CollectPage() {
       {/* ── The collectibles themselves ─────────────────── */}
       <section>
         <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display text-2xl font-semibold text-[#23252f]">Available to collect</h2>
+          <h2 className="tracking-tight text-2xl font-semibold text-[#23252f]">Available to collect</h2>
           {!loading && items.length > 0 && (
             <span className="text-sm text-[#7a7768]">{items.length} collectible{items.length === 1 ? "" : "s"} · 1 per wallet</span>
           )}

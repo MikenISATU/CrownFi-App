@@ -42,7 +42,7 @@ export default function MePage() {
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-4xl font-semibold text-[#23252f]">{fan?.handle}</h1>
+            <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">{fan?.handle}</h1>
             <button onClick={() => setEditing(true)} className="rounded-full border border-[#e7e2d3] p-1.5 text-[#7a7768] transition hover:border-[#c9a227] hover:text-[#a97f16]" aria-label="Rename"><Icons.Verify size={15} strokeWidth={2} /></button>
           </div>
         )}
@@ -78,7 +78,7 @@ export default function MePage() {
       {/* Collectibles — NFT gallery (art + token id, since wallets can't render Soroban NFTs yet) */}
       <div className="mt-8">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-xl text-[#23252f]">Your collectibles</h2>
+          <h2 className="tracking-tight text-xl text-[#23252f]">Your collectibles</h2>
           <span className="chip">{(data?.collectibles ?? []).length}</span>
         </div>
         {(data?.collectibles ?? []).length === 0 ? (
@@ -119,7 +119,7 @@ function Panel({ title, rows, empty, href, cta }: { title: string; rows: { main:
   return (
     <div className="glass p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-display text-xl text-[#23252f]">{title}</h2>
+        <h2 className="tracking-tight text-xl text-[#23252f]">{title}</h2>
         <span className="chip">{rows.length}</span>
       </div>
       {rows.length === 0 ? (

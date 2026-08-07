@@ -15,7 +15,7 @@ export function TicketList({ tickets, onChooseSeat }: TicketListProps) {
 
   return (
     <div className="mt-10">
-      <h2 className="mb-3 font-display text-2xl text-[#23252f]">{TICKETING_COPY.ticketsHeading}</h2>
+      <h2 className="mb-3 tracking-tight text-2xl text-[#23252f]">{TICKETING_COPY.ticketsHeading}</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {tickets.map((t) => (
           <div key={t.id} className="glass overflow-hidden flex flex-col justify-between">

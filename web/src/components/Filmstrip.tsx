@@ -69,7 +69,7 @@ export function Filmstrip({ slides }: { slides: Slide[] }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={s.portraitUrl ?? s.fallbackUrl ?? ""} alt={s.name} loading="lazy" />
               <div className="filmstrip__contents">
-                <h3 className="filmstrip__name font-display">{s.name}</h3>
+                <h3 className="filmstrip__name tracking-tight">{s.name}</h3>
                 <p className="filmstrip__country">{s.country}</p>
                 {active && (
                   <Link href={`/contestants/${s.id}`} className="filmstrip__cta btn-gold !min-h-[36px] !px-5 !py-1.5 !text-xs">

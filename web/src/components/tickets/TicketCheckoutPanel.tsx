@@ -11,7 +11,7 @@ export function TicketCheckoutPanel({ busy, fanConnected, tier, onBuy }: TicketC
   return (
     <div className="mt-8 border-t border-[#e7e2d3] pt-6 flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h3 className="font-display text-lg font-semibold text-[#23252f]">{TICKETING_COPY.bookingHeading}</h3>
+        <h3 className="tracking-tight text-lg font-semibold text-[#23252f]">{TICKETING_COPY.bookingHeading}</h3>
         <p className="text-xs text-[#7a7768] mt-0.5">{TICKETING_COPY.bookingDescription}</p>
       </div>
       <div className="flex items-center gap-3">

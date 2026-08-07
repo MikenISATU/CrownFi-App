@@ -161,13 +161,40 @@ function TicketsPageInner() {
     .filter((v): v is string => Boolean(v));
 
   return (
-    <div>
-      <TicketHero hasAddress={Boolean(address)} balance={balance} busy={busy} onGetTestUsdc={getTestUsdc} />
-      <TicketTierSelector tiers={TIERS} selectedTier={tier} onSelectTier={handleTierChange} />
-      <TicketCheckoutPanel busy={busy} fanConnected={Boolean(fan)} tier={tier} onBuy={buy} />
-      <TicketSuccessBanner ticketId={lastTicketId} onDismiss={() => setLastTicketId(null)} />
-      <TicketList tickets={mine} onChooseSeat={(ticket) => { setAssigningTicket(ticket); setChosenSeat(null); }} />
-      <TicketDemoLinks />
+    <div className="relative min-h-[70vh] overflow-hidden rounded-[2rem] border border-[#e7d9a8] bg-[#faf7ef] shadow-[0_30px_70px_-42px_rgba(184,145,47,0.75)]">
+      <div inert aria-hidden="true" className="pointer-events-none select-none p-5 opacity-40 blur-[6px] sm:p-8">
+        <TicketHero hasAddress={Boolean(address)} balance={balance} busy={busy} onGetTestUsdc={getTestUsdc} />
+        <TicketTierSelector tiers={TIERS} selectedTier={tier} onSelectTier={handleTierChange} />
+        <TicketCheckoutPanel busy={busy} fanConnected={Boolean(fan)} tier={tier} onBuy={buy} />
+        <TicketSuccessBanner ticketId={lastTicketId} onDismiss={() => setLastTicketId(null)} />
+        <TicketList tickets={mine} onChooseSeat={(ticket) => { setAssigningTicket(ticket); setChosenSeat(null); }} />
+        <TicketDemoLinks />
+      </div>
+
+      <div className="absolute inset-0 z-20 flex items-start justify-center bg-white/35 px-4 pt-12 backdrop-blur-[2px] sm:pt-20">
+        <div className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-[#e7d9a8] bg-white/95 px-6 py-10 text-center shadow-[0_30px_80px_-35px_rgba(184,145,47,0.85)] sm:px-10 sm:py-12">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,175,55,0.22),transparent_55%)]" />
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/logo.png"
+              alt="CrownFi"
+              className="mx-auto h-20 w-20 object-contain drop-shadow-[0_10px_24px_rgba(184,145,47,0.38)]"
+            />
+            <div className="eyebrow mt-6">Ticketing</div>
+            <h1 className="mt-3 tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">
+              Seat reservations <span className="font-display italic text-[#c8a233]">coming soon</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-[#5f6172] sm:text-base">
+              We’re preparing the CrownFi ticketing experience. Verified seats and on-chain tickets will open soon.
+            </p>
+            <span className="mt-7 inline-flex items-center rounded-full border border-[#e7d9a8] bg-[#fbf4dd] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a7417]">
+              Launching soon
+            </span>
+          </div>
+        </div>
+      </div>
+
       <SeatAssignmentModal
         ticket={assigningTicket}
         selectedSeat={chosenSeat}

@@ -14,7 +14,7 @@ export default function SeatmapPage() {
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="eyebrow mb-2">Choose Your Seat</div>
-        <h1 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">
+        <h1 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">
           Arena Seatmap
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm text-[#5f6172]">

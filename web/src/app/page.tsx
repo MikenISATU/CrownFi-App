@@ -7,7 +7,7 @@ import { CountUp } from "@/components/ui";
 import type { MarketView } from "@/components/MarketCard";
 import { getJson } from "@/lib/api";
 
-type Stats = { votes: number; tickets: number; collectiblesSold: number; contestants: number; fans: number; predictions: number };
+type Stats = { votes: number; collectiblesSold: number; fans: number; predictions: number };
 
 export default function Home() {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -28,23 +28,6 @@ export default function Home() {
 
   return (
     <div className="space-y-14 sm:space-y-20">
-      {/* ─── SASHES FOR LIFE BANNER ───────────────────────── */}
-      <section className="group relative -mt-2 overflow-hidden rounded-[2rem] border border-[#e7d9a8] shadow-[0_30px_70px_-42px_rgba(184,145,47,0.85)]">
-        <div className="sfl-band absolute inset-0" />
-        <div className="relative flex h-60 items-center justify-center sm:h-[27rem]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/sfl.gif"
-            alt="Sashes for Life"
-            className="h-full w-auto max-w-full object-contain transition-transform duration-[900ms] ease-out group-hover:scale-[1.02]"
-          />
-        </div>
-        {/* vignette + gold sheen sweep */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_75%_at_50%_50%,transparent_45%,rgba(35,37,47,0.14)_100%)]" />
-        <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 animate-sheen bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#d4af37] to-transparent" />
-      </section>
-
       {/* ─── HERO ─────────────────────────────────────────── */}
       <section className="hero-band relative overflow-hidden rounded-[2rem] border border-[#e7d9a8] px-5 py-12 text-center sm:px-10 sm:py-24"
         style={{ background: "radial-gradient(120% 90% at 50% -10%, #fbf4dd 0%, #ffffff 45%, #faf7ef 100%)" }}>
@@ -58,10 +41,10 @@ export default function Home() {
         </div>
         <div className="relative">
           <div className="eyebrow mb-4">CrownFi Pageant Platform</div>
-          <h1 className="font-display text-6xl font-semibold leading-[1.02] text-[#23252f] sm:text-8xl">
-            CrownFi <span className="italic text-[#c8a233]">App</span>
+          <h1 className="tracking-tight text-6xl font-semibold leading-[1.02] text-[#23252f] sm:text-8xl">
+            CrownFi <span className="font-display italic text-[#c8a233]">App</span>
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl font-display text-lg uppercase tracking-[0.28em] text-[#a97f16] sm:text-xl">
+          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold uppercase tracking-[0.28em] text-[#a97f16] sm:text-base">
             Blockchain-powered voting, tickets & predictions for pageants
           </p>
           <p className="mx-auto mt-6 max-w-xl text-[#5f6172]">
@@ -78,20 +61,18 @@ export default function Home() {
       <section>
         <div className="mb-8 text-center">
           <div className="eyebrow mb-2">Platform pulse</div>
-          <h2 className="font-display text-3xl font-semibold text-[#23252f] sm:text-4xl">CrownFi in numbers</h2>
+          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">CrownFi in <span className="font-display italic text-[#c8a233]">numbers</span></h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#5f6172]">Live from the platform — every figure below is a real record, not a projection.</p>
         </div>
 
         {/* One clean strip: dark digits, gold accent, plain labels. */}
         <div className="card-gold px-6 py-10 sm:px-10 sm:py-12">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 text-center sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 text-center lg:grid-cols-4">
             {[
               { label: "Users registered", value: stats?.fans ?? 0 },
               { label: "Votes cast", value: stats?.votes ?? 0 },
               { label: "Predictions made", value: stats?.predictions ?? 0 },
               { label: "NFTs collected", value: stats?.collectiblesSold ?? 0 },
-              { label: "Tickets minted", value: stats?.tickets ?? 0 },
-              { label: "Delegates", value: stats?.contestants ?? slides.length },
             ].map((s) => (
               <div key={s.label}>
                 <div className="font-display text-5xl font-semibold tabular-nums text-[#23252f] sm:text-6xl">
@@ -123,7 +104,7 @@ export default function Home() {
               </span>
               Prediction markets
             </div>
-            <h2 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the crown</h2>
+            <h2 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the <span className="font-display italic text-[#c8a233]">crown</span></h2>
             <p className="mt-3 max-w-lg text-[#5f6172]">
               Call the swimsuit round, the long gown, the Q&amp;A — or the crown itself. Winnings settle in test USDC
               the moment a market resolves.
@@ -162,7 +143,7 @@ export default function Home() {
       <section>
         <div className="mb-8 text-center">
           <div className="eyebrow mb-2">Delegate roster</div>
-          <h2 className="font-display text-4xl font-semibold text-[#c8a233] sm:text-6xl">Meet the Delegates</h2>
+          <h2 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-6xl">Meet the <span className="font-display italic text-[#c8a233]">Delegates</span></h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-[#5f6172]">
             Five delegates, one crown. Send your favorite to the next stage — one vote per wallet, per round.
           </p>
@@ -177,7 +158,7 @@ export default function Home() {
       <section className="grid items-center gap-10 lg:grid-cols-2">
         <div>
           <div className="eyebrow mb-3">Exclusive collectibles</div>
-          <h2 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Own a piece of the crown</h2>
+          <h2 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Own a piece of the <span className="font-display italic text-[#c8a233]">crown</span></h2>
           <p className="mt-4 max-w-lg text-[#5f6172]">
             Every official candidate portrait becomes a digital collectible on Stellar. Mint your favorite queen and
             support her directly.
@@ -201,10 +182,10 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/45 to-black/30" />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
           <h2
-            className="font-display text-4xl font-semibold text-white sm:text-6xl"
+            className="tracking-tight text-4xl font-semibold text-white sm:text-6xl"
             style={{ textShadow: "0 2px 4px rgba(0,0,0,0.55), 0 8px 28px rgba(0,0,0,0.65)" }}
           >
-            Reserve your seat
+            Reserve your <span className="font-display italic text-[#e6c65a]">seat</span>
           </h2>
           <p className="max-w-md text-sm text-white/85" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
             Every seat is a verified ticket on Stellar — scannable at the door, impossible to duplicate.
@@ -217,7 +198,7 @@ export default function Home() {
       <section>
         <div className="mb-6 text-center">
           <div className="eyebrow mb-2">Why it holds up</div>
-          <h2 className="font-display text-3xl font-semibold text-[#23252f] sm:text-4xl">Fast to vote. Impossible to fake.</h2>
+          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">Fast to vote. <span className="font-display italic text-[#c8a233]">Impossible to fake.</span></h2>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {[
@@ -230,7 +211,7 @@ export default function Home() {
                 <span className="num-gold">{s.n}</span>
                 <span className={s.tag === "on-chain" ? "tag-on" : "tag-off"}>{s.tag}</span>
               </div>
-              <h3 className="mt-3 font-display text-xl text-[#23252f]">{s.title}</h3>
+              <h3 className="mt-3 tracking-tight text-xl text-[#23252f]">{s.title}</h3>
               <p className="mt-2 text-sm text-[#5f6172]">{s.body}</p>
             </div>
           ))}
@@ -241,7 +222,7 @@ export default function Home() {
       <section>
         <div className="mb-10 text-center">
           <div className="eyebrow mb-2">Where this goes</div>
-          <h2 className="font-display text-3xl font-semibold text-[#23252f] sm:text-4xl">Roadmap</h2>
+          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">The <span className="font-display italic text-[#c8a233]">road</span> ahead</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#5f6172]">Shipped first, promises second — everything in phase one is live today.</p>
         </div>
 
@@ -260,7 +241,7 @@ export default function Home() {
                       <span className="rounded-full bg-[#faf0d2] px-2.5 py-0.5 text-[11px] font-semibold text-[#8a6d1f]">{p.period}</span>
                       <span className={p.status === "Shipped" ? "tag-on" : "tag-off"}>{p.status}</span>
                     </div>
-                    <h3 className="mt-2 font-display text-xl font-semibold text-[#23252f]">{p.title}</h3>
+                    <h3 className="mt-2 tracking-tight text-xl font-semibold text-[#23252f]">{p.title}</h3>
                     <ul className="mt-2.5 space-y-1.5">
                       {p.items.map((it) => (
                         <li key={it} className="flex gap-2 text-xs leading-relaxed text-[#5f6172]">
@@ -281,7 +262,7 @@ export default function Home() {
       <section id="faq">
         <div className="mb-6 text-center">
           <div className="eyebrow mb-2">Got questions?</div>
-          <h2 className="font-display text-3xl font-semibold text-[#23252f] sm:text-4xl">Frequently asked questions</h2>
+          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">Frequently asked <span className="font-display italic text-[#c8a233]">questions</span></h2>
         </div>
         <div className="mx-auto max-w-3xl space-y-3">
           {HOME_FAQ.map((f, i) => <FaqItem key={i} q={f.q} a={f.a} />)}

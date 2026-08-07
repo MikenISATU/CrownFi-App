@@ -74,13 +74,13 @@ export default function FaqPage() {
     <div className="space-y-10">
       <header>
         <div className="eyebrow mb-2">Help center</div>
-        <h1 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Frequently asked questions</h1>
+        <h1 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Frequently asked questions</h1>
         <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Everything about wallets, voting, tickets, NFTs, and rewards. Still stuck? Reach us on Discord.</p>
       </header>
 
       {GROUPS.map((g) => (
         <section key={g.title}>
-          <h2 className="mb-3 font-display text-2xl font-semibold text-[#23252f]">{g.title}</h2>
+          <h2 className="mb-3 tracking-tight text-2xl font-semibold text-[#23252f]">{g.title}</h2>
           <div className="space-y-3">
             {g.items.map((qa) => <Item key={qa.q} qa={qa} />)}
           </div>
@@ -88,7 +88,7 @@ export default function FaqPage() {
       ))}
 
       <section id="legal" className="glass p-6">
-        <h2 className="font-display text-xl font-semibold text-[#23252f]">Terms & privacy</h2>
+        <h2 className="tracking-tight text-xl font-semibold text-[#23252f]">Terms & privacy</h2>
         <p className="mt-2 text-sm leading-relaxed text-[#5f6172]">
           CrownFi is a hackathon/testnet demonstration. It is not production voting infrastructure, not a mainnet financial
           application, and not a replacement for legal tabulation or compliance systems. Test assets and demo data are

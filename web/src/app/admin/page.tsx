@@ -184,7 +184,7 @@ export default function AdminPage() {
     return (
       <div className="glass mx-auto max-w-md p-8 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full surface-soft text-[#a97f16]"><Icons.Lock size={22} strokeWidth={1.75} /></div>
-        <h1 className="mt-3 font-display text-2xl text-[#23252f]">Admin area</h1>
+        <h1 className="mt-3 tracking-tight text-2xl text-[#23252f]">Admin area</h1>
         <p className="mt-2 text-sm text-[#5f6172]">Connect an allowlisted admin wallet to manage rounds, contestants, and anchoring.</p>
         <button className="btn-gold mt-4" onClick={() => connect()}>{connecting ? "Connecting..." : "Connect admin wallet"}</button>
       </div>
@@ -196,7 +196,7 @@ export default function AdminPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="eyebrow mb-2">Organizer console</div>
-          <h1 className="font-display text-4xl font-semibold text-[#23252f]">Admin</h1>
+          <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Admin</h1>
         </div>
         <div className="flex gap-1 rounded-full border border-[#e7e2d3] bg-[#faf7ef] p-1">
           {(["overview", "rounds", "contestants", "requests", "pageants", "payments", "markets"] as Tab[]).map((t) => (
@@ -244,7 +244,7 @@ function Overview({ stats }: { stats: any }) {
         ))}
       </div>
       <div className="glass p-5">
-        <h2 className="mb-4 font-display text-xl text-[#23252f]">Vote leaderboard</h2>
+        <h2 className="mb-4 tracking-tight text-xl text-[#23252f]">Vote leaderboard</h2>
         {top.length === 0 ? <p className="text-sm text-[#7a7768]">No votes yet.</p> : (
           <div className="space-y-3">
             {top.map((t: any) => (
@@ -459,7 +459,7 @@ function RequestModal({ req, onClose, onDecide }: { req: any; onClose: () => voi
         <div className="mb-4 flex items-start justify-between gap-3 border-b border-[#eee6d3] pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-display text-2xl font-semibold text-[#23252f]">{req.pageantName}</h3>
+              <h3 className="tracking-tight text-2xl font-semibold text-[#23252f]">{req.pageantName}</h3>
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${REQ_STATUS_CHIP[req.status] ?? ""}`}>{req.status}</span>
             </div>
             <div className="mt-1 text-sm text-[#7a7768]">{req.orgName}</div>
@@ -543,7 +543,7 @@ function ReviewModal({ pageant, onClose, onDecide }: { pageant: any; onClose: ()
         <div className="mb-4 flex items-start justify-between gap-3 border-b border-[#eee6d3] pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-display text-2xl font-semibold text-[#23252f]">{pageant.title}</h3>
+              <h3 className="tracking-tight text-2xl font-semibold text-[#23252f]">{pageant.title}</h3>
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CHIP[pageant.status]}`}>{STATUS_LABEL[pageant.status]}</span>
             </div>
             <div className="mt-1 text-sm text-[#7a7768]">{pageant.orgName}</div>
@@ -678,7 +678,7 @@ function Payments({ data, locked, onUnlock, onSave }: any) {
   return (
     <div className="space-y-6">
       <div className="glass space-y-4 p-5">
-        <h2 className="font-display text-xl text-[#23252f]">Payment & KYC settings</h2>
+        <h2 className="tracking-tight text-xl text-[#23252f]">Payment & KYC settings</h2>
         <Toggle label="Payments enabled" hint="Master switch for all paid actions" checked={form.paymentsEnabled} onChange={() => toggle("paymentsEnabled")} />
         <Toggle label="KYC verification enabled" hint="Turn on identity verification for paid actions" checked={form.kycEnabled} onChange={() => toggle("kycEnabled")} />
         <Toggle label="KYC mandatory" hint="Require KYC (vs optional prompt) for paid actions" checked={form.kycMandatory} disabled={!form.kycEnabled} onChange={() => toggle("kycMandatory")} />
@@ -728,7 +728,7 @@ function Payments({ data, locked, onUnlock, onSave }: any) {
 function LogTable({ title, rows, cols }: { title: string; rows: any[]; cols: string[] }) {
   return (
     <div>
-      <h3 className="mb-2 font-display text-lg text-[#23252f]">{title}</h3>
+      <h3 className="mb-2 tracking-tight text-lg text-[#23252f]">{title}</h3>
       <div className="glass divide-y divide-[#eee6d3]">
         {(rows ?? []).length === 0 && <div className="px-4 py-4 text-sm text-[#7a7768]">No records yet.</div>}
         {(rows ?? []).map((r: any) => (

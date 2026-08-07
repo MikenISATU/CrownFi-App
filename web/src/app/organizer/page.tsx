@@ -40,7 +40,7 @@ export default function OrganizerDashboard() {
       <div className="space-y-8">
         <div className="glass mx-auto max-w-md p-8 text-center">
           <div className="eyebrow mb-2">Organizer</div>
-          <h1 className="font-display text-2xl text-[#23252f]">Run your pageant on CrownFi</h1>
+          <h1 className="tracking-tight text-2xl text-[#23252f]">Run your pageant on CrownFi</h1>
           <p className="mt-2 text-sm text-[#5f6172]">
             Connect your wallet to register an event, add candidates and track your review. Here’s what to prepare
             before you start.
@@ -68,7 +68,7 @@ export default function OrganizerDashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow mb-2">Organizer dashboard</div>
-          <h1 className="font-display text-4xl font-semibold text-[#23252f]">Your pageants</h1>
+          <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Your pageants</h1>
           <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
             Register your event, add your candidates, and send it in for review. Once approved, your pageant opens for
             voting, tickets and collectibles on CrownFi.
@@ -126,7 +126,7 @@ const DRIVE_CHECKLIST = [
 function SubmissionGuide() {
   return (
     <section className="glass p-6">
-      <h2 className="font-display text-xl font-semibold text-[#23252f]">How a submission works</h2>
+      <h2 className="tracking-tight text-xl font-semibold text-[#23252f]">How a submission works</h2>
       <ol className="mt-4 grid gap-3 sm:grid-cols-3">
         {STEPS.map((s) => (
           <li key={s.n} className="card-gold p-4">
@@ -223,7 +223,7 @@ function PageantEditor({ pageant, onBack, reload, flash }: { pageant: any; onBac
       <button onClick={onBack} className="text-sm text-[#7a7768] hover:text-[#23252f]">← Back to my pageants</button>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-[#23252f]">{pageant.title}</h1>
+          <h1 className="tracking-tight text-3xl font-semibold text-[#23252f]">{pageant.title}</h1>
           <div className="mt-1 text-sm text-[#7a7768]">{pageant.orgName}</div>
         </div>
         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_CHIP[pageant.status]}`}>{STATUS_LABEL[pageant.status]}</span>
@@ -240,7 +240,7 @@ function PageantEditor({ pageant, onBack, reload, flash }: { pageant: any; onBac
 
       {/* Candidates */}
       <section>
-        <h2 className="mb-3 font-display text-xl font-semibold text-[#23252f]">Candidates</h2>
+        <h2 className="mb-3 tracking-tight text-xl font-semibold text-[#23252f]">Candidates</h2>
         <p className="mb-3 text-sm text-[#5f6172]">Add every candidate, then upload their profile, swimsuit and long gown photo. These are the images fans see when they vote.</p>
         {editable && (
           <div className="glass mb-4 flex flex-col gap-3 p-4 sm:flex-row">
@@ -288,7 +288,7 @@ function RequiredFiles({ pageant, editable, reload, flash }: { pageant: any; edi
   return (
     <section className="glass p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-semibold text-[#23252f]">Required files</h2>
+        <h2 className="tracking-tight text-xl font-semibold text-[#23252f]">Required files</h2>
         {saved
           ? <span className="tag-on">Link added</span>
           : <span className="tag-off">Not linked yet</span>}

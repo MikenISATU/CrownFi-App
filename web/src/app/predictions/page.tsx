@@ -56,7 +56,7 @@ export default function PredictionsLanding() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow mb-2">Prediction markets</div>
-          <h1 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the crown</h1>
+          <h1 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the <span className="font-display italic text-[#c8a233]">crown</span></h1>
           <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Back your call on pageant outcomes. Browse freely — connect only when you stake.</p>
           {markets !== null && markets.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -140,7 +140,7 @@ export default function PredictionsLanding() {
       {/* Featured live */}
       {markets !== null && status === "all" && cat === "all" && !q && live.length > 0 && (
         <section>
-          <h2 className="mb-3 flex items-center gap-2 font-display text-2xl font-semibold text-[#23252f]">
+          <h2 className="mb-3 flex items-center gap-2 tracking-tight text-2xl font-semibold text-[#23252f]">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c0392b]" />
@@ -156,7 +156,7 @@ export default function PredictionsLanding() {
       {/* All (filtered) */}
       {markets !== null && (
         <section>
-          {status === "all" && cat === "all" && !q && <h2 className="mb-3 font-display text-2xl font-semibold text-[#23252f]">All markets</h2>}
+          {status === "all" && cat === "all" && !q && <h2 className="mb-3 tracking-tight text-2xl font-semibold text-[#23252f]">All markets</h2>}
           {filtered.length === 0 ? (
             <div className="glass p-10 text-center">
               <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full surface-soft text-[#a97f16]"><Icons.Search size={20} strokeWidth={1.75} /></div>
@@ -226,7 +226,7 @@ function CreateMarket({ onCreated, onError }: { onCreated: () => void; onError: 
 
   return (
     <div className="card-gold space-y-3 p-5">
-      <h3 className="font-display text-xl font-semibold text-[#23252f]">Create a market</h3>
+      <h3 className="tracking-tight text-xl font-semibold text-[#23252f]">Create a market</h3>
       <input className="field" placeholder="Question (e.g. Who wins the Q&A round?)" value={question} onChange={(e) => setQuestion(e.target.value)} />
       <select className="field" value={category} onChange={(e) => setCategory(e.target.value)}>
         {MARKET_CATEGORIES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}

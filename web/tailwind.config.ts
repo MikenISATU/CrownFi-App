@@ -22,9 +22,11 @@ export default {
         ruby: { DEFAULT: "#e11d48", soft: "#fbe9ef" },
       },
       fontFamily: {
-        // Luxury brief: Times New Roman as the primary typeface throughout.
-        display: ['"Times New Roman"', "Times", "Georgia", "serif"],
-        sans: ['"Times New Roman"', "Times", "Georgia", "serif"],
+        // Luxury brief, upgraded: Playfair Display (fashion-editorial serif) for headlines
+        // and numbers, Inter for body/UI. Loaded via next/font — the CSS variables are set
+        // on <html> in layout.tsx; the trailing stacks are fallbacks while fonts stream in.
+        display: ["var(--font-display)", '"Playfair Display"', "Georgia", '"Times New Roman"', "serif"],
+        sans: ["var(--font-sans)", "Inter", "system-ui", "-apple-system", '"Segoe UI"', "sans-serif"],
       },
       keyframes: {
         floatUp: {

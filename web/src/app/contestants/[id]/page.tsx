@@ -156,7 +156,7 @@ export default function CandidatePage() {
         {/* Left: support copy + mint */}
         <div>
           <div className="eyebrow mb-3">Exclusive drop</div>
-          <h1 className="font-display text-5xl font-semibold text-[#c8a233] sm:text-6xl">Support Your Queen</h1>
+          <h1 className="tracking-tight text-5xl font-semibold text-[#c8a233] sm:text-6xl">Support Your Queen</h1>
           <p className="mt-5 max-w-lg text-[#5f6172]">
             Every official candidate portrait is a digital collectible on Stellar. Mint your favorite queen to own it.
           </p>

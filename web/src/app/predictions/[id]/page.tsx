@@ -197,7 +197,7 @@ export default function MarketDetail() {
               <span className="rounded-full bg-[#faf0d2] px-2.5 py-0.5 font-semibold text-[#8a6d1f]">{CATEGORY_LABEL[m.category] ?? m.category}</span>
               <span className={`rounded-full px-2.5 py-0.5 font-semibold ${badge.cls}`}>{badge.label}</span>
             </div>
-            <h1 className="mt-3 font-display text-3xl font-semibold leading-tight text-[#23252f] sm:text-4xl">{m.question}</h1>
+            <h1 className="mt-3 tracking-tight text-3xl font-semibold leading-tight text-[#23252f] sm:text-4xl">{m.question}</h1>
             {closeAt && m.status === "open" && (
               <div className="mt-2 text-xs text-[#7a7768]">
                 Closes {closeAt.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} local
@@ -303,7 +303,7 @@ export default function MarketDetail() {
         <div className="space-y-4 lg:sticky lg:top-24">
           <div className="card-gold p-5">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-semibold text-[#23252f]">Place a prediction</h2>
+              <h2 className="tracking-tight text-lg font-semibold text-[#23252f]">Place a prediction</h2>
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.cls}`}>{badge.label}</span>
             </div>
 

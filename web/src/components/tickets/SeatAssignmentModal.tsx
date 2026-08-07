@@ -22,7 +22,7 @@ export function SeatAssignmentModal({ ticket, selectedSeat, saving, takenSeatIds
       <div className="relative w-full max-w-4xl glass bg-white p-6 shadow-2xl z-10 max-h-[90vh] overflow-y-auto flex flex-col justify-between rounded-3xl border border-[#eee6d3]">
         <div className="mb-4 flex items-start justify-between border-b border-[#eee6d3] pb-3">
           <div>
-            <h3 className="font-display text-2xl font-semibold text-[#23252f]">Assign Seat: {ticket.tier} Tier</h3>
+            <h3 className="tracking-tight text-2xl font-semibold text-[#23252f]">Assign Seat: {ticket.tier} Tier</h3>
             <p className="mt-1 text-xs text-[#7a7768]">Select any available seat inside your highlighted <b>{ticket.tier}</b> zone.</p>
           </div>
           <button

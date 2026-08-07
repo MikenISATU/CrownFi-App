@@ -97,7 +97,7 @@ export default function TicketVerificationPage() {
         <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-red-50 text-red-500 shadow-[0_8px_30px_-8px_rgba(220,60,60,0.2)]">
           <Icons.X size={28} strokeWidth={2.5} />
         </div>
-        <h2 className="font-display text-2xl font-bold text-[#23252f]">Verification Failed</h2>
+        <h2 className="tracking-tight text-2xl font-bold text-[#23252f]">Verification Failed</h2>
         <p className="mt-2 text-sm text-[#7a7768] max-w-xs mx-auto">{error || "This ticket is invalid or does not exist in our system."}</p>
         <button onClick={() => router.push("/tickets")} className="btn-ghost mt-6">Back to Dashboard</button>
       </div>
@@ -118,7 +118,7 @@ export default function TicketVerificationPage() {
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="eyebrow mb-2">Ticket Scanner</div>
-        <h1 className="font-display text-3xl font-semibold text-[#23252f]">Verify & Redeem</h1>
+        <h1 className="tracking-tight text-3xl font-semibold text-[#23252f]">Verify & Redeem</h1>
         <p className="mt-2 text-sm text-[#5f6172]">Authenticate ticket status via the Stellar blockchain.</p>
       </div>
 
@@ -156,7 +156,7 @@ export default function TicketVerificationPage() {
               )}
             </div>
 
-            <h2 className="font-display text-2xl font-bold tracking-tight">
+            <h2 className="tracking-tight text-2xl font-bold tracking-tight">
               {isRedeemed ? "Already Redeemed" : "Valid Ticket"}
             </h2>
             <p className="mt-1.5 text-sm text-white/80 max-w-xs mx-auto">

@@ -5,7 +5,7 @@ export function SectionHeading({ eyebrow, title, sub }: { eyebrow?: string; titl
   return (
     <div className="mb-6">
       {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
-      <h2 className="font-display text-3xl font-semibold text-[#23252f] sm:text-4xl">{title}</h2>
+      <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">{title}</h2>
       {sub && <p className="mt-2 max-w-2xl text-sm text-[#5f6172]">{sub}</p>}
     </div>
   );

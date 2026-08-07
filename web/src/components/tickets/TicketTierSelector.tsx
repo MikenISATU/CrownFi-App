@@ -10,7 +10,7 @@ type TicketTierSelectorProps = {
 export function TicketTierSelector({ tiers, selectedTier, onSelectTier }: TicketTierSelectorProps) {
   return (
     <div className="mb-4">
-      <h2 className="font-display text-xl font-semibold text-[#23252f] mb-3">{TICKETING_COPY.tierHeading}</h2>
+      <h2 className="tracking-tight text-xl font-semibold text-[#23252f] mb-3">{TICKETING_COPY.tierHeading}</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiers.map((t) => (
           <button

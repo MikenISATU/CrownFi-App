@@ -24,7 +24,7 @@ export default function OrganizePage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/logo.png" alt="CrownFi" className="h-7 w-7 object-contain" />
         </div>
-        <h1 className="mt-3 font-display text-2xl text-[#23252f]">Request received</h1>
+        <h1 className="mt-3 tracking-tight text-2xl text-[#23252f]">Request received</h1>
         <p className="mt-2 text-sm text-[#5f6172]">Thanks — we’ll review your pageant and reply at {f.email}, usually within 2–3 business days.</p>
       </div>
     );
@@ -34,7 +34,7 @@ export default function OrganizePage() {
     <div className="mx-auto max-w-2xl">
       <div className="mb-8">
         <div className="eyebrow mb-2">For organizers</div>
-        <h1 className="font-display text-4xl font-semibold text-[#23252f]">Run your pageant on CrownFi</h1>
+        <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Run your pageant on CrownFi</h1>
         <p className="mt-2 text-sm text-[#5f6172]">Apply to host voting, ticketing, and collectibles for your event. We review every request before granting access.</p>
       </div>
       <div className="glass grid gap-4 p-6">

@@ -94,7 +94,7 @@ export default function LoyaltyPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow mb-2">Fan rewards</div>
-          <h1 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Loyalty</h1>
+          <h1 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Loyalty</h1>
           <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Earn points by voting, collecting, and completing social tasks. Redeem them for perks. Support and points never change vote power.</p>
         </div>
         <div className="card-gold px-6 py-4 text-center">
@@ -115,7 +115,7 @@ export default function LoyaltyPage() {
       {/* Social tasks */}
       {fan && (
         <section>
-          <h2 className="mb-4 font-display text-2xl font-semibold text-[#23252f]">Earn points</h2>
+          <h2 className="mb-4 tracking-tight text-2xl font-semibold text-[#23252f]">Earn points</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {tasks.map((t) => (
               <div key={t.key} className="card-gold flex items-center gap-4 p-4">
@@ -143,7 +143,7 @@ export default function LoyaltyPage() {
 
       {/* Shop */}
       <section>
-        <h2 className="mb-4 font-display text-2xl font-semibold text-[#23252f]">Loyalty shop</h2>
+        <h2 className="mb-4 tracking-tight text-2xl font-semibold text-[#23252f]">Loyalty shop</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {shop.map((rw) => {
             const soldOut = rw.remaining != null && rw.remaining <= 0;
@@ -171,7 +171,7 @@ export default function LoyaltyPage() {
       {fan && loyalty && (loyalty.history.length > 0 || loyalty.redemptions.length > 0) && (
         <section className="grid gap-6 lg:grid-cols-2">
           <div>
-            <h2 className="mb-3 font-display text-xl font-semibold text-[#23252f]">Points history</h2>
+            <h2 className="mb-3 tracking-tight text-xl font-semibold text-[#23252f]">Points history</h2>
             <div className="glass divide-y divide-[#eee6d3]">
               {loyalty.history.map((h) => (
                 <div key={h.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
@@ -183,7 +183,7 @@ export default function LoyaltyPage() {
             </div>
           </div>
           <div>
-            <h2 className="mb-3 font-display text-xl font-semibold text-[#23252f]">Redemptions</h2>
+            <h2 className="mb-3 tracking-tight text-xl font-semibold text-[#23252f]">Redemptions</h2>
             <div className="glass divide-y divide-[#eee6d3]">
               {loyalty.redemptions.map((r) => (
                 <div key={r.id} className="flex items-center justify-between px-4 py-2.5 text-sm">

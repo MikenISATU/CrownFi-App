@@ -39,8 +39,8 @@ export default function WinnersPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/sfl.gif" alt="" className="h-44 w-auto max-w-full object-contain sm:h-64" />
             <div className="eyebrow mt-6">Coronation Night 2026</div>
-            <h1 className="mt-2 font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">
-              {ready ? "The results are in" : "The crown awaits"}
+            <h1 className="mt-2 tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">
+              {ready ? <>The results are <span className="font-display italic text-[#c8a233]">in</span></> : <>The <span className="font-display italic text-[#c8a233]">crown</span> awaits</>}
             </h1>
             <p className="mt-3 max-w-md text-sm text-[#5f6172]">
               {ready
@@ -72,8 +72,8 @@ export default function WinnersPage() {
       {crown && (
         <section className="animate-fadeSlideUp text-center">
           <div className="eyebrow">Coronation Night 2026</div>
-          <h1 className="mt-1 font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">
-            {overall ? "Your Official Winner" : crown.label}
+          <h1 className="mt-1 tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">
+            {overall ? <>Your Official <span className="font-display italic text-[#c8a233]">Winner</span></> : crown.label}
           </h1>
 
           <div className="card-gold mx-auto mt-6 max-w-sm p-4">
@@ -107,7 +107,7 @@ export default function WinnersPage() {
 
       {act === 2 && court.length > 0 && (
         <section>
-          <h2 className="mb-5 text-center font-display text-2xl font-semibold text-[#23252f]">Stage winners</h2>
+          <h2 className="mb-5 text-center tracking-tight text-2xl font-semibold text-[#23252f]">Stage winners</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {court.map((w, i) => (
               <div key={w.category} className="card-gold animate-fadeSlideUp p-3" style={{ animationDelay: `${i * 120}ms` }}>

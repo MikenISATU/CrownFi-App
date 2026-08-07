@@ -64,7 +64,7 @@ export default function LeaderboardPage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="eyebrow mb-2">Live standings</div>
-            <h1 className="font-display text-4xl font-semibold text-[#23252f] sm:text-5xl">Leaderboard</h1>
+            <h1 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Leaderboard</h1>
             <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
               {meta.blurb}{" "}
               {board?.verified
