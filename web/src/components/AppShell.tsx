@@ -86,7 +86,7 @@ function LinkedInIcon({ className }: { className?: string }) {
 
 const SOCIALS = [
   { href: "https://discord.com/", label: "Discord", Icon: DiscordIcon },
-  { href: "https://x.com/", label: "X", Icon: XIcon },
+  { href: "https://x.com/CrownFi_app", label: "X", Icon: XIcon },
   { href: "https://www.linkedin.com/", label: "LinkedIn", Icon: LinkedInIcon },
 ];
 
