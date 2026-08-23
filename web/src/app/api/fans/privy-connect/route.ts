@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { isLikelyStellarAddress } from "@/lib/adminAuth";
+import { getAddress, isAddress } from "viem";
 import { createFanSession, setFanCookie } from "@/lib/fanAuth";
 import { clientIpHash } from "@/lib/ip";
-import { privyConfigured, resolvePrivyStellarIdentity, ensureFundedOnTestnet } from "@/lib/privyServer";
+import { privyConfigured, resolvePrivyEvmIdentity } from "@/lib/privyServer";
 
 const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
 
 // Web2 sign-in via Privy: the client sends its Privy access token; the server verifies it
-// (proof of identity), provisions the user's Stellar wallet, links/creates the Fan, and
-// opens a CrownFi session cookie. No client-side Stellar signature needed — the verified
+// (proof of identity), resolves the user's embedded EVM wallet, links/creates the Fan, and
+// opens a CrownFi session cookie. No wallet signature is needed here — the verified
 // Privy token is the proof.
 export async function POST(req: NextRequest) {
   if (!privyConfigured()) {
@@ -17,12 +17,12 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => null);
-  const token = String(body?.token ?? "");
-  if (!token) return NextResponse.json({ error: "missing_token" }, { status: 400 });
+  const identityToken = String(body?.identityToken ?? "");
+  if (!identityToken) return NextResponse.json({ error: "missing_token" }, { status: 400 });
 
   let identity;
   try {
-    identity = await resolvePrivyStellarIdentity(token);
+    identity = await resolvePrivyEvmIdentity(identityToken);
   } catch (e: any) {
     // TEMP DEBUG: include the real message so it shows in the browser Network tab.
     const detail = e?.message ?? String(e);
@@ -30,29 +30,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "privy_error", detail }, { status: 502 });
   }
 
-  const { email, address } = identity;
-  if (!isLikelyStellarAddress(address)) {
+  const { userId, email } = identity;
+  if (!isAddress(identity.address)) {
     return NextResponse.json({ error: "privy_error" }, { status: 502 });
   }
-
-  // Testnet: the Privy wallet must exist ON-CHAIN before it can source any transaction.
-  // Idempotent (friendbot once, then a no-op) — covers new signups AND pre-existing accounts
-  // created before funding was wired in. Best-effort: login should not fail if friendbot is down.
-  await ensureFundedOnTestnet(address).catch((e) =>
-    console.warn("[api/fans/privy-connect] funding skipped:", e?.message ?? e)
-  );
+  const address = getAddress(identity.address);
 
   const ipHash = clientIpHash(req);
 
   try {
-    const existing = await db.fan.findUnique({ where: { walletAddress: address } });
+    const byPrivy = await db.fan.findUnique({ where: { privyUserId: userId } });
+    const existing = byPrivy ?? await db.fan.findUnique({ where: { walletAddress: address } });
     if (existing) {
+      if (existing.privyUserId && existing.privyUserId !== userId) {
+        return NextResponse.json({ error: "wallet_linked_elsewhere" }, { status: 409 });
+      }
       if (email && existing.email && existing.email !== email) {
         return NextResponse.json({ error: "wallet_linked_elsewhere" }, { status: 409 });
       }
-      const fan = email && !existing.email
-        ? await db.fan.update({ where: { id: existing.id }, data: { email } })
-        : existing;
+      const fan = await db.fan.update({
+        where: { id: existing.id },
+        data: { privyUserId: userId, walletAddress: address, email: existing.email ?? email, authProvider: "privy" },
+      });
       const res = NextResponse.json(fan);
       setFanCookie(res, createFanSession(fan.id, address));
       return res;
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
     }
 
     const fan = await db.fan.create({
-      data: { handle: `fan_${address.slice(-6)}`, walletAddress: address, email, registrationIpHash: ipHash, authProvider: "privy" },
+      data: { handle: `fan_${address.slice(-6)}`, walletAddress: address, privyUserId: userId, email, registrationIpHash: ipHash, authProvider: "privy" },
     });
     const res = NextResponse.json(fan);
     setFanCookie(res, createFanSession(fan.id, address));

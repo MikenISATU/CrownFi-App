@@ -101,7 +101,7 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
 function SiteFooter() {
   const [subscribed, setSubscribed] = useState(false);
   return (
-    <footer className="mt-24 bg-[radial-gradient(circle_at_15%_0%,rgba(184,137,36,0.22),transparent_34%),linear-gradient(135deg,#2a190c_0%,#3b260f_52%,#211309_100%)] text-[#eadfca]">
+    <footer className="mt-24 bg-[radial-gradient(circle_at_15%_0%,rgba(0,0,255,0.32),transparent_36%),linear-gradient(135deg,#030b3d_0%,#07145d_52%,#050817_100%)] text-[#e8ebff]">
       {/* Thin gold accent line grounds the dark footer against the light page. */}
       <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-70" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
@@ -113,7 +113,7 @@ function SiteFooter() {
               <img src="/brand/logo.png" alt="CrownFi" className="h-8 w-8 object-contain" />
               <span className="font-display text-2xl font-semibold tracking-wide text-[#e6c65a]">CrownFi</span>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-[#c9bda8]">
+            <p className="mt-4 text-sm leading-relaxed text-[#bac4eb]">
               Blockchain-powered voting, tickets, and prediction markets for pageants — built on {CHAIN_LABEL}.
             </p>
             <form className="mt-5" onSubmit={(e) => { e.preventDefault(); setSubscribed(true); }}>
@@ -130,7 +130,7 @@ function SiteFooter() {
             <div className="mt-5 flex items-center gap-2">
               {SOCIALS.map(({ href, label, Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-full text-[#c9bda8] ring-1 ring-[#d4af37]/30 transition hover:bg-[#e6c65a] hover:text-[#2a190c] hover:ring-transparent">
+                  className="grid h-9 w-9 place-items-center rounded-full text-[#bac4eb] ring-1 ring-[#d4af37]/35 transition hover:bg-[#e6c65a] hover:text-[#07145d] hover:ring-transparent">
                   <Icon />
                 </a>
               ))}
@@ -150,16 +150,16 @@ function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-[#d4af37]/20 pt-6 text-xs text-[#bbaa8e]">
+        <div className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-[#d4af37]/25 pt-6 text-xs text-[#aab6e3]">
           <span className="inline-flex items-center gap-2">We accept
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <span className="inline-flex items-center rounded-md bg-white px-2 py-1"><img src="/brand/gcash.svg" alt="GCash" className="h-5 w-auto" /></span>
           </span>
           <span className="rounded-full bg-black/15 px-2.5 py-1 text-[11px] ring-1 ring-[#d4af37]/25">Built on {CHAIN_LABEL}</span>
-          <span className="ml-auto text-[#a99472]">Crown your queen, on-chain.</span>
+          <span className="ml-auto text-[#8e9dd2]">Crown your queen, on-chain.</span>
         </div>
 
-        <div className="mt-4 flex flex-col items-start justify-between gap-2 text-xs text-[#a99472] sm:flex-row sm:items-center">
+        <div className="mt-4 flex flex-col items-start justify-between gap-2 text-xs text-[#8e9dd2] sm:flex-row sm:items-center">
           <span>© 2026 CrownFi · Testnet demo — not for real-money use.</span>
           <span className="flex gap-4">
             <Link href="/faq#legal" className="transition hover:text-[#f6d77a]">Privacy</Link>
@@ -227,7 +227,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
         <div className="mx-auto max-w-[1440px]">
-          <div className="flex items-center justify-between rounded-2xl border border-[#c69b35]/55 bg-[linear-gradient(110deg,rgba(42,25,12,0.97),rgba(59,38,15,0.95),rgba(35,20,9,0.97))] px-4 py-2.5 shadow-[0_16px_38px_-20px_rgba(55,32,9,0.75)] backdrop-blur-xl sm:px-6">
+          <div className="flex items-center justify-between rounded-2xl border border-[#d4af37]/60 bg-[radial-gradient(circle_at_12%_0%,rgba(0,0,255,0.72),transparent_40%),linear-gradient(110deg,rgba(3,11,61,0.98),rgba(7,20,93,0.97),rgba(5,8,23,0.98))] px-4 py-2.5 shadow-[0_16px_38px_-20px_rgba(0,0,120,0.85)] backdrop-blur-xl sm:px-6">
             <div className="flex items-center gap-2">
               <button className="grid h-9 w-9 place-items-center rounded-xl border border-[#d4af37]/25 text-[#f3ddb0] transition hover:bg-white/10 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
@@ -242,7 +242,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <nav className="hidden items-center gap-1 text-sm sm:flex">
               {NAV_DIRECT.map((l) => (
                 <Link key={l.href} href={l.href}
-                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-gradient-to-b from-[#edcc62] to-[#c99725] text-[#2a190c]" : "text-[#eadfca] hover:bg-white/10 hover:text-[#f6d77a]"}`}>
+                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-gradient-to-b from-[#edcc62] to-[#c99725] text-[#07145d]" : "text-[#e8ebff] hover:bg-white/10 hover:text-[#f6d77a]"}`}>
                   {l.label}
                 </Link>
               ))}
@@ -284,10 +284,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {drawer && (
             <>
               <div className="fixed inset-0 top-0 z-[-1] sm:hidden" onClick={() => setDrawer(false)} />
-              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#c69b35]/55 bg-[linear-gradient(145deg,rgba(42,25,12,0.98),rgba(59,38,15,0.98))] p-3 shadow-[0_24px_50px_-24px_rgba(55,32,9,0.9)] backdrop-blur-xl sm:hidden">
+              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#d4af37]/60 bg-[linear-gradient(145deg,rgba(3,11,61,0.99),rgba(7,20,93,0.99))] p-3 shadow-[0_24px_50px_-24px_rgba(0,0,120,0.9)] backdrop-blur-xl sm:hidden">
                 {links.map((l) => (
                   <Link key={l.href} href={l.href} onClick={() => setDrawer(false)}
-                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-gradient-to-b from-[#edcc62] to-[#c99725] text-[#2a190c]" : "text-[#eadfca] hover:bg-white/10 hover:text-[#f6d77a]"}`}>
+                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-gradient-to-b from-[#edcc62] to-[#c99725] text-[#07145d]" : "text-[#e8ebff] hover:bg-white/10 hover:text-[#f6d77a]"}`}>
                     {l.label}
                   </Link>
                 ))}
@@ -326,13 +326,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <SiteFooter />
 
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#c69b35]/55 bg-[#2a190c]/95 backdrop-blur-xl sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#d4af37]/60 bg-[#050b35]/95 backdrop-blur-xl sm:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
           {TABS.map(({ href, label, Icon }) => {
             const active = path === href;
             return (
               <Link key={href} href={href}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] ${active ? "text-[#f6d77a]" : "text-[#bbaa8e]"}`}>
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] ${active ? "text-[#f6d77a]" : "text-[#aab6e3]"}`}>
                 <Icon size={20} strokeWidth={1.75} />
                 {label}
               </Link>

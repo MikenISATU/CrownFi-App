@@ -13,7 +13,10 @@
 
 export const ERROR_MESSAGES: Record<string, string> = {
   // ── Wallet / session / registration ──
-  invalid_address: "That doesn’t look like a valid Stellar wallet address.",
+  invalid_address: "That doesn’t look like a valid Base wallet address.",
+  privy_not_configured: "Email sign-in is not configured yet.",
+  privy_error: "We couldn’t finish your secure email sign-in. Please try again.",
+  missing_token: "Your sign-in session expired. Please try again.",
   missing_signature: "We couldn’t read your wallet signature. Please try connecting again.",
   bad_signature: "That signature didn’t match your wallet. Please try again.",
   invalid_challenge: "Your sign-in request expired. Please connect again.",

@@ -8,8 +8,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")   // Supabase pooled (6543, ?pgbouncer=true)
-  directUrl = env("DIRECT_URL")     // Supabase direct (5432) for migrations
+  url       = env("DATABASE_URL") // Supabase pooled (6543, ?pgbouncer=true)
+  directUrl = env("DIRECT_URL") // Supabase direct (5432) for migrations
 }
 
 model Fan {
@@ -17,13 +17,15 @@ model Fan {
   handle             String               @unique
   email              String?              @unique
   walletAddress      String?              @unique
+  // Stable Privy DID for email/Google users; never use email as the identity key.
+  privyUserId        String?              @unique
   points             Int                  @default(0)
   // Anti-abuse: sha256(ip + secret) captured at registration to cap accounts per network.
   registrationIpHash String?
   // Identity verification for the money-out path. none | pending | verified | rejected
   kycStatus          String               @default("none")
-  // Onboarding provenance: freighter | privy | mock
-  authProvider       String               @default("freighter")
+  // Onboarding provenance: base | metamask | privy | mock
+  authProvider       String               @default("base")
   createdAt          DateTime             @default(now())
   votes              Vote[]
   tickets            Ticket[]
@@ -31,6 +33,11 @@ model Fan {
   loyaltyTx          LoyaltyTransaction[]
   taskCompletions    TaskCompletion[]
   redemptions        Redemption[]
+  ownedPageants      Pageant[]            @relation("PageantOwner")
+  createdMarkets     PredictionMarket[]   @relation("MarketCreator")
+  predictions        Prediction[]
+  paymentLogs        PaymentLog[]
+  kycLogs            KycLog[]
 
   @@index([registrationIpHash])
 }
@@ -41,8 +48,8 @@ model LoyaltyTransaction {
   id        String   @id @default(cuid())
   fan       Fan      @relation(fields: [fanId], references: [id])
   fanId     String
-  delta     Int      // + earn / - spend
-  reason    String   // "vote" | "collectible" | "task:<key>" | "redeem:<key>"
+  delta     Int // + earn / - spend
+  reason    String // "vote" | "collectible" | "task:<key>" | "redeem:<key>"
   createdAt DateTime @default(now())
 
   @@index([fanId])
@@ -81,8 +88,8 @@ model Reward {
   key         String       @unique
   title       String
   description String
-  cost        Int          // points
-  stock       Int?         // null = unlimited
+  cost        Int // points
+  stock       Int? // null = unlimited
   icon        String?
   active      Boolean      @default(true)
   order       Int          @default(0)
@@ -116,11 +123,11 @@ model Contestant {
 }
 
 model VotingRound {
-  id         String       @id @default(cuid())
+  id         String      @id @default(cuid())
   title      String
   category   String? // pageant segment: swimsuit | long_gown | qa | overall (null = general)
-  status     String       @default("open") // open | closed
-  openedAt   DateTime     @default(now())
+  status     String      @default("open") // open | closed
+  openedAt   DateTime    @default(now())
   closedAt   DateTime?
   votes      Vote[]
   checkpoint Checkpoint?
@@ -135,7 +142,7 @@ model Vote {
   fanId        String
   contestant   Contestant  @relation(fields: [contestantId], references: [id])
   contestantId String
-  leafHash     String      // sha256(fanId|contestantId|roundId)
+  leafHash     String // sha256(fanId|contestantId|roundId)
   createdAt    DateTime    @default(now())
 
   @@unique([roundId, fanId]) // duplicate-vote prevention
@@ -150,9 +157,9 @@ model Checkpoint {
   merkleRoot String
   tallyHash  String
   totalVotes Int
-  anchorTx   String?     // Stellar tx hash (or mock)
-  tallyJson  String      // aggregated results snapshot
-  leavesJson String      // ordered leaf hashes, for proof generation
+  anchorTx   String? // Stellar tx hash (or mock)
+  tallyJson  String // aggregated results snapshot
+  leavesJson String // ordered leaf hashes, for proof generation
   createdAt  DateTime    @default(now())
 }
 
@@ -164,8 +171,8 @@ model Ticket {
   tier      String
   seat      String
   priceUsdc Float
-  tokenId   String?  // on-chain NFT token id (or mock)
-  mintTx    String?  // Stellar tx hash (or mock)
+  tokenId   String? // on-chain NFT token id (or mock)
+  mintTx    String? // Stellar tx hash (or mock)
   status    String   @default("minted")
   createdAt DateTime @default(now())
 }
@@ -176,11 +183,11 @@ model Collectible {
   contestant   Contestant @relation(fields: [contestantId], references: [id])
   contestantId String
   title        String
-  metadataUri  String     // ipfs://...
-  imageUrl     String?    // resolved NFT art (from the metadata's image field) for in-app display
+  metadataUri  String // ipfs://...
+  imageUrl     String? // resolved NFT art (from the metadata's image field) for in-app display
   priceUsdc    Float
   edition      Int
-  candidateId  Int?       // pageant-nft on-chain candidate id (1..N) this collectible mints
+  candidateId  Int? // pageant-nft on-chain candidate id (1..N) this collectible mints
   listingId    Int?       @unique // sale-splitter listing id (set when registered on-chain)
   createdAt    DateTime   @default(now())
   purchases    Purchase[]
@@ -224,41 +231,43 @@ model OrganizerRequest {
 // Statuses: draft | submitted | in_review | requires_changes | approved | rejected
 // ─────────────────────────────────────────────────────────────────────────────
 model Pageant {
-  id            String   @id @default(cuid())
-  slug          String   @unique
-  ownerFanId    String? // the organizer (connected wallet) who created it
+  id         String  @id @default(cuid())
+  slug       String  @unique
+  ownerFanId String? // the organizer (connected wallet) who created it
+  owner      Fan?    @relation("PageantOwner", fields: [ownerFanId], references: [id], onDelete: SetNull)
 
   // Organizer info
-  orgName       String
-  contactName   String
-  email         String
-  website       String?
-  facebook      String?
-  instagram     String?
-  socials       String? // other social links (freeform / comma-separated)
-  verification  String? // supporting verification links
-  driveUrl      String? // Google Drive folder holding the required files (permits, roster, hi-res photos)
+  orgName      String
+  contactName  String
+  email        String
+  website      String?
+  facebook     String?
+  instagram    String?
+  socials      String? // other social links (freeform / comma-separated)
+  verification String? // supporting verification links
+  driveUrl     String? // Google Drive folder holding the required files (permits, roster, hi-res photos)
 
   // Event info
-  title         String
-  description   String?
-  eventDate     DateTime?
-  venue         String?
-  bannerUrl     String?
+  title       String
+  description String?
+  eventDate   DateTime?
+  venue       String?
+  bannerUrl   String?
 
   // Approval workflow
-  status        String   @default("draft")
-  reviewNote    String? // admin feedback for requires_changes / rejected
+  status     String  @default("draft")
+  reviewNote String? // admin feedback for requires_changes / rejected
 
   // On-chain (set at Phase 2 deploy time)
   nftContractId String?
-  published     Boolean  @default(false)
+  published     Boolean @default(false)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  candidates    Candidate[]
-  categories    PageantCategory[]
+  candidates Candidate[]
+  categories PageantCategory[]
+  markets    PredictionMarket[]
 
   @@index([status])
   @@index([ownerFanId])
@@ -301,7 +310,7 @@ model Candidate {
   maxSupply     Int      @default(100) // per-candidate NFT supply cap
   createdAt     DateTime @default(now())
 
-  images        CandidateImage[]
+  images CandidateImage[]
 
   @@index([pageantId])
 }
@@ -332,22 +341,23 @@ model Keepalive {
 // PHASE 3 — Payment & KYC settings (single admin-editable config row) + logs.
 // ─────────────────────────────────────────────────────────────────────────────
 model PlatformSettings {
-  id              String   @id @default("singleton")
-  paymentsEnabled Boolean  @default(true)
-  kycEnabled      Boolean  @default(false) // is KYC verification switched on at all
-  kycMandatory    Boolean  @default(false) // if enabled, required (vs optional prompt) for paid actions
-  environment     String   @default("testnet") // testnet | production
-  activeProvider  String   @default("testnet_usdc")
-  maintenanceMode Boolean  @default(false)
-  winnersAnnounced Boolean @default(false) // coronation switch: reveals /winners to the public
-  providerConfig  String? // JSON blob for the active provider's non-secret config
-  updatedAt       DateTime @updatedAt
+  id               String   @id @default("singleton")
+  paymentsEnabled  Boolean  @default(true)
+  kycEnabled       Boolean  @default(false) // is KYC verification switched on at all
+  kycMandatory     Boolean  @default(false) // if enabled, required (vs optional prompt) for paid actions
+  environment      String   @default("testnet") // testnet | production
+  activeProvider   String   @default("testnet_usdc")
+  maintenanceMode  Boolean  @default(false)
+  winnersAnnounced Boolean  @default(false) // coronation switch: reveals /winners to the public
+  providerConfig   String? // JSON blob for the active provider's non-secret config
+  updatedAt        DateTime @updatedAt
 }
 
 // Payment attempts (mint / ticket / vote / premium), for the admin monitor.
 model PaymentLog {
   id        String   @id @default(cuid())
   fanId     String?
+  fan       Fan?     @relation(fields: [fanId], references: [id], onDelete: SetNull)
   kind      String // mint | ticket | vote | premium
   provider  String
   amount    Float
@@ -364,6 +374,7 @@ model PaymentLog {
 model KycLog {
   id        String   @id @default(cuid())
   fanId     String?
+  fan       Fan?     @relation(fields: [fanId], references: [id], onDelete: SetNull)
   provider  String
   status    String // started | pending | verified | rejected
   reference String?
@@ -389,7 +400,9 @@ model StoredImage {
 model PredictionMarket {
   id            String   @id @default(cuid())
   pageantId     String? // optional link to a Pageant
+  pageant       Pageant? @relation(fields: [pageantId], references: [id], onDelete: SetNull)
   creatorFanId  String? // null = official (admin/platform); set = community/user-created
+  creator       Fan?     @relation("MarketCreator", fields: [creatorFanId], references: [id], onDelete: SetNull)
   category      String // swimsuit | long_gown | overall | talent | costume
   question      String
   optionsJson   String // JSON array of option labels
@@ -410,16 +423,17 @@ model PredictionMarket {
 }
 
 model Prediction {
-  id        String           @id @default(cuid())
-  market    PredictionMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  marketId  String
-  fanId     String
-  option    Int
-  amount    Float
-  status    String           @default("active") // active | won | lost | claimed
-  txHash    String? // on-chain stake tx
+  id          String           @id @default(cuid())
+  market      PredictionMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  marketId    String
+  fanId       String
+  fan         Fan              @relation(fields: [fanId], references: [id])
+  option      Int
+  amount      Float
+  status      String           @default("active") // active | won | lost | claimed
+  txHash      String? // on-chain stake tx
   claimTxHash String? // on-chain claim tx (payout)
-  createdAt DateTime         @default(now())
+  createdAt   DateTime         @default(now())
 
   @@index([marketId])
   @@index([fanId])

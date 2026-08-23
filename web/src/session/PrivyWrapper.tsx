@@ -1,12 +1,13 @@
 "use client";
 import { ReactNode } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
-import { PrivySignerBridge } from "./PrivySignerBridge";
+import { base, baseSepolia } from "viem/chains";
+import { targetBaseChain } from "@/base/config";
 
 const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
-// Wraps the app in PrivyProvider ONLY when an App ID is configured. Without it, this is a
-// transparent pass-through — the app behaves exactly as before (Freighter-only).
+// Privy is optional locally. When configured it gives email/Google users an EVM
+// embedded wallet automatically; Base Sepolia remains the default test network.
 export function PrivyWrapper({ children }: { children: ReactNode }) {
   if (!APP_ID) return <>{children}</>;
   return (
@@ -14,15 +15,15 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
       appId={APP_ID}
       config={{
         loginMethods: ["email", "google"],
-        // Stellar wallets are provisioned server-side (chainType "stellar"); no EVM/SOL needed on login.
+        defaultChain: targetBaseChain,
+        supportedChains: [baseSepolia, base],
         embeddedWallets: {
-          ethereum: { createOnLogin: "off" },
+          ethereum: { createOnLogin: "users-without-wallets" },
           solana: { createOnLogin: "off" },
         },
-        appearance: { theme: "light", accentColor: "#d4af37", logo: "/brand/logo.png" },
+        appearance: { theme: "light", accentColor: "#0000FF", logo: "/brand/logo.png" },
       }}
     >
-      <PrivySignerBridge />
       {children}
     </PrivyProvider>
   );

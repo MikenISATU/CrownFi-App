@@ -5,6 +5,11 @@ import { useAccount, useChainId, useConnect, useSwitchChain, type Connector } fr
 import { useSession } from "@/session/SessionProvider";
 import { targetBaseChain } from "./config";
 import { ConnectorMark, WalletMarkStack } from "./WalletMarks";
+import { PrivyAutoLink } from "@/components/PrivyAutoLink";
+import { PrivyEmailButton, PrivySessionButton } from "@/components/PrivyEmailButton";
+import { Icons } from "@/components/icons";
+
+const PRIVY_ENABLED = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
 
 function shortAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
@@ -31,6 +36,17 @@ export function BaseWalletConnect() {
 
   if (isReconnecting) {
     return <button className="btn-ghost !min-h-[38px] !rounded-[11px] !px-3 text-xs" disabled>Restoring wallet…</button>;
+  }
+
+  if (fan?.authProvider === "privy" && fan.walletAddress) {
+    return (
+      <div className="relative">
+        {PRIVY_ENABLED && <PrivyAutoLink />}
+        {PRIVY_ENABLED
+          ? <PrivySessionButton address={fan.walletAddress} />
+          : <button className="btn-ghost !min-h-[38px] !rounded-[11px] !px-3 font-mono text-xs" onClick={disconnect}>{shortAddress(fan.walletAddress)}</button>}
+      </div>
+    );
   }
 
   if (isConnected && chainId !== targetBaseChain.id) {
@@ -62,6 +78,7 @@ export function BaseWalletConnect() {
 
   return (
     <div className="relative">
+      {PRIVY_ENABLED && <PrivyAutoLink />}
       <button className="btn-gold !min-h-[38px] !rounded-[11px] !px-4 text-xs" disabled={isConnecting || authenticating}
         aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         {isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /> Connect Wallet</>}
@@ -82,6 +99,18 @@ export function BaseWalletConnect() {
               </span>
             </button>
           ))}
+          {PRIVY_ENABLED && (
+            <>
+              <div className="my-1 flex items-center gap-2 px-2 text-[10px] uppercase tracking-wider text-[#9a968b]"><span className="h-px flex-1 bg-[#eee6d3]" />or<span className="h-px flex-1 bg-[#eee6d3]" /></div>
+              <PrivyEmailButton onStart={() => setOpen(false)}>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#0000ff] text-white"><Icons.Mail size={16} strokeWidth={1.9} /></span>
+                <span className="min-w-0">
+                  <span className="block font-semibold text-[#23252f]">Continue with email</span>
+                  <span className="mt-0.5 block text-[11px] text-[#8a8779]">Privy creates your Base wallet automatically</span>
+                </span>
+              </PrivyEmailButton>
+            </>
+          )}
           {error && <p className="px-2 pt-1 text-xs text-red-700">{error.message}</p>}
         </div>
       )}

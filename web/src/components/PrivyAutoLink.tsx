@@ -1,14 +1,15 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { useIdentityToken, usePrivy } from "@privy-io/react-auth";
 import { useSession } from "@/session/SessionProvider";
 import { messageFor } from "@/lib/messages";
 
 // Persistent: after Privy email/Google auth, exchanges the access token for a CrownFi
-// session (server verifies the token + provisions the Stellar wallet). Lives outside the
+// session (server verifies the identity token + reads the embedded EVM wallet). Lives outside the
 // connect chooser so it keeps running after the chooser closes. Renders only an error, if any.
 export function PrivyAutoLink() {
-  const { authenticated, logout, getAccessToken } = usePrivy();
+  const { authenticated, logout } = usePrivy();
+  const { identityToken } = useIdentityToken();
   const { fan, refresh } = useSession();
   const [err, setErr] = useState("");
   const attempted = useRef(false);
@@ -16,11 +17,11 @@ export function PrivyAutoLink() {
   const linkSession = useCallback(async () => {
     setErr("");
     try {
-      const token = await getAccessToken();
+      if (!identityToken) return;
       const res = await fetch("/api/fans/privy-connect", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ identityToken }),
       });
       if (res.ok) {
         await refresh();
@@ -32,14 +33,15 @@ export function PrivyAutoLink() {
     } catch {
       setErr("Could not finish email sign-in.");
     }
-  }, [getAccessToken, refresh, logout]);
+  }, [identityToken, refresh, logout]);
 
   useEffect(() => {
     if (!authenticated) { attempted.current = false; return; }
+    if (!identityToken) return;
     if (fan || attempted.current) return;
     attempted.current = true;
     linkSession();
-  }, [authenticated, fan, linkSession]);
+  }, [authenticated, fan, identityToken, linkSession]);
 
   if (!err) return null;
   return (
