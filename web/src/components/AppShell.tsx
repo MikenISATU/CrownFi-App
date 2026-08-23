@@ -227,15 +227,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
         <div className="mx-auto max-w-[1440px]">
-          <div className="flex items-center justify-between rounded-2xl border border-[#d4af37]/60 bg-[radial-gradient(circle_at_12%_0%,rgba(0,0,255,0.72),transparent_40%),linear-gradient(110deg,rgba(3,11,61,0.98),rgba(7,20,93,0.97),rgba(5,8,23,0.98))] px-4 py-2.5 shadow-[0_16px_38px_-20px_rgba(0,0,120,0.85)] backdrop-blur-xl sm:px-6">
-            <div className="flex items-center gap-2">
-              <button className="grid h-9 w-9 place-items-center rounded-xl border border-[#d4af37]/25 text-[#f3ddb0] transition hover:bg-white/10 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
+          <div className="flex items-center justify-between rounded-2xl border border-[#d4af37]/60 bg-[radial-gradient(circle_at_12%_0%,rgba(0,0,255,0.72),transparent_40%),linear-gradient(110deg,rgba(3,11,61,0.98),rgba(7,20,93,0.97),rgba(5,8,23,0.98))] px-2.5 py-2.5 shadow-[0_16px_38px_-20px_rgba(0,0,120,0.85)] backdrop-blur-xl sm:px-6">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+              <button className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#d4af37]/25 text-[#f3ddb0] transition hover:bg-white/10 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
               </button>
-              <Link href="/" className="flex items-center gap-2" onClick={() => setDrawer(false)}>
+              <Link href="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2" onClick={() => setDrawer(false)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/brand/logo.png" alt="CrownFi" className="h-7 w-7 object-contain" />
-                <span className="font-display text-xl font-semibold tracking-wide text-[#f1cf68]">CrownFi</span>
+                <span className="font-display text-base font-semibold tracking-wide text-[#f1cf68] min-[375px]:text-xl">CrownFi</span>
               </Link>
             </div>
 

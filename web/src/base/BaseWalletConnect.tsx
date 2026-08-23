@@ -79,9 +79,9 @@ export function BaseWalletConnect() {
   return (
     <div className="relative">
       {PRIVY_ENABLED && <PrivyAutoLink />}
-      <button className="btn-gold !min-h-[38px] !rounded-[11px] !px-4 text-xs" disabled={isConnecting || authenticating}
+      <button className="btn-gold !min-h-[38px] !rounded-[11px] !px-2.5 text-xs sm:!px-4" disabled={isConnecting || authenticating}
         aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        {isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /> Connect Wallet</>}
+        {isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /><span className="hidden min-[350px]:inline">Connect Wallet</span><span className="min-[350px]:hidden">Connect</span></>}
       </button>
       {open && (
         <div className="glass absolute right-0 z-50 mt-2 grid w-64 gap-1 p-2">
