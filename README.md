@@ -1,384 +1,245 @@
 # CrownFi
 
-CrownFi is a hackathon/testnet MVP for pageant voting, ticketing, fan rewards, contestant support, and digital collectibles. The current mainline app is a **Next.js full-stack demo**: the UI and API routes live in `web/`, data is handled through Prisma/Postgres, and Stellar/Soroban is used for audit proofs and asset/payment primitives where configured.
+CrownFi is a fan-engagement platform for pageant voting, prediction markets, digital collectibles, rewards, and future ticketing. The active application is a Next.js full-stack demo backed by Prisma and Supabase Postgres.
 
-> **Status:** hackathon MVP. This repository is suitable for demos, review, and iteration. It is **not** production-ready voting infrastructure, mainnet financial infrastructure, or a replacement for legal tabulation/compliance systems.
+> **Current status — Base migration in progress:** CrownFi now targets **Base Sepolia**, but **no CrownFi smart contracts have been deployed to Base Sepolia yet**. Base Account, MetaMask, Privy onboarding, network configuration, and contract-address placeholders are ready. Contract-backed voting, anchoring, collectibles, prediction settlement, and tickets must remain disabled or marked as coming soon until the EVM contracts are written, tested, deployed, and verified.
 
-## What's new in the finale build (merged to `main`)
+This repository is suitable for development, demos, and product review. It is not production voting infrastructure, audited financial infrastructure, or ready for real-money markets.
 
-Beyond the mainline voting/ticketing/collectibles, this build adds:
+## Migration status
 
-- **Prediction markets** — Polymarket-style pooled markets on pageant outcomes (or any topic via a "General" category). Any connected user *or* admin can create a market with per-outcome inputs; fans stake USDC, **cancel positions** before close, and **claim** a pro-rata share of the pool. A **2% fee on winnings only** goes to a treasury. Includes a live **odds-over-time chart** and a **tabular outcomes** view (Chance / Pool / To-win).
-- **Reusable pageant NFT contract (`pageant-nft`)** — one instance per pageant, **per-candidate IPFS metadata** (Pinata), effectively unlimited supply, **one mint per wallet**, and **admin-signed minting** so buyers sign only the payment. In-app **NFT gallery** on `/me` (token id + art + explorer link).
-- **Per-category voting & leaderboards** — each pageant stage (Top 20 Swimsuit, Top 10 Long Gown, Top 5 Q&A, Overall Winner) is its **own round with its own tally** and per-category candidate photos (`web/public/candidates/<stage>/`). The leaderboard has **Swimsuit / Long Gown / Overall** boards; closed rounds use the anchored tally. The Vote tab shows the wallet's **existing vote** as locked-in.
-- **Organizer submissions** — organizers register a pageant, add candidates with photos, and link a **Google Drive folder** of required files (permits, roster, hi-res photos); admins preview everything in the review modal.
-- **UX** — gold design system (molten-gold buttons, cards and step chips), looping delegates filmstrip, mobile burger nav, sticky market filters, browser-side image auto-optimization, and a **Privy (email/Google) Web2 login** path alongside Freighter. (A night-mode theme exists but is currently hidden — see the note in `web/src/app/layout.tsx`.)
-- **Payments admin** — master enable/disable, **maintenance mode**, and a scaffolded **GCash (via PayMongo)** checkout path (disabled until keys are set).
-- **Performance** — in-memory TTL caches on both the client (`web/src/lib/api.ts`) and the hot read APIs (`web/src/lib/serverCache.ts`), so tab navigation doesn't re-hit Postgres.
+| Area | Current status |
+|---|---|
+| Web application | Active — Next.js 15, React 19, TypeScript, and Tailwind CSS |
+| Database | Active — Prisma with a new Supabase Postgres project |
+| Base network | Configured for Base Sepolia by default |
+| Wallets | Base Account and MetaMask connection available |
+| Web2 onboarding | Privy email/Google login with an embedded EVM wallet; credentials required |
+| Base voting contract | **Not deployed** |
+| Base audit-anchor contract | **Not deployed** |
+| Base collectible contract | **Not deployed** |
+| Base prediction-market contract | **Not deployed** |
+| Base ticket contract | **Not deployed** |
+| Base Mainnet | Not enabled for production |
+| Stellar/Soroban | Legacy prototype code only; not the active wallet or deployment target |
 
-### Deployed testnet contracts (2026-07)
+The configured Base Sepolia USDC address is Circle's existing test token address. It is not a CrownFi deployment and does not mean CrownFi's paid flows are live.
 
-All seven Soroban contracts are deployed and live on Stellar testnet:
+## What currently works
 
-| Contract | Purpose | ID |
-|---|---|---|
-| Audit anchor | Seals each closed round's Merkle root (tamper-evident tallies) | `CAC7AX3PFJ5NC43BB5TRWY4QTKLSPBVK3DT5GTLH5N6Y3TIYK5GLOVNV` |
-| Ticket | Event tickets as verifiable passes (tier + seat) | `CA7M6UH55Z4UBQKBZNZBFFU3PWI3XI3BH46LMHSUINWJHTRG7CYDLH6N` |
-| Collectible | Original contestant collectible primitive (mainline) | `CAZOOO3AUNGKDE6XTQNHETSBJGU33I2OCNREZ63GTUTDRPYBUS2R4LZX` |
-| Sale splitter | On-chain USDC payment split; ticket listings **101–104** (Silver/Gold/Diamond/Platinum) registered | `CATCOIVWAVVXBNLPOXBVN3WQ26UNAVLUVSRYBNQWIII75I5QK4YV2KU3` |
-| Test USDC | Mintable demo token everything settles in (faucet source) | `CAE2GXXU4BPLRX5DHLFJKUR7AP5ETPIERGTFNCY7PEFCEL5H3G3RG6LW` |
-| Pageant NFT | Finale-build candidate NFTs: per-candidate IPFS metadata, one mint per wallet, admin-signed mint | `CCONZKTIQHR5UE4AKROICICZ2JSWDAXYBNYDCKDIMRFSIK37PND5PMQW` |
-| Prediction market | Pooled markets: stake / unstake / resolve / claim, 2% fee on winnings | `CDF3R2LUIZJUXCFUBXP62F25M2BYUJT6OT3QYR46MWWBUFEXEAY25POO` |
+- Responsive CrownFi website and pageant discovery experience.
+- Candidate, voting, leaderboard, rewards, prediction, receipt, and organizer interfaces.
+- Next.js API routes with Prisma/Postgres persistence.
+- Base Sepolia network configuration through Wagmi and Viem.
+- Base Account and injected EVM wallet support, including MetaMask.
+- Privy email/Google onboarding and automatic embedded EVM-wallet creation when configured.
+- Wallet-signed CrownFi sessions and EVM-address-based admin allowlisting.
+- Off-chain vote records, market records, user profiles, pageants, candidates, and application receipts.
+- Merkle proof generation and receipt verification at the application layer.
 
-The prediction **treasury** (fee recipient) is a regular wallet, not a contract: `GC3PXGAWQWHHV6M6AKR3LSZZ7RNYZXASGNJM7BSU3EMWI5KG2R5QSIY3`.
+Any UI that depends on a CrownFi Base contract must be treated as a preview until its contract address is configured.
 
-Runbooks: [`contracts/DeploySC.md`](contracts/DeploySC.md) (deploy/init), [`docs/setup/deploy-nft-5-contestants.md`](docs/setup/deploy-nft-5-contestants.md) (Pinata + NFT), and the GCash steps in the PR description.
+## On-chain and off-chain boundaries
 
-## Mainline architecture
+### Currently off-chain
 
-The current mainline branch is intentionally simple so the team can demo it quickly:
+- User profiles and Privy identity mappings.
+- Pageants, candidates, voting rounds, and raw vote records.
+- Prediction-market questions, options, positions, status, and application-controlled settlement records.
+- Rewards, rankings, organizer data, payment logs, and KYC-provider references.
+- Candidate and collectible metadata stored in Supabase, public application assets, or IPFS where configured.
+- Merkle trees, vote receipts, tally hashes, and checkpoint data before anchoring.
+
+### Planned for Base Sepolia
+
+- Publishing closed-round Merkle roots and tally commitments through an audit-anchor contract.
+- Collectible minting and ownership through an EVM collectible contract.
+- Prediction escrow, resolution, refunds, and claims through a prediction-market contract.
+- Verifiable ticket ownership and ticket-state transitions.
+- USDC-based contract interactions after contract and security testing.
+
+CrownFi does not need to publish every raw vote on-chain. The intended design keeps private and high-volume application data in Postgres while publishing compact proofs and ownership or settlement state to Base. Until the Base audit-anchor contract is deployed, receipt verification proves consistency with the application's generated Merkle data but is not yet independently anchored on Base.
+
+## Current architecture
 
 ```mermaid
 flowchart LR
-  Fan[Fan / Freighter wallet] --> Web[Next.js app]
-  Web --> Routes[Next.js API routes]
-  Routes --> DB[(Prisma + Postgres / Supabase)]
-  Routes --> Proofs[Merkle tally + receipt proof]
-  Proofs --> Anchor[Soroban audit-anchor contract]
-  Routes --> Ticket[Ticket / collectible / sale-splitter contract helpers]
+  Fan[Fan]
+  Wallet[Base Account / MetaMask]
+  Privy[Privy email or Google]
+  Web[Next.js application]
+  API[Next.js API routes]
+  DB[(Supabase Postgres)]
+  Proofs[Merkle receipts and tallies]
+  BaseContracts[Base Sepolia contracts<br/>not deployed]
+
+  Fan --> Wallet
+  Fan --> Privy
+  Wallet --> Web
+  Privy --> Web
+  Web --> API
+  API --> DB
+  API --> Proofs
+  Proofs -. future anchor .-> BaseContracts
+  API -. future transactions .-> BaseContracts
 ```
-
-Important framing:
-
-- Voting is **backend-first/off-chain** for speed and privacy.
-- Stellar is used for **tamper-evident audit commitments, payments, ticket/collectible primitives, and proof records**.
-- CrownFi does **not** put every raw vote on-chain.
-- Fan support, ticket purchases, and collectibles do **not** multiply vote power.
-- Ticketing can reduce counterfeits and improve verifiable ownership, but it does **not** fully eliminate off-platform scalping.
 
 ## Repository layout
 
 ```text
 .
-├── web/                    # Active Next.js 15 app: UI, API routes, Prisma, wallet flows
-├── contracts/              # Soroban Rust workspace: audit anchor, tickets, collectibles, sale splitter, test USDC
-├── docs/                   # Structured project documentation
-│   ├── overview/           # Product overview and hackathon pitch
-│   ├── architecture/       # Current platform, component boundaries, future refactor plan
-│   ├── features/           # Voting, ticketing, verification, admin, collectibles
-│   ├── blockchain/         # Stellar/Soroban and transaction verification notes
-│   ├── setup/              # Supabase, local setup, deployment notes
-│   ├── security/           # Security audit notes
-│   └── planning/           # Refactor TODOs
-├── SECURITY.md             # Root security policy and reporting notes
-├── SUPABASE.md             # Compatibility pointer to Supabase setup docs
-├── USER_FLOW.md            # Compatibility pointer to demo walkthrough
-├── WORKFLOW.md             # Compatibility pointer to workflow docs
-└── DEPLOY.md               # Compatibility pointer to deployment docs
+├── web/                         # Active Next.js application
+│   ├── prisma/                  # Prisma schema and seed data
+│   ├── supabase/schema.sql      # Fresh Supabase database schema
+│   ├── src/base/                # Base wallet, network, USDC, and address configuration
+│   └── .env.base.example        # Base/Supabase/Privy environment template
+├── contracts/                   # Legacy Stellar/Soroban contracts; not deployable to Base
+├── docs/                        # Product and historical technical documentation
+├── SUPABASE.md                  # Fresh Supabase setup guide
+└── README.md                    # Current project status
 ```
 
-> The Rust/Axum API and Docker Compose platform split are **future/refactor work**, not the active mainline runtime. See `docs/architecture/platform-refactor-plan.md` for that plan.
+Some files under `contracts/` and `docs/` still describe the former Stellar prototype. They are retained as implementation references and historical context, not as the current Base deployment state.
 
-## Stack in mainline
-
-| Area | Current implementation |
-|---|---|
-| Web app | Next.js 15 App Router, React 19, TypeScript, Tailwind CSS |
-| API/backend | Next.js route handlers under `web/src/app/api` |
-| Database | Prisma + Postgres; Supabase is the team-supported hosted Postgres path |
-| Wallet | Freighter for Stellar wallet connection/signing; mock/demo session paths still exist |
-| Blockchain | Stellar Testnet + Soroban Rust contracts where `STELLAR_MODE=live` is configured |
-| Contracts | `audit-anchor`, `ticket`, `collectible`, `sale-splitter`, `usdc-test`, `pageant-nft`, `prediction-market` |
-| CI/security | npm audit, TypeScript, Merkle tests, Rust format/tests/audit, secret smoke test, best-effort CodeQL |
-
-## What the app currently does
-
-### Fan flows
-
-- Browse the pageant demo experience.
-- Connect or create a fan session.
-- Vote for a contestant in an open round.
-- View receipt/proof information after a round is closed.
-- Buy or mint demo tickets.
-- View ticket voucher/check-in flows.
-- Collect contestant memorabilia in demo/testnet mode.
-
-### Admin flows
-
-- Sign in through wallet-signed admin challenge flow.
-- Create/manage contestants and rounds.
-- Close rounds and generate tally snapshots.
-- Anchor voting proofs in mock mode or Stellar/Soroban live mode when contract IDs are configured.
-- Review organizer/admin-facing dashboard data.
-
-### Voting/proof flow
-
-1. A fan submits a vote through the web app.
-2. The API route validates the round and duplicate-vote rules.
-3. Prisma writes the vote to Postgres.
-4. The database/application layer prevents duplicate votes per fan/round.
-5. On close, the app computes a tally hash and Merkle root.
-6. The proof is stored locally and can be anchored to Soroban when live mode is configured.
-7. The verification page displays proof metadata without putting voter personal data on-chain.
-
-## Quick start
+## Local setup
 
 ### Requirements
 
-- Node.js 22+ recommended, or the version used by CI.
+- Node.js 22 or the version used by CI.
 - npm.
-- A Postgres database. Supabase is supported because the current team setup uses it.
-- Rust toolchain only if running Soroban contract checks.
+- A new Supabase project.
+- A Privy application if email/Google onboarding is enabled.
+- A Base-compatible browser wallet for external-wallet testing.
 
-### Web app setup
+### 1. Install the application
 
 ```bash
 cd web
-cp .env.example .env
+cp .env.base.example .env
 npm ci
-npx prisma migrate dev --name init
+```
+
+On PowerShell, use `Copy-Item .env.base.example .env` instead of `cp`.
+
+### 2. Create the Supabase database
+
+1. Create a new Supabase project.
+2. Open its SQL Editor.
+3. Run `web/supabase/schema.sql` once.
+4. Open the project's **Connect** panel and add the new connection strings to `web/.env`.
+
+```env
+DATABASE_URL="postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+DIRECT_URL="postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:5432/postgres"
+```
+
+`DATABASE_URL` is the transaction-pooler URL used by the application and Vercel. `DIRECT_URL` is the session/direct URL used for schema and migration operations. Both must point to the new Supabase project.
+
+See [`SUPABASE.md`](SUPABASE.md) for the complete setup instructions.
+
+### 3. Configure Privy
+
+Create an application in the Privy dashboard and set:
+
+```env
+NEXT_PUBLIC_PRIVY_APP_ID="your-privy-app-id"
+PRIVY_APP_ID="your-privy-app-id"
+PRIVY_APP_SECRET="your-server-only-app-secret"
+```
+
+Configure email and Google login methods and allow `http://localhost:3000` plus the deployed CrownFi domain. Never expose `PRIVY_APP_SECRET` in browser code or commit it to Git.
+
+### 4. Keep Base on Sepolia
+
+```env
+NEXT_PUBLIC_BASE_NETWORK="sepolia"
+NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL="https://sepolia.base.org"
+NEXT_PUBLIC_BASE_USDC_ADDRESS="0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+```
+
+The public RPC is acceptable for development but should be replaced with a dedicated provider before production.
+
+Leave every CrownFi contract address empty for now:
+
+```env
+NEXT_PUBLIC_BASE_VOTE_CONTRACT_ADDRESS=""
+NEXT_PUBLIC_BASE_AUDIT_ANCHOR_ADDRESS=""
+NEXT_PUBLIC_BASE_COLLECTIBLE_CONTRACT_ADDRESS=""
+NEXT_PUBLIC_BASE_PREDICTION_MARKET_ADDRESS=""
+NEXT_PUBLIC_BASE_TICKET_CONTRACT_ADDRESS=""
+```
+
+Do not paste Stellar `C...` contract IDs into these fields. Base requires deployed EVM contract addresses in `0x...` format.
+
+### 5. Start CrownFi
+
+```bash
+npx prisma generate
 npm run seed
 npm run dev
 ```
 
-Open:
+Open `http://localhost:3000`.
 
-```text
-http://localhost:3000
-```
+## Base contract work still required
 
-For Supabase/Postgres, configure `web/.env`:
+The repository does not currently contain deployable Solidity, Foundry, or Hardhat implementations for the five planned Base contracts. Before any address is added to the environment:
 
-```env
-DATABASE_URL="postgresql://...pooler.supabase.com:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://...pooler.supabase.com:5432/postgres"
-```
+1. Define the EVM interfaces and authorization model.
+2. Implement the contracts in Solidity.
+3. Add unit, invariant, and integration tests.
+4. Review upgradeability, treasury, pause, refund, and admin controls.
+5. Deploy to Base Sepolia from an encrypted deployer keystore.
+6. Verify source code on BaseScan.
+7. Add the verified `0x...` addresses to the environment.
+8. Replace remaining legacy transaction routes with Viem-based Base calls.
+9. Complete testnet QA before considering Base Mainnet.
 
-> Local-only note: for a long-running `npm run dev` server, the direct `5432` URL is ~3.5× faster
-> per query than the pooler. On Vercel (serverless) you **must** use the pooled `6543` URL above,
-> or concurrent functions will exhaust the database's connections.
+Never place a deployer private key, wallet seed phrase, database password, or Privy App Secret in a `NEXT_PUBLIC_*` variable.
 
-## Deploy to Vercel
+## Deploying the web app to Vercel
 
-1. **Import the repo** and set **Root Directory = `web`** (the app is not at the repo root).
-   The build command is the default `npm run build` (it runs `prisma generate` first).
-2. **Set the function region to Tokyo (`hnd1`)** — Project → Settings → Functions. The Supabase
-   database is in `ap-northeast-1`; leaving functions in the default US East adds ~150–200 ms to
-   every query.
-3. **Environment variables** — copy every key from `web/.env.example` into Vercel and fill in the
-   values from your local `web/.env`, with two changes:
-   - `DATABASE_URL` → the **pooled 6543** URL with `?pgbouncer=true` (see note above).
-   - `NEXT_PUBLIC_APP_ORIGIN` → your Vercel URL (e.g. `https://crownfi.vercel.app`).
-4. **Do not run migrations from Vercel.** Apply schema changes locally with
-   `npx prisma db push` / `prisma migrate deploy` against `DIRECT_URL`; the deployed app only reads.
-5. After the first deploy, click through one paid flow (faucet → buy a Silver ticket) — Stellar
-   testnet calls and the database are shared with local dev, so no reseeding is needed.
+1. Import the repository and set the Vercel Root Directory to `web`.
+2. Add the Supabase, Base, Privy, admin-session, and optional provider variables from `web/.env.base.example`.
+3. Set `NEXT_PUBLIC_APP_ORIGIN` to the deployed CrownFi URL.
+4. Keep `NEXT_PUBLIC_BASE_NETWORK=sepolia`.
+5. Leave CrownFi Base contract addresses empty until verified deployments exist.
+6. Redeploy after changing any `NEXT_PUBLIC_*` variable because it is included in the client build.
 
-Use [`docs/setup/supabase.md`](docs/setup/supabase.md) for the team’s Supabase path. A self-hosted Postgres instance can also work as long as the Prisma connection strings are set correctly.
+## Validation
 
-## Environment variables
-
-The main environment file is `web/.env`. Start from `web/.env.example`.
-
-### Database
-
-| Variable | Purpose |
-|---|---|
-| `DATABASE_URL` | Pooled/runtime Postgres connection for the app |
-| `DIRECT_URL` | Direct Postgres connection for Prisma migrations |
-
-### App/wallet mode
-
-| Variable | Purpose |
-|---|---|
-| `WALLET_PROVIDER` | `mock` by default; future embedded-wallet adapters may be added later |
-| `STELLAR_MODE` | `mock` by default; use `live` only after contract deployment/configuration |
-| `STELLAR_NETWORK` | Usually `testnet` during the hackathon/demo phase |
-| `STELLAR_RPC_URL` | Soroban RPC endpoint |
-| `NEXT_PUBLIC_STELLAR_NETWORK` | Client-visible Stellar network label |
-| `NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE` | Client-visible Stellar network passphrase |
-
-### Admin authentication
-
-| Variable | Purpose |
-|---|---|
-| `ADMIN_WALLETS` | Server-side comma-separated allowlist of admin `G...` addresses |
-| `NEXT_PUBLIC_ADMIN_WALLETS` | Client UI hint only; not a security boundary |
-| `ADMIN_SESSION_SECRET` | HMAC secret for httpOnly admin session cookies |
-| `NEXT_PUBLIC_APP_ORIGIN` | Optional app origin used in challenge text |
-
-Generate a strong admin session secret with:
+Run the application checks from `web/`:
 
 ```bash
-openssl rand -base64 32
-```
-
-### Stellar contract IDs
-
-When using `STELLAR_MODE=live`, set deployed Soroban contract IDs:
-
-| Variable | Purpose |
-|---|---|
-| `AUDIT_ANCHOR_CONTRACT_ID` | Round Merkle/tally anchor contract |
-| `TICKET_CONTRACT_ID` | Ticket contract |
-| `COLLECTIBLE_CONTRACT_ID` | Collectible contract |
-| `SALE_SPLITTER_CONTRACT_ID` | Listing/payment split contract |
-| `USDC_TEST_CONTRACT_ID` | Demo/test USDC contract |
-| `PAGEANT_NFT_CONTRACT_ID` | Reusable per-candidate NFT contract (`pageant-nft`) |
-| `PREDICTION_MARKET_CONTRACT_ID` | Prediction-market escrow/settlement contract |
-| `PREDICTION_MARKET_TREASURY` | Wallet that receives the 2% market fee |
-| `STELLAR_PLATFORM_SECRET` | Server-only platform signing key for platform-authorized operations |
-| `DEMO_CONTESTANT_PAYOUT` | Demo payout wallet used by listing registration scripts |
-
-Optional (fiat): `PAYMONGO_SECRET_KEY`, `PAYMONGO_PUBLIC_KEY`, `PAYMONGO_WEBHOOK_SECRET`, `PHP_PER_USD` enable the GCash checkout. Leave blank to keep it disabled.
-
-Do not commit `.env`, private keys, seed phrases, database passwords, Supabase service-role keys, or Stellar secret keys.
-
-## Smart contracts
-
-Contracts live in [`contracts/`](contracts/).
-
-```text
-contracts/
-├── audit-anchor/       # voting round checkpoints / Merkle roots
-├── ticket/             # ticket asset primitive
-├── collectible/        # contestant collectible primitive (mainline)
-├── sale-splitter/      # listing-based payment split primitive
-├── usdc-test/          # mintable test token for demos
-├── pageant-nft/        # finale build: per-candidate NFTs (IPFS metadata, 1 mint/wallet)
-└── prediction-market/  # finale build: pooled prediction markets (stake/unstake/claim)
-```
-
-### Contract checks
-
-```bash
-cd contracts
-cargo fmt --all -- --check
-cargo test --workspace --locked
-cargo audit
-```
-
-`cargo audit --deny warnings` may report advisory warnings from transitive Soroban/Arkworks dependencies. These are documented in [`docs/security/security-audit.md`](docs/security/security-audit.md) and are kept visible but non-blocking in CI.
-
-### Testnet deployment
-
-Install the toolchain:
-
-```bash
-rustup target add wasm32v1-none
-cargo install --locked stellar-cli
-```
-
-Generate and fund a testnet identity:
-
-```bash
-stellar keys generate alice --network testnet --fund
-```
-
-Build contracts:
-
-```bash
-cd contracts
-stellar contract build
-```
-
-Use [`contracts/DEPLOY_GUIDE.md`](contracts/DEPLOY_GUIDE.md) for the full deployment runbook and contract wiring steps.
-
-## Demo flow
-
-A minimal reviewer/demo path:
-
-1. Start the app.
-2. Connect/create a fan account.
-3. Vote for a contestant.
-4. Sign in as admin using an allowlisted Stellar wallet.
-5. Create or close a voting round.
-6. Anchor the round result in mock mode or live testnet mode.
-7. Verify a vote receipt against the Merkle root.
-8. Try ticket and collectible flows in mock/testnet mode.
-
-See [`docs/demo/user-flow.md`](docs/demo/user-flow.md) for the longer walkthrough.
-
-## Security posture
-
-The mainline includes an MVP security hardening pass that is appropriate for a hackathon/testnet demo, not production use.
-
-Current hardening includes:
-
-- server-side wallet-signed admin sessions;
-- httpOnly admin session cookies;
-- server-side checks on sensitive admin routes;
-- short-lived transaction intents for signed XDR confirmation;
-- live-mode rejection for direct mock mint endpoints;
-- faucet rate/amount limits;
-- dependency audit cleanup;
-- committed-secret smoke tests;
-- removal of local/generated artifacts from version control.
-
-Known limitations:
-
-- fan/user wallet sessions are not yet cryptographically enforced server-side across all flows;
-- payment and mint are not fully atomic yet;
-- in-memory challenges, sessions, rate limits, and transaction intents are demo/server-singleton only;
-- contract IDs and live-mode configuration need final testnet validation before presenting live Stellar flows;
-- a deeper external review is required before any mainnet, real-money, or real voter-data usage.
-
-See [`SECURITY.md`](SECURITY.md) and [`docs/security/security-audit.md`](docs/security/security-audit.md).
-
-## CI and local validation
-
-Run these before pushing or asking for review:
-
-```bash
-cd web
-npm ci
-npm audit --audit-level=moderate
-npm audit --audit-level=moderate --omit=dev
 npm run typecheck
 npm run test:merkle
+npm run test:ticketing
+npm run security:audit
 ```
 
-```bash
-cd contracts
-cargo fmt --all -- --check
-cargo test --workspace --locked
-cargo audit
-```
+The Rust checks under `contracts/` validate legacy Soroban code only. Passing them does not validate or deploy a Base contract.
 
-Optional advisory visibility check:
+## Security and product limitations
 
-```bash
-cd contracts
-cargo audit --deny warnings
-```
+- No CrownFi Base contract has completed a security audit.
+- No CrownFi Base contract is deployed on Sepolia or Mainnet.
+- Prediction settlement is not trustless until the Base contract is deployed and integrated.
+- Vote receipts are not Base-anchored until the audit-anchor contract is deployed.
+- Collectibles and tickets do not have Base ownership records yet.
+- In-memory challenges and rate limits remain appropriate only for development/demo use unless backed by shared infrastructure.
+- Real-money prediction markets require legal review, licensing, jurisdiction controls, and production-grade KYC/AML systems.
 
-GitHub Actions run checks that avoid requiring special repository permissions. CodeQL is best-effort because this repository may not have GitHub Code Scanning/GitHub Advanced Security enabled.
+## Near-term roadmap
 
-## Useful docs
-
-| Document | Purpose |
+| Phase | Work |
 |---|---|
-| [`docs/README.md`](docs/README.md) | Documentation map |
-| [`docs/DEMO_QA.md`](docs/DEMO_QA.md) | Q&A prep — likely judge/investor questions with our answers |
-| [`docs/overview/hackathon-pitch.md`](docs/overview/hackathon-pitch.md) | Hackathon/project narrative |
-| [`docs/architecture/current-platform.md`](docs/architecture/current-platform.md) | Current mainline architecture |
-| [`docs/features/voting.md`](docs/features/voting.md) | Voting flow and constraints |
-| [`docs/features/ticketing.md`](docs/features/ticketing.md) | Ticketing flow and anti-scalping framing |
-| [`docs/features/verification.md`](docs/features/verification.md) | Audit/proof verification flow |
-| [`docs/blockchain/stellar-soroban.md`](docs/blockchain/stellar-soroban.md) | Stellar/Soroban integration notes |
-| [`docs/blockchain/transaction-verification.md`](docs/blockchain/transaction-verification.md) | How transaction/proof verification should be presented |
-| [`docs/setup/supabase.md`](docs/setup/supabase.md) | Supabase/Postgres setup |
-| [`docs/security/security-audit.md`](docs/security/security-audit.md) | Security audit notes and remaining risks |
+| Current | Complete Supabase migration, Privy onboarding, Base Sepolia wallets, and UI/API cleanup |
+| Next | Design and implement EVM voting and audit-anchor contracts |
+| Next | Implement collectible, prediction-market, and ticket contracts |
+| Testnet | Deploy and verify all contracts on Base Sepolia; run end-to-end QA |
+| Security | External review, multisig administration, monitoring, and incident procedures |
+| Later | Consider staged Base Mainnet deployment only after testnet and security gates pass |
 
-## Roadmap
+## Social
 
-| Phase | When | What |
-|---|---|---|
-| **Shipped** | Now | Full testnet platform: 7 deployed contracts, anchored verifiable voting, prediction markets, NFTs, ticketing, Google/email onboarding with real wallets |
-| **Next** | Q3 2026 | Pilot regional pageant runs a live anchored round · GCash live via PayMongo · external contract audit + multisig admin · Stellar Community Fund application |
-| **Planned** | Q4 2026 | Staged mainnet (audit-anchor first, commerce after audit) · sponsored reserves · free-play predictions with loyalty points |
-| **Planned** | 2027 | Licensed real-money markets (PAGCOR-compliant partner) · talent shows / esports / fan awards on the same rails · self-serve organizer platform |
-
-## Socials
-
-**X account:** [https://x.com/CrownFi_app]
+X: [@CrownFi_app](https://x.com/CrownFi_app)
