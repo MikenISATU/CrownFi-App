@@ -7,7 +7,7 @@
 export const PLATFORM_FEE_BPS = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_BPS ?? "200"); // 2%
 export const PLATFORM_FEE_PCT = PLATFORM_FEE_BPS / 100; // for display, e.g. 2
 
-export type MarketOptionView = { index: number; label: string; pool: number; percent: number };
+export type MarketOptionView = { index: number; label: string; pool: number; percent: number; sash?: string | null };
 export type MarketView = {
   id: string;
   pageantId: string | null;
@@ -24,6 +24,39 @@ export type MarketView = {
   totalPool: number;
   participants: number;
 };
+
+export type MarketCandidateHint = { name: string; country: string; sash: string };
+
+function normalizedWords(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// Candidate markets still store plain-text outcomes. Match those labels to the
+// current contestant roster at display time so existing markets gain flags without
+// changing their persisted format or forcing a database migration.
+export function withCandidateFlags<T extends MarketView>(market: T, candidates: MarketCandidateHint[]): T {
+  const aliases = candidates.flatMap((candidate) =>
+    [candidate.name, candidate.country, candidate.sash]
+      .map(normalizedWords)
+      .filter(Boolean)
+      .map((alias) => ({ alias, sash: candidate.sash }))
+  ).sort((a, b) => b.alias.length - a.alias.length);
+
+  return {
+    ...market,
+    options: market.options.map((option) => {
+      const label = normalizedWords(option.label);
+      const padded = ` ${label} `;
+      const match = aliases.find(({ alias }) => label === alias || (alias.length > 2 && padded.includes(` ${alias} `)));
+      return { ...option, sash: match?.sash ?? null };
+    }),
+  };
+}
 
 type MarketRow = {
   id: string;

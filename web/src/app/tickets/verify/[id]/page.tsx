@@ -119,7 +119,7 @@ export default function TicketVerificationPage() {
       <div className="mb-8 text-center">
         <div className="eyebrow mb-2">Ticket Scanner</div>
         <h1 className="tracking-tight text-3xl font-semibold text-[#23252f]">Verify & Redeem</h1>
-        <p className="mt-2 text-sm text-[#5f6172]">Authenticate ticket status via the Stellar blockchain.</p>
+        <p className="mt-2 text-sm text-[#5f6172]">Authenticate ticket status through its Base record.</p>
       </div>
 
       {/* Success toast */}
@@ -199,7 +199,7 @@ export default function TicketVerificationPage() {
 
           {/* Wallet */}
           <div className="rounded-xl bg-[#faf7ef] border border-[#eee6d3] px-4 py-3">
-            <div className="text-[9px] text-[#9a968b] uppercase font-bold tracking-wider">Stellar Wallet</div>
+            <div className="text-[9px] text-[#9a968b] uppercase font-bold tracking-wider">Base Wallet</div>
             <div className="mono text-xs text-[#3a3f52] mt-0.5">{walletShort}</div>
           </div>
 

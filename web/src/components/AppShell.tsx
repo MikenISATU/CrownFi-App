@@ -4,8 +4,10 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "@/session/SessionProvider";
 import { Icons } from "./icons";
-import { WalletConnect } from "./WalletConnect";
+import { BaseWalletConnect } from "@/base";
 // import { ThemeToggle } from "./ThemeToggle"; — night mode hidden for now
+
+const CHAIN_LABEL = "Base";
 
 // Full list (mobile burger drawer shows everything).
 const USER_LINKS = [
@@ -99,7 +101,7 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
 function SiteFooter() {
   const [subscribed, setSubscribed] = useState(false);
   return (
-    <footer className="mt-24 bg-[#14172a] text-[#c7cad8]">
+    <footer className="mt-24 bg-[radial-gradient(circle_at_15%_0%,rgba(184,137,36,0.22),transparent_34%),linear-gradient(135deg,#2a190c_0%,#3b260f_52%,#211309_100%)] text-[#eadfca]">
       {/* Thin gold accent line grounds the dark footer against the light page. */}
       <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-70" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
@@ -111,16 +113,16 @@ function SiteFooter() {
               <img src="/brand/logo.png" alt="CrownFi" className="h-8 w-8 object-contain" />
               <span className="font-display text-2xl font-semibold tracking-wide text-[#e6c65a]">CrownFi</span>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-[#9aa0b4]">
-              Blockchain-powered voting, tickets, and prediction markets for pageants — built on Stellar.
+            <p className="mt-4 text-sm leading-relaxed text-[#c9bda8]">
+              Blockchain-powered voting, tickets, and prediction markets for pageants — built on {CHAIN_LABEL}.
             </p>
             <form className="mt-5" onSubmit={(e) => { e.preventDefault(); setSubscribed(true); }}>
               {subscribed ? (
-                <div className="rounded-xl bg-white/5 px-3.5 py-2.5 text-sm text-[#c7cad8] ring-1 ring-white/10">Thanks — you’re subscribed. ✓</div>
+                <div className="rounded-xl bg-white/5 px-3.5 py-2.5 text-sm text-[#eadfca] ring-1 ring-[#d4af37]/25">Thanks — you’re subscribed. ✓</div>
               ) : (
                 <div className="flex items-center gap-2">
                   <input type="email" required placeholder="Email for updates" aria-label="Email"
-                    className="min-w-0 flex-1 rounded-xl bg-white/[0.06] px-3.5 py-2.5 text-sm text-white outline-none ring-1 ring-white/10 transition placeholder-[#6b7086] focus:ring-[#d4af37]/50" />
+                    className="min-w-0 flex-1 rounded-xl bg-black/20 px-3.5 py-2.5 text-sm text-white outline-none ring-1 ring-[#d4af37]/25 transition placeholder-[#9f8f74] focus:ring-[#d4af37]/60" />
                   <button type="submit" className="btn-gold shrink-0 !min-h-[40px] !px-5 !py-2">Join</button>
                 </div>
               )}
@@ -128,7 +130,7 @@ function SiteFooter() {
             <div className="mt-5 flex items-center gap-2">
               {SOCIALS.map(({ href, label, Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-full text-[#9aa0b4] ring-1 ring-white/15 transition hover:bg-[#e6c65a] hover:text-[#1a1f35] hover:ring-transparent">
+                  className="grid h-9 w-9 place-items-center rounded-full text-[#c9bda8] ring-1 ring-[#d4af37]/30 transition hover:bg-[#e6c65a] hover:text-[#2a190c] hover:ring-transparent">
                   <Icon />
                 </a>
               ))}
@@ -138,30 +140,30 @@ function SiteFooter() {
           {/* Link columns */}
           {FOOTER_COLS.map((col) => (
             <div key={col.title}>
-              <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b8fa3]">{col.title}</div>
-              <ul className="space-y-2.5 text-sm text-[#c7cad8]">
+              <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d6b95b]">{col.title}</div>
+              <ul className="space-y-2.5 text-sm text-[#eadfca]">
                 {col.links.map(([h, l]) => (
-                  <li key={h + l}><Link href={h} className="transition hover:text-white">{l}</Link></li>
+                  <li key={h + l}><Link href={h} className="transition hover:text-[#f6d77a]">{l}</Link></li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-white/10 pt-6 text-xs text-[#8b8fa3]">
+        <div className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-[#d4af37]/20 pt-6 text-xs text-[#bbaa8e]">
           <span className="inline-flex items-center gap-2">We accept
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <span className="inline-flex items-center rounded-md bg-white px-2 py-1"><img src="/brand/gcash.svg" alt="GCash" className="h-5 w-auto" /></span>
           </span>
-          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] ring-1 ring-white/10">Built on Stellar</span>
-          <span className="ml-auto text-[#6b7086]">Crown your queen, on-chain.</span>
+          <span className="rounded-full bg-black/15 px-2.5 py-1 text-[11px] ring-1 ring-[#d4af37]/25">Built on {CHAIN_LABEL}</span>
+          <span className="ml-auto text-[#a99472]">Crown your queen, on-chain.</span>
         </div>
 
-        <div className="mt-4 flex flex-col items-start justify-between gap-2 text-xs text-[#6b7086] sm:flex-row sm:items-center">
+        <div className="mt-4 flex flex-col items-start justify-between gap-2 text-xs text-[#a99472] sm:flex-row sm:items-center">
           <span>© 2026 CrownFi · Testnet demo — not for real-money use.</span>
           <span className="flex gap-4">
-            <Link href="/faq#legal" className="transition hover:text-[#c7cad8]">Privacy</Link>
-            <Link href="/faq#legal" className="transition hover:text-[#c7cad8]">Terms</Link>
+            <Link href="/faq#legal" className="transition hover:text-[#f6d77a]">Privacy</Link>
+            <Link href="/faq#legal" className="transition hover:text-[#f6d77a]">Terms</Link>
           </span>
         </div>
       </div>
@@ -174,7 +176,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [maintenance, setMaintenance] = useState(false);
-  const { isAdmin, error, needsInstall, clearError } = useSession();
+  const { isAdmin, error, clearError } = useSession();
   // Admin slots into the Account group when the wallet is on the allowlist.
   const navGroups = isAdmin
     ? NAV_GROUPS.map((g) => (g.label === "Account" ? { ...g, links: [...g.links, { href: "/admin", label: "Admin" }] } : g))
@@ -224,23 +226,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex items-center justify-between rounded-2xl border border-[#ece6d8] bg-white/85 px-4 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_30px_-16px_rgba(16,24,40,0.18)] backdrop-blur-xl sm:px-6">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="flex items-center justify-between rounded-2xl border border-[#c69b35]/55 bg-[linear-gradient(110deg,rgba(42,25,12,0.97),rgba(59,38,15,0.95),rgba(35,20,9,0.97))] px-4 py-2.5 shadow-[0_16px_38px_-20px_rgba(55,32,9,0.75)] backdrop-blur-xl sm:px-6">
             <div className="flex items-center gap-2">
-              <button className="btn-ghost h-9 w-9 !px-0 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
+              <button className="grid h-9 w-9 place-items-center rounded-xl border border-[#d4af37]/25 text-[#f3ddb0] transition hover:bg-white/10 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
               </button>
               <Link href="/" className="flex items-center gap-2" onClick={() => setDrawer(false)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/brand/logo.png" alt="CrownFi" className="h-7 w-7 object-contain" />
-                <span className="font-display text-xl font-semibold tracking-wide text-[#a97f16]">CrownFi</span>
+                <span className="font-display text-xl font-semibold tracking-wide text-[#f1cf68]">CrownFi</span>
               </Link>
             </div>
 
             <nav className="hidden items-center gap-1 text-sm sm:flex">
               {NAV_DIRECT.map((l) => (
                 <Link key={l.href} href={l.href}
-                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-gradient-to-b from-[#d4af37] to-[#b8912f] text-[#1a1f35]" : "text-[#5f6172] hover:bg-[#faf6ea] hover:text-[#23252f]"}`}>
+                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-gradient-to-b from-[#edcc62] to-[#c99725] text-[#2a190c]" : "text-[#eadfca] hover:bg-white/10 hover:text-[#f6d77a]"}`}>
                   {l.label}
                 </Link>
               ))}
@@ -251,7 +253,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 return (
                   <div key={g.label} className="relative">
                     <button onClick={() => setOpenGroup(open ? null : g.label)} aria-expanded={open} aria-haspopup="menu"
-                      className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${active ? "bg-[#faf6ea] text-[#a97f16]" : "text-[#5f6172] hover:bg-[#faf6ea] hover:text-[#23252f]"}`}>
+                      className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${active ? "bg-[#d4af37]/15 text-[#f6d77a]" : "text-[#eadfca] hover:bg-white/10 hover:text-[#f6d77a]"}`}>
                       {g.label} <Icons.ChevronDown size={14} strokeWidth={2} className={`transition ${open ? "rotate-180" : ""}`} />
                     </button>
                     {open && (
@@ -274,7 +276,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2">
               {/* <ThemeToggle /> — night mode hidden for now (see the theme note in layout.tsx). */}
-              <WalletConnect />
+              <BaseWalletConnect />
             </div>
           </div>
 
@@ -282,10 +284,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {drawer && (
             <>
               <div className="fixed inset-0 top-0 z-[-1] sm:hidden" onClick={() => setDrawer(false)} />
-              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#efe4c2] bg-white/95 p-3 shadow-[0_24px_50px_-24px_rgba(120,100,40,0.6)] backdrop-blur-xl sm:hidden">
+              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#c69b35]/55 bg-[linear-gradient(145deg,rgba(42,25,12,0.98),rgba(59,38,15,0.98))] p-3 shadow-[0_24px_50px_-24px_rgba(55,32,9,0.9)] backdrop-blur-xl sm:hidden">
                 {links.map((l) => (
                   <Link key={l.href} href={l.href} onClick={() => setDrawer(false)}
-                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-gradient-to-b from-[#d4af37] to-[#b8912f] text-[#1a1f35]" : "text-[#3a3f52] hover:bg-[#faf6ea]"}`}>
+                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-gradient-to-b from-[#edcc62] to-[#c99725] text-[#2a190c]" : "text-[#eadfca] hover:bg-white/10 hover:text-[#f6d77a]"}`}>
                     {l.label}
                   </Link>
                 ))}
@@ -303,14 +305,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Icons.Wallet size={16} strokeWidth={2} className="mt-0.5 shrink-0" />
               <span>
                 {error}
-                {needsInstall && (
-                  <>
-                    {" "}
-                    <a href="https://www.freighter.app/" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2">
-                      Get Freighter
-                    </a>
-                  </>
-                )}
               </span>
             </div>
             <button onClick={clearError} aria-label="Dismiss" className="shrink-0 rounded-md px-1 text-[#6b5410]/70 hover:text-[#6b5410]"><Icons.X size={16} strokeWidth={2} /></button>
@@ -327,18 +321,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6">{children}</main>
 
       <SiteFooter />
 
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#eee6d3] bg-white/90 backdrop-blur-xl sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#c69b35]/55 bg-[#2a190c]/95 backdrop-blur-xl sm:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
           {TABS.map(({ href, label, Icon }) => {
             const active = path === href;
             return (
               <Link key={href} href={href}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] ${active ? "text-[#b8912f]" : "text-[#8a8779]"}`}>
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] ${active ? "text-[#f6d77a]" : "text-[#bbaa8e]"}`}>
                 <Icon size={20} strokeWidth={1.75} />
                 {label}
               </Link>

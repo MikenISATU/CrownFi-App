@@ -1,6 +1,8 @@
 "use client";
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
-import { connectFreighter, getConnectedAddress, getConnectedNetworkPassphrase, signFanMessage, TESTNET_PASSPHRASE } from "@/wallet/freighter";
+
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useAccount, useChainId, useConnect, useDisconnect, useSignMessage, useSwitchChain } from "wagmi";
+import { targetBaseChain } from "@/base/config";
 import { messageFor } from "@/lib/messages";
 
 export type Fan = { id: string; handle: string; walletAddress: string; points: number; authProvider?: string | null };
@@ -14,15 +16,17 @@ type Ctx = {
   error: string;
   needsInstall: boolean;
   connect: () => Promise<void>;
+  authenticate: (address: string) => Promise<boolean>;
   disconnect: () => void;
   refresh: () => Promise<void>;
   clearError: () => void;
 };
 
 const C = createContext<Ctx | null>(null);
-// Admin is decided by an allowlist of Stellar addresses. Set NEXT_PUBLIC_ADMIN_WALLETS in .env.
-// Note: this is a UI hint only — admin routes are enforced server-side (see adminAuth).
-const ADMIN = (process.env.NEXT_PUBLIC_ADMIN_WALLETS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const ADMIN = (process.env.NEXT_PUBLIC_ADMIN_WALLETS ?? "")
+  .split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
@@ -30,99 +34,147 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState("");
-  const [needsInstall, setNeedsInstall] = useState(false);
 
-  const addressRef = useRef<string | null>(null);
-  addressRef.current = address;
-  const wrongNetwork = useRef(false);
+  const { address: connectedAddress, isConnected } = useAccount();
+  const connectedChainId = useChainId();
+  const { connectors, connectAsync } = useConnect();
+  const { disconnect: disconnectWallet } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
+  const { switchChainAsync } = useSwitchChain();
 
-  // Full wallet sign-in: prove control of the address with a Freighter signature,
-  // then the server issues an httpOnly fan-session cookie. Returns true on success.
-  async function signInWithAddress(addr: string): Promise<boolean> {
-    // 1) Ask the server for a one-time challenge message.
+  async function signInWithAddress(rawAddress: string): Promise<boolean> {
+    const walletAddress = rawAddress.trim();
+    if (fan?.walletAddress?.toLowerCase() === walletAddress.toLowerCase()) return true;
+
     let message: string;
     try {
-      const r = await fetch("/api/fans/challenge", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ address: addr }),
+      const challenge = await fetch("/api/fans/challenge", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ address: walletAddress }),
       });
-      if (!r.ok) { setError("Could not start sign-in. Try again."); return false; }
-      message = (await r.json()).message;
+      if (!challenge.ok) {
+        setError("Could not start Base wallet sign-in. Try again.");
+        return false;
+      }
+      message = (await challenge.json()).message;
     } catch {
       setError("Could not reach the server. Is the dev server running?");
       return false;
     }
-    // 2) Sign it in Freighter (proves wallet ownership).
-    const signed = await signFanMessage(message, addr);
-    if (signed.error || !signed.signature) {
-      setError(signed.error ?? "Sign-in signature was cancelled.");
-      return false;
-    }
-    // 3) Server verifies + sets the session cookie, returns the fan.
-    let res: Response;
+
+    let signature: `0x${string}`;
     try {
-      res = await fetch("/api/fans/connect", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ walletAddress: addr, message, signature: signed.signature }),
+      signature = await signMessageAsync({
+        account: walletAddress as `0x${string}`,
+        message,
+      });
+    } catch {
+      setError("Base wallet signature was cancelled.");
+      return false;
+    }
+
+    let response: Response;
+    try {
+      response = await fetch("/api/fans/connect", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ walletAddress, message, signature }),
       });
     } catch {
       setError("Could not reach the server. Is the dev server running?");
       return false;
     }
-    if (res.ok) {
-      setFan(await res.json());
-      setAddress(addr);
-      localStorage.setItem("crownfi.addr", addr);
+
+    if (response.ok) {
+      const connectedFan = await response.json();
+      setFan(connectedFan);
+      setAddress(connectedFan.walletAddress);
+      localStorage.setItem("crownfi.addr", connectedFan.walletAddress);
       return true;
     }
-    if (res.status === 503) {
-      setError("Wallet verified — but the database isn't set up yet. Follow SUPABASE.md, then reconnect.");
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setError(messageFor(body?.error, "We couldn’t sign you in. Please try again."));
-    }
+
+    const body = await response.json().catch(() => ({}));
+    setError(messageFor(body?.error, "We couldn’t sign you in with Base. Please try again."));
     return false;
   }
 
-  // On load, silently restore a valid session from the httpOnly cookie (no wallet popup).
-  // We optimistically show the last-known address from localStorage first so navigating or
-  // opening a new tab never flashes "Connect Wallet" while /api/fans/me confirms in the background.
+  async function authenticate(walletAddress: string): Promise<boolean> {
+    setConnecting(true);
+    setError("");
+    try {
+      if (connectedChainId !== targetBaseChain.id) {
+        await switchChainAsync({ chainId: targetBaseChain.id });
+      }
+      return await signInWithAddress(walletAddress);
+    } catch {
+      setError(`Switch your wallet to ${targetBaseChain.name}, then try again.`);
+      return false;
+    } finally {
+      setConnecting(false);
+    }
+  }
+
+  async function connect() {
+    setConnecting(true);
+    setError("");
+    try {
+      if (isConnected && connectedAddress) {
+        if (connectedChainId !== targetBaseChain.id) {
+          await switchChainAsync({ chainId: targetBaseChain.id });
+        }
+        await signInWithAddress(connectedAddress);
+        return;
+      }
+
+      const connector = connectors.find((item) => item.id.toLowerCase().includes("metamask")) ?? connectors[0];
+      if (!connector) {
+        setError("No Base-compatible wallet was found. Install MetaMask or use Base Account.");
+        return;
+      }
+      const result = await connectAsync({ connector, chainId: targetBaseChain.id });
+      const walletAddress = result.accounts[0];
+      if (walletAddress) await signInWithAddress(walletAddress);
+    } catch {
+      setError("Base wallet connection was cancelled or unavailable.");
+    } finally {
+      setConnecting(false);
+    }
+  }
+
   useEffect(() => {
     try {
       const cached = localStorage.getItem("crownfi.addr");
       if (cached) setAddress(cached);
-    } catch { /* ignore */ }
+    } catch {
+      // Local storage can be unavailable in privacy-restricted contexts.
+    }
+
     (async () => {
       try {
-        const r = await fetch("/api/fans/me");
-        if (r.ok) {
-          const f = await r.json();
-          setFan(f);
-          setAddress(f.walletAddress);
-          try { localStorage.setItem("crownfi.addr", f.walletAddress); } catch { /* ignore */ }
+        const response = await fetch("/api/fans/me");
+        if (response.ok) {
+          const connectedFan = await response.json();
+          setFan(connectedFan);
+          setAddress(connectedFan.walletAddress);
+          localStorage.setItem("crownfi.addr", connectedFan.walletAddress);
         } else {
-          // Session genuinely gone — clear the optimistic address so we don't show stale state.
           setFan(null);
           setAddress(null);
-          try { localStorage.removeItem("crownfi.addr"); } catch { /* ignore */ }
+          localStorage.removeItem("crownfi.addr");
         }
       } catch {
-        /* offline — keep the optimistic address, don't force a reconnect */
+        // Keep the cached address while offline.
       }
       setReady(true);
     })();
   }, []);
 
-  // Cross-tab sync: when another tab signs in or out (it writes/clears crownfi.addr),
-  // mirror that here so every open tab shows the same wallet without a manual reload.
   useEffect(() => {
-    function onStorage(e: StorageEvent) {
-      if (e.key !== "crownfi.addr") return;
-      if (e.newValue) {
-        // Another tab signed in — adopt the shared cookie session.
-        refresh();
-      } else {
-        // Another tab signed out — clear locally (that tab already hit the logout API).
+    function onStorage(event: StorageEvent) {
+      if (event.key !== "crownfi.addr") return;
+      if (event.newValue) refresh();
+      else {
         setFan(null);
         setAddress(null);
       }
@@ -132,93 +184,53 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // While signed in, watch Freighter for two things that silently invalidate the session:
-  //
-  //   1. An account switch — the server session belongs to the previous wallet, so sign in again.
-  //   2. A network switch — connect() enforces Testnet, but nothing stops the user changing it
-  //      afterwards. Every signature we request is pinned to the Testnet passphrase, so on the
-  //      wrong network they'd fail with a raw wallet error at the worst moment (mid-purchase).
-  //      Say so up front instead.
-  //
-  // A locked wallet reports neither, and is ignored — the server session stays the source of truth.
   useEffect(() => {
-    if (!address) return;
-    let cancelled = false;
-    const iv = setInterval(async () => {
-      const cur = await getConnectedAddress();
-      if (cancelled) return;
-      if (cur && cur !== addressRef.current) {
-        setFan(null);
-        setAddress(null);
-        localStorage.removeItem("crownfi.addr");
-        fetch("/api/fans/logout", { method: "POST" }).catch(() => {});
-        setError("Freighter account changed — connect again to sign in as the new wallet.");
-        return;
-      }
-
-      const net = await getConnectedNetworkPassphrase();
-      if (cancelled || !net) return;
-      const wrong = net !== TESTNET_PASSPHRASE;
-      // Only fire on the transition, so a dismissed banner doesn't reappear every 4s.
-      if (wrong && !wrongNetwork.current) {
-        wrongNetwork.current = true;
-        setError("Freighter is on the wrong network. Switch it back to Testnet — signing won’t work until you do.");
-      } else if (!wrong && wrongNetwork.current) {
-        wrongNetwork.current = false;
-        setError("");
-      }
-    }, 4000);
-    return () => { cancelled = true; clearInterval(iv); };
-  }, [address]);
-
-  async function connect() {
-    setConnecting(true); setError(""); setNeedsInstall(false);
-    try {
-      const res = await connectFreighter();
-      if (res.notInstalled) {
-        setNeedsInstall(true);
-        setError(res.error ?? "Freighter not detected. Install it from freighter.app, then reload this page.");
-        return;
-      }
-      if (res.error || !res.address) { setError(res.error ?? "Could not connect."); return; }
-      await signInWithAddress(res.address);
-    } finally {
-      setConnecting(false);
-    }
-  }
+    if (!fan || !isConnected || !connectedAddress) return;
+    if (fan.walletAddress.toLowerCase() === connectedAddress.toLowerCase()) return;
+    fetch("/api/fans/logout", { method: "POST" }).catch(() => {});
+    localStorage.removeItem("crownfi.addr");
+    setFan(null);
+    setAddress(null);
+    setError("Base wallet account changed. Sign the new account in to continue.");
+  }, [connectedAddress, fan, isConnected]);
 
   function disconnect() {
     fetch("/api/fans/logout", { method: "POST" }).catch(() => {});
-    setFan(null); setAddress(null); setError("");
+    disconnectWallet();
+    setFan(null);
+    setAddress(null);
+    setError("");
     localStorage.removeItem("crownfi.addr");
   }
 
   async function refresh() {
     try {
-      const r = await fetch("/api/fans/me");
-      if (r.ok) {
-        const f = await r.json();
-        setFan(f);
-        setAddress(f.walletAddress);
+      const response = await fetch("/api/fans/me");
+      if (response.ok) {
+        const connectedFan = await response.json();
+        setFan(connectedFan);
+        setAddress(connectedFan.walletAddress);
       }
     } catch {
-      /* ignore */
+      // Leave the current session intact when temporarily offline.
     }
   }
 
-  function clearError() { setError(""); setNeedsInstall(false); }
+  function clearError() {
+    setError("");
+  }
 
-  const isAdmin = !!address && ADMIN.includes(address);
+  const isAdmin = !!address && ADMIN.includes(address.toLowerCase());
 
   return (
-    <C.Provider value={{ fan, address, isAdmin, ready, connecting, error, needsInstall, connect, disconnect, refresh, clearError }}>
+    <C.Provider value={{ fan, address, isAdmin, ready, connecting, error, needsInstall: false, connect, authenticate, disconnect, refresh, clearError }}>
       {children}
     </C.Provider>
   );
 }
 
 export function useSession() {
-  const c = useContext(C);
-  if (!c) throw new Error("useSession must be used within SessionProvider");
-  return c;
+  const context = useContext(C);
+  if (!context) throw new Error("useSession must be used within SessionProvider");
+  return context;
 }

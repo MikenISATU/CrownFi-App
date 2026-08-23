@@ -1,11 +1,9 @@
 "use client";
 import type { Fan } from "@/session/SessionProvider";
-import { signWithFreighter } from "@/wallet/freighter";
 import { getPrivySigner } from "@/wallet/privySigner";
 
-// One signing door for every paid flow. Freighter fans approve in the extension popup;
-// Privy (email/Google) fans have no extension — their wallet lives server-side in Privy's
-// TEE, so the app signs through /api/wallet/privy-sign (session-gated, source-checked).
+// Legacy Stellar XDR signing stays isolated while each paid flow is replaced by a Base
+// contract write. Base-connected fans must never be sent into a Freighter popup.
 export async function signTx(
   xdr: string,
   fan: Pick<Fan, "walletAddress"> & { authProvider?: string | null }
@@ -40,5 +38,7 @@ export async function signTx(
       return { error: e?.message ?? "Could not sign with your account wallet." };
     }
   }
-  return signWithFreighter(xdr, fan.walletAddress);
+  return {
+    error: "This paid action is moving to Base and will open after its Base contract is deployed.",
+  };
 }

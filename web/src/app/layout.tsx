@@ -4,6 +4,7 @@ import { Playfair_Display, Inter } from "next/font/google";
 import { SessionProvider } from "@/session/SessionProvider";
 import { PrivyWrapper } from "@/session/PrivyWrapper";
 import { AppShell } from "@/components/AppShell";
+import { ChainProviders } from "@/base";
 
 // Typography: Playfair Display for headlines/numbers (the fashion-editorial serif the gold
 // design wants), Inter for body/UI (crisp at small sizes). Self-hosted via next/font — no
@@ -11,21 +12,22 @@ import { AppShell } from "@/components/AppShell";
 // Times New Roman, so the old setup rendered differently per platform).
 const display = Playfair_Display({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const chainLabel = "Base";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_ORIGIN || "http://localhost:3000"),
   title: "CrownFi — Crown your queen, on-chain",
-  description: "Blockchain-powered voting, ticketing, and fan experience for pageants, built on Stellar.",
+  description: `Blockchain-powered voting, ticketing, and fan experience for pageants, built on ${chainLabel}.`,
   openGraph: {
     title: "CrownFi — Crown your queen, on-chain",
-    description: "Vote, predict, and collect — every result sealed on Stellar.",
+    description: `Vote, predict, and collect — every result sealed on ${chainLabel}.`,
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "CrownFi — crown your queen, on-chain" }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "CrownFi — Crown your queen, on-chain",
-    description: "Vote, predict, and collect — every result sealed on Stellar.",
+    description: `Vote, predict, and collect — every result sealed on ${chainLabel}.`,
     images: ["/og.png"],
   },
 };
@@ -51,11 +53,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-sans antialiased">
-        <PrivyWrapper>
-          <SessionProvider>
-            <AppShell>{children}</AppShell>
-          </SessionProvider>
-        </PrivyWrapper>
+        <ChainProviders>
+          <PrivyWrapper>
+            <SessionProvider>
+              <AppShell>{children}</AppShell>
+            </SessionProvider>
+          </PrivyWrapper>
+        </ChainProviders>
       </body>
     </html>
   );

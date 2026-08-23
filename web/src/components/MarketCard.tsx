@@ -1,15 +1,12 @@
 "use client";
 import Link from "next/link";
 import { CATEGORY_LABEL, categoryImage } from "@/lib/segments";
+import { Flag } from "@/components/Flag";
+import type { MarketView as MarketViewType } from "@/lib/markets";
 
 export { CATEGORY_LABEL };
 
-export type MarketView = {
-  id: string; category: string; question: string; status: string; live: boolean; official: boolean;
-  endsInMs: number; winningOption: number | null; bannerUrl: string | null;
-  options: { index: number; label: string; pool: number; percent: number }[];
-  totalPool: number; participants: number;
-};
+export type MarketView = MarketViewType;
 
 export function statusBadge(m: MarketView): { label: string; cls: string } {
   if (m.status === "resolved") return { label: "Resolved", cls: "bg-[#e1f5ee] text-[#0f6e56]" };
@@ -63,14 +60,14 @@ export function MarketCard({ m }: { m: MarketView }) {
 
         {resolvedWin ? (
           <div className="mt-3 flex flex-1 items-center gap-2 rounded-xl bg-[#f2fbf7] px-3 py-2.5 text-sm text-[#0f6e56]">
-            <span aria-hidden>🏆</span> <span className="truncate"><b>{resolvedWin.label}</b> won</span>
+            <span aria-hidden>🏆</span> <Flag sash={resolvedWin.sash ?? ""} /> <span className="truncate"><b>{resolvedWin.label}</b> won</span>
           </div>
         ) : (
           <div className="mt-3 flex-1 space-y-2">
             {top.map((o, i) => (
               <div key={o.index}>
                 <div className="flex items-center justify-between gap-2 text-xs">
-                  <span className="truncate text-[#5f6172]">{o.label}</span>
+                  <span className="flex min-w-0 items-center gap-1.5 text-[#5f6172]"><Flag sash={o.sash ?? ""} /><span className="truncate">{o.label}</span></span>
                   <span className={`shrink-0 font-semibold tabular-nums ${i === 0 ? "text-[#a97f16]" : "text-[#9a968b]"}`}>{o.percent}%</span>
                 </div>
                 <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#efe9d8]">
@@ -84,7 +81,7 @@ export function MarketCard({ m }: { m: MarketView }) {
 
         <div className="mt-4 flex items-center justify-between border-t border-[#eee6d3] pt-3 text-xs text-[#7a7768]">
           <span className="tabular-nums">{m.totalPool.toLocaleString()} USDC · {m.participants} in</span>
-          <span className="tabular-nums">{m.status === "resolved" ? "Resolved" : timeLeft(m.endsInMs)}</span>
+          <span className="tabular-nums">{m.status === "cancelled" ? "Refunded" : m.status === "resolved" ? "Resolved" : timeLeft(m.endsInMs)}</span>
         </div>
       </div>
     </Link>

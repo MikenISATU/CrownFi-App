@@ -35,7 +35,7 @@ export default function CollectPage() {
   }
 
   async function getTestUsdc() {
-    if (!address) { flash("Connect your Freighter wallet first.", "err"); return; }
+    if (!address) { flash("Connect your Base wallet first.", "err"); return; }
     setBusy("faucet");
     const r = await postJson<any>("/api/faucet", { walletAddress: address, amountUsdc: 50 });
     setBusy("");
@@ -44,7 +44,7 @@ export default function CollectPage() {
   }
 
   async function buy(c: Collectible) {
-    if (!fan || !address) { flash("Connect your Freighter wallet first.", "err"); return; }
+    if (!fan || !address) { flash("Connect your Base wallet first.", "err"); return; }
     setBusy(c.id);
     try {
       // Step 1 — ask the backend to build the purchase transaction.
@@ -84,7 +84,7 @@ export default function CollectPage() {
           <div className="eyebrow mb-2">Collect</div>
           <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Collectibles that fund <span className="font-display italic text-[#c8a233]">delegates</span></h1>
           <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
-            One official portrait per delegate, minted on Stellar. The payment splits on-chain — her cut lands
+            One official portrait per delegate, prepared for Base. When collecting opens, the payment split and ownership record stay
             instantly. One per wallet.
           </p>
         </div>
@@ -101,7 +101,7 @@ export default function CollectPage() {
           </div>
         ) : (
           <div className="card-gold w-full px-5 py-4 text-sm text-[#5f6172] sm:w-auto sm:max-w-[15rem]">
-            Connect your Freighter wallet to see your balance and start collecting.
+            Connect your Base wallet to see your balance and prepare to collect.
           </div>
         )}
       </div>
@@ -111,7 +111,7 @@ export default function CollectPage() {
         {[
           { n: "1", t: "Top up test USDC", d: "One tap funds your wallet. Testnet money — nothing real is spent." },
           { n: "2", t: "Pick your delegate", d: "Every portrait is 50 USDC, one per wallet." },
-          { n: "3", t: "Confirm in Freighter", d: "Approve once — the NFT lands in your wallet, her cut pays out on-chain." },
+          { n: "3", t: "Confirm in your wallet", d: "Approve once — the NFT lands in your wallet and the settlement stays verifiable." },
         ].map((s) => (
           <div key={s.n} className="card-gold p-5">
             <div className="flex items-center gap-2">

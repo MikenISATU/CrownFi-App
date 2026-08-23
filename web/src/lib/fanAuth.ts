@@ -1,17 +1,17 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { isLikelyStellarAddress } from "@/lib/adminAuth";
+import { createPublicClient, http, isAddress, verifyMessage } from "viem";
+import { base, baseSepolia } from "viem/chains";
 import { signToken, verifyToken } from "@/lib/statelessToken";
 
 // Fan (voter) authentication. Same shape as adminAuth, but there is no allowlist:
-// any wallet that proves control of its Stellar address (SEP-53 signature) gets a
+// any wallet that proves control of its Base address gets a
 // short-lived, HMAC-signed, httpOnly session. fanId is then derived from this
 // session server-side, so routes never trust a body/query fanId.
 
 const COOKIE = "crownfi_fan";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
-const SEP53_PREFIX = "Stellar Signed Message:\n";
 
 type Challenge = { address: string; expiresAt: number };
 type FanSessionPayload = { fanId: string; address: string; exp: number; iat: number };
@@ -72,17 +72,13 @@ function safeEqual(a: string, b: string): boolean {
   const bb = Buffer.from(b);
   return ab.length === bb.length && timingSafeEqual(ab, bb);
 }
-function sep53Hash(message: string): Buffer {
-  return createHash("sha256").update(SEP53_PREFIX).update(Buffer.from(message, "utf8")).digest();
-}
-
 export async function verifyFanSignature(params: {
   address: string;
   message: string;
   signature: string;
 }): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
   const { address, message, signature } = params;
-  if (!isLikelyStellarAddress(address)) return { ok: false, error: "invalid_address", status: 400 };
+  if (!isAddress(address)) return { ok: false, error: "invalid_address", status: 400 };
 
   const nonce = extractNonce(message);
   if (!nonce) return { ok: false, error: "missing_nonce", status: 400 };
@@ -101,9 +97,20 @@ export async function verifyFanSignature(params: {
   }
 
   try {
-    const sdk: any = await import("@stellar/stellar-sdk");
-    const keypair = sdk.Keypair.fromPublicKey(address);
-    const valid = keypair.verify(sep53Hash(message), Buffer.from(signature, "base64"));
+    const hexSignature = signature as `0x${string}`;
+    let valid = await verifyMessage({ address, message, signature: hexSignature });
+
+    // Base Account may use a smart-wallet signature. Public-client verification adds
+    // ERC-1271/ERC-6492 support while MetaMask EOAs are handled by the offline check above.
+    if (!valid) {
+      const useMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+      const chain = useMainnet ? base : baseSepolia;
+      const rpcUrl = useMainnet
+        ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || "https://mainnet.base.org"
+        : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
+      const client = createPublicClient({ chain, transport: http(rpcUrl) });
+      valid = await client.verifyMessage({ address, message, signature: hexSignature });
+    }
     if (!valid) return { ok: false, error: "bad_signature", status: 401 };
     return { ok: true };
   } catch {

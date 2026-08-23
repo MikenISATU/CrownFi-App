@@ -127,7 +127,7 @@ export default function TicketPrintPage() {
             </div>
             <div>
               <div className="font-display text-xl font-bold tracking-tight text-[#23252f]">CrownFi</div>
-              <div className="text-[10px] text-[#7a7768] font-medium tracking-wider uppercase">Blockchain Ticketing · Stellar Network</div>
+              <div className="text-[10px] text-[#7a7768] font-medium tracking-wider uppercase">Blockchain Ticketing · Base Network</div>
             </div>
           </div>
           <div className="text-right shrink-0">
@@ -225,7 +225,7 @@ export default function TicketPrintPage() {
                   <div className="text-xs font-semibold text-[#23252f] mt-0.5">{dateIssued}</div>
                 </div>
                 <div className="rounded-lg bg-[#faf7ef] border border-[#eee6d3] px-3.5 py-2.5 col-span-2">
-                  <div className="text-[9px] text-[#9a968b] uppercase font-bold tracking-wider">Stellar Wallet Address</div>
+                  <div className="text-[9px] text-[#9a968b] uppercase font-bold tracking-wider">Base Wallet Address</div>
                   <div className="mono text-[11px] text-[#3a3f52] mt-0.5 truncate">{walletShort}</div>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export default function TicketPrintPage() {
           <div className="text-[9px] text-[#9a968b] leading-[1.7] space-y-1">
             <p>
               <strong className="text-[#7a7768]">Terms & Conditions:</strong> This voucher is non-transferable. Only the registered wallet holder may redeem this ticket. 
-              Ticket redemption is handled on the Stellar blockchain; once scanned and verified, this voucher becomes invalid for further use. 
+              Ticket redemption will be verified through the Base ticket contract; once scanned and redeemed, the voucher becomes invalid for further use.
               CrownFi is not responsible for lost or stolen vouchers. By presenting this voucher, you agree to all event terms and conditions.
             </p>
             <p>
@@ -349,7 +349,7 @@ export default function TicketPrintPage() {
             <div className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/logo.png" alt="CrownFi" className="h-4 w-4 object-contain" />
-              <span className="text-[10px] font-bold text-[#9a968b] tracking-wider uppercase">CrownFi — Powered by Stellar</span>
+              <span className="text-[10px] font-bold text-[#9a968b] tracking-wider uppercase">CrownFi — Built on Base</span>
             </div>
             <div className="mono text-[9px] text-[#b8b0a0]">Page 1 / 1</div>
           </div>

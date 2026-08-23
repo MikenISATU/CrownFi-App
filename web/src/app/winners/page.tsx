@@ -44,8 +44,8 @@ export default function WinnersPage() {
             </h1>
             <p className="mt-3 max-w-md text-sm text-[#5f6172]">
               {ready
-                ? "Every result below was sealed on Stellar the moment its round closed — decided before it was announced."
-                : "Winners are announced after Coronation Night. Every tally is already sealed on Stellar the moment its round closes."}
+                ? "Every result below was sealed into a verifiable checkpoint when its round closed — decided before it was announced."
+                : "Winners are announced after Coronation Night. Every closed tally is prepared for a public Base checkpoint."}
             </p>
             {ready ? (
               <button className="btn-gold mt-7 !px-10 !py-3 text-base" onClick={() => setAct(1)}>Reveal the crown</button>
@@ -93,7 +93,7 @@ export default function WinnersPage() {
               {crown.anchorTx && (
                 <a href={`https://stellar.expert/explorer/testnet/tx/${crown.anchorTx}`} target="_blank" rel="noopener noreferrer"
                   className="mt-3 inline-block text-xs font-semibold text-[#a97f16] hover:underline">
-                  Sealed on Stellar — view the anchor ↗
+                  View the public result anchor ↗
                 </a>
               )}
             </div>

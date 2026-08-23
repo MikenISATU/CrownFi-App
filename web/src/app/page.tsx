@@ -1,13 +1,58 @@
 "use client";
+
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Slide } from "@/components/Carousel";
-import { Filmstrip } from "@/components/Filmstrip";
-import { CountUp } from "@/components/ui";
 import type { MarketView } from "@/components/MarketCard";
+import { CountUp } from "@/components/ui";
 import { getJson } from "@/lib/api";
+import styles from "./home.module.css";
 
 type Stats = { votes: number; collectiblesSold: number; fans: number; predictions: number };
+
+const FALLBACK_CANDIDATES: Slide[] = [
+  { id: "philippines", name: "Isabel Reyes", country: "Philippines", sash: "Philippines", portraitUrl: "/candidates/philippines.webp" },
+  { id: "thailand", name: "Ratana Somsri", country: "Thailand", sash: "Thailand", portraitUrl: "/candidates/thailand.webp" },
+  { id: "vietnam", name: "Linh Nguyen", country: "Vietnam", sash: "Vietnam", portraitUrl: "/candidates/vietnam.webp" },
+  { id: "japan", name: "Aiko Mori", country: "Japan", sash: "Japan", portraitUrl: "/candidates/japan.webp" },
+  { id: "indonesia", name: "Ayu Pratama", country: "Indonesia", sash: "Indonesia", portraitUrl: "/candidates/indonesia.webp" },
+];
+
+const FALLBACK_MARKETS = [
+  { label: "Live · Q&A", question: "Who wins the Q&A round?", left: "Delegate A", leftPct: 62, right: "Delegate B", rightPct: 38 },
+  { label: "Live · Long gown", question: "Top score in evening wear?", left: "Philippines", leftPct: 54, right: "Thailand", rightPct: 46 },
+  { label: "Upcoming · Crown", question: "Who takes the final crown?", left: "Open field", leftPct: 100, right: "", rightPct: 0 },
+  { label: "Resolved · Swimsuit", question: "Swimsuit round winner", left: "Resolved onchain", leftPct: 100, right: "", rightPct: 0 },
+];
+
+const REWARD_TASKS = [
+  ["01", "Cast a verified vote", "Once per active round", "+25"],
+  ["02", "Collect a delegate", "Official portrait edition", "+50"],
+  ["03", "Join a prediction", "Before the market locks", "+15"],
+  ["04", "Verify your receipt", "Confirm the anchored proof", "+10"],
+];
+
+const ROADMAP = [
+  { period: "Now", status: "Foundation", title: "Base migration", items: ["Base Sepolia integration", "EVM wallet connection", "Contract interface mapping", "Existing data preserved"] },
+  { period: "Phase 02", status: "Next", title: "Fan actions", items: ["Receipt-backed voting", "USDC collectibles", "Free-play prediction pools", "Loyalty points and rankings"] },
+  { period: "Phase 03", status: "Planned", title: "Live pageants", items: ["Organizer command center", "Candidate review workflow", "Public result settlement", "Partner pilot event"] },
+  { period: "Phase 04", status: "Planned", title: "Mainnet stage", items: ["Audited Base contracts", "Production RPC provider", "Sponsored fan transactions", "Base ecosystem launch"] },
+];
+
+function marketPreview(market: MarketView, index: number) {
+  const sorted = [...market.options].sort((a, b) => b.percent - a.percent);
+  const first = sorted[0];
+  const second = sorted[1];
+  return {
+    label: `${market.live ? "Live" : market.status === "resolved" ? "Resolved" : "Upcoming"} · ${market.category}`,
+    question: market.question,
+    left: first?.label ?? "Open field",
+    leftPct: first?.percent ?? 100,
+    right: second?.label ?? "",
+    rightPct: second?.percent ?? 0,
+    key: market.id || String(index),
+  };
+}
 
 export default function Home() {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -21,314 +66,176 @@ export default function Home() {
     getJson<MarketView[]>("/api/markets", [], { ttl: 30_000 }).then(setMarkets);
   }, []);
 
-  // The home page only previews the markets — the numbers below, never the markets themselves.
-  const liveMarkets = markets.filter((m) => m.live).length;
-  const pooled = markets.reduce((sum, m) => sum + m.totalPool, 0);
-  const predictors = markets.reduce((sum, m) => sum + m.participants, 0);
+  const candidates = useMemo(() => (slides.length ? slides : FALLBACK_CANDIDATES).slice(0, 5), [slides]);
+  const marketCards = useMemo(() => markets.length ? markets.slice(0, 4).map(marketPreview) : FALLBACK_MARKETS.map((m, i) => ({ ...m, key: String(i) })), [markets]);
+  const tally = [46, 31, 23];
 
   return (
-    <div className="space-y-14 sm:space-y-20">
-      {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="hero-band relative overflow-hidden rounded-[2rem] border border-[#e7d9a8] px-5 py-12 text-center sm:px-10 sm:py-24"
-        style={{ background: "radial-gradient(120% 90% at 50% -10%, #fbf4dd 0%, #ffffff 45%, #faf7ef 100%)" }}>
-        {/* Gold aura */}
-        <div className="pointer-events-none absolute inset-0 opacity-90"
-          style={{ background: "radial-gradient(45% 40% at 50% 8%, rgba(212,175,55,0.28), transparent 60%)" }} />
-        {/* Crown coin */}
-        <div className="relative mx-auto mb-6 h-28 w-28 sm:h-36 sm:w-36">
+    <div className={styles.home}>
+      <section className={styles.hero} id="experience">
+        <div className={styles.heroGlow} aria-hidden="true" />
+        <div className={styles.heroCopy}>
+          <span className={styles.eyebrow}>Built for the onchain stage</span>
+          <h1>The future wears <em>the crown.</em></h1>
+          <p>A transparent pageant platform for voting, collecting and predicting—designed for a new generation of fans.</p>
+          <div className={styles.actions}>
+            <Link className={styles.primaryButton} href="/vote">Enter CrownFi</Link>
+            <Link className={styles.secondaryButton} href="#platform-story">Explore the platform</Link>
+          </div>
+          <div className={styles.heroChips}><span>Verifiable votes</span><span>Digital collectibles</span><span>Live predictions</span></div>
+        </div>
+
+        <div className={styles.crownScene} aria-label="CrownFi crown in a dimensional orbit">
+          <div className={styles.crownHalo} />
+          <div className={styles.crownOrbit}><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo.png" alt="CrownFi" className="h-full w-full object-contain drop-shadow-[0_10px_30px_rgba(184,145,47,0.45)]" />
-        </div>
-        <div className="relative">
-          <div className="eyebrow mb-4">CrownFi Pageant Platform</div>
-          <h1 className="tracking-tight text-6xl font-semibold leading-[1.02] text-[#23252f] sm:text-8xl">
-            CrownFi <span className="font-display italic text-[#c8a233]">App</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold uppercase tracking-[0.28em] text-[#a97f16] sm:text-base">
-            Blockchain-powered voting, tickets & predictions for pageants
-          </p>
-          <p className="mx-auto mt-6 max-w-xl text-[#5f6172]">
-            Vote, reserve your seat, and collect your queen — all on Stellar.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/tickets" className="btn-gold !px-8 !py-3 text-base">Buy Tickets</Link>
-            <Link href="/vote" className="btn-ghost !px-7 !py-3 text-base">Cast your vote</Link>
-          </div>
+          <img src="/brand/logo.png" alt="CrownFi crown" />
+          <span className={styles.crownLabel}>Crown protocol active</span>
         </div>
       </section>
 
-      {/* ─── PLATFORM IN NUMBERS ──────────────────────────── */}
-      <section>
-        <div className="mb-8 text-center">
-          <div className="eyebrow mb-2">Platform pulse</div>
-          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">CrownFi in <span className="font-display italic text-[#c8a233]">numbers</span></h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#5f6172]">Live from the platform — every figure below is a real record, not a projection.</p>
-        </div>
-
-        {/* One clean strip: dark digits, gold accent, plain labels. */}
-        <div className="card-gold px-6 py-10 sm:px-10 sm:py-12">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 text-center lg:grid-cols-4">
-            {[
-              { label: "Users registered", value: stats?.fans ?? 0 },
-              { label: "Votes cast", value: stats?.votes ?? 0 },
-              { label: "Predictions made", value: stats?.predictions ?? 0 },
-              { label: "NFTs collected", value: stats?.collectiblesSold ?? 0 },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="font-display text-5xl font-semibold tabular-nums text-[#23252f] sm:text-6xl">
-                  <CountUp to={s.value} /><span className="text-[#c8a233]">+</span>
-                </div>
-                <div className="mt-2 text-sm text-[#7a7768]">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── PREDICTION MARKETS (preview only — full markets live on /predictions) ─── */}
-      <section className="relative overflow-hidden rounded-[2rem] border border-[#efe4c2] bg-white">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d4af37]/10 blur-3xl" />
-
-        {/* Prediction market artwork — a wide banner, so it runs the full width of the card. */}
-        <div className="relative border-b border-[#efe4c2]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/prediction-market.webp" alt="CrownFi prediction markets" className="h-full w-full object-cover" />
-        </div>
-
-        <div className="relative grid items-center gap-9 p-7 sm:p-10 lg:grid-cols-2">
-          <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#efe4c2] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#a97f16]">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c0392b]" />
-              </span>
-              Prediction markets
-            </div>
-            <h2 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the <span className="font-display italic text-[#c8a233]">crown</span></h2>
-            <p className="mt-3 max-w-lg text-[#5f6172]">
-              Call the swimsuit round, the long gown, the Q&amp;A — or the crown itself. Winnings settle in test USDC
-              the moment a market resolves.
-            </p>
-            <ul className="mt-5 space-y-2.5">
-              {[
-                "Stake on any outcome — cancel any time before the market locks.",
-                "Odds move live with the crowd.",
-                "Anyone can open a market. Official ones carry a star.",
-              ].map((line) => (
-                <li key={line} className="flex gap-2.5 text-sm text-[#5f6172]">
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#d4af37]" />
-                  {line}
-                </li>
-              ))}
-            </ul>
-            <Link href="/predictions" className="btn-gold mt-7 inline-flex !px-8 !py-3 text-base">Open prediction markets</Link>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: "Markets live", value: liveMarkets },
-              { label: "USDC pooled", value: pooled },
-              { label: "Predicting", value: predictors },
-            ].map((s) => (
-              <div key={s.label} className="card-gold p-5 text-center">
-                <div className="font-display text-3xl font-semibold tabular-nums text-[#b8912f] sm:text-4xl"><CountUp to={s.value} /></div>
-                <div className="mt-1 text-[11px] uppercase tracking-wider text-[#7a7768]">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── MEET THE DELEGATES ───────────────────────────── */}
-      <section>
-        <div className="mb-8 text-center">
-          <div className="eyebrow mb-2">Delegate roster</div>
-          <h2 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-6xl">Meet the <span className="font-display italic text-[#c8a233]">Delegates</span></h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-[#5f6172]">
-            Five delegates, one crown. Send your favorite to the next stage — one vote per wallet, per round.
-          </p>
-        </div>
-        <Filmstrip slides={slides} />
-        <div className="mt-8 text-center">
-          <Link href="/vote" className="btn-gold !px-8 !py-3 text-base">Vote Now</Link>
-        </div>
-      </section>
-
-      {/* ─── FEATURED NFT ─────────────────────────────────── */}
-      <section className="grid items-center gap-10 lg:grid-cols-2">
-        <div>
-          <div className="eyebrow mb-3">Exclusive collectibles</div>
-          <h2 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Own a piece of the <span className="font-display italic text-[#c8a233]">crown</span></h2>
-          <p className="mt-4 max-w-lg text-[#5f6172]">
-            Every official candidate portrait becomes a digital collectible on Stellar. Mint your favorite queen and
-            support her directly.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/contestants" className="btn-gold !px-8 !py-3 text-base">Explore collectibles</Link>
-            <Link href="/leaderboard" className="btn-ghost !px-7 !py-3 text-base">View leaderboard</Link>
-          </div>
-        </div>
-        <div className="flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/hero-nft.png" alt="CrownFi collectible" className="w-full max-w-md animate-float drop-shadow-[0_40px_70px_rgba(184,145,47,0.35)]" />
-        </div>
-      </section>
-
-      {/* ─── BUY TICKETS (stage) ──────────────────────────── */}
-      <section className="relative overflow-hidden rounded-[2rem] border border-[#e7d9a8]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/stadium/stage.png" alt="CrownFi arena" className="h-64 w-full object-cover sm:h-96" />
-        {/* Full scrim, not just a bottom fade — the heading sits mid-frame over a bright stage. */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/45 to-black/30" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
-          <h2
-            className="tracking-tight text-4xl font-semibold text-white sm:text-6xl"
-            style={{ textShadow: "0 2px 4px rgba(0,0,0,0.55), 0 8px 28px rgba(0,0,0,0.65)" }}
-          >
-            Reserve your <span className="font-display italic text-[#e6c65a]">seat</span>
-          </h2>
-          <p className="max-w-md text-sm text-white/85" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
-            Every seat is a verified ticket on Stellar — scannable at the door, impossible to duplicate.
-          </p>
-          <Link href="/tickets" className="btn-gold !px-10 !py-3 text-lg shadow-2xl">Buy Tickets</Link>
-        </div>
-      </section>
-
-      {/* ─── HOW IT WORKS ─────────────────────────────────── */}
-      <section>
-        <div className="mb-6 text-center">
-          <div className="eyebrow mb-2">Why it holds up</div>
-          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">Fast to vote. <span className="font-display italic text-[#c8a233]">Impossible to fake.</span></h2>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
+      <section className={styles.pulse} aria-labelledby="pulse-title">
+        <header className={styles.sectionIntro}>
+          <span className={styles.pill}>Platform pulse</span>
+          <h2 id="pulse-title">CrownFi in <em>numbers</em></h2>
+          <p>Live from the platform—every figure below is a real record, not a projection.</p>
+        </header>
+        <div className={styles.statsGrid}>
           {[
-            { n: "1", title: "Vote in a heartbeat", body: "Voting is instant — intake runs off-chain, so the site never buckles on finale night.", tag: "off-chain" },
-            { n: "2", title: "Anchored to Stellar", body: "When a round closes, the tally is sealed into a Merkle root on Stellar. Tamper-evident, forever.", tag: "on-chain" },
-            { n: "3", title: "Verify your receipt", body: "A cryptographic receipt proves your vote is in the official count — no trust required.", tag: "on-chain" },
-          ].map((s) => (
-            <div key={s.n} className="card-gold p-6">
-              <div className="flex items-center justify-between">
-                <span className="num-gold">{s.n}</span>
-                <span className={s.tag === "on-chain" ? "tag-on" : "tag-off"}>{s.tag}</span>
-              </div>
-              <h3 className="mt-3 tracking-tight text-xl text-[#23252f]">{s.title}</h3>
-              <p className="mt-2 text-sm text-[#5f6172]">{s.body}</p>
+            ["Users registered", stats?.fans ?? 0],
+            ["Votes cast", stats?.votes ?? 0],
+            ["Predictions made", stats?.predictions ?? 0],
+            ["NFTs collected", stats?.collectiblesSold ?? 0],
+          ].map(([label, value]) => (
+            <div className={styles.stat} key={label}>
+              <b><CountUp to={Number(value)} /><span>+</span></b>
+              <small>{label}</small>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ─── ROADMAP ──────────────────────────────────────── */}
-      <section>
-        <div className="mb-10 text-center">
-          <div className="eyebrow mb-2">Where this goes</div>
-          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">The <span className="font-display italic text-[#c8a233]">road</span> ahead</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#5f6172]">Shipped first, promises second — everything in phase one is live today.</p>
+      <section className={styles.voteSection} id="platform-story" aria-labelledby="vote-title">
+        <header className={styles.splitHeading}>
+          <div><span className={styles.eyebrow}>Cast your vote</span><h2 id="vote-title">Who wears the <em>crown?</em></h2></div>
+          <p>A dimensional voting room with live standings and one clear, receipt-backed action.</p>
+        </header>
+        <div className={styles.voteRoom}>
+          <div className={styles.candidateDeck} aria-label="Featured CrownFi delegates">
+            {candidates.slice(0, 3).map((candidate, index) => (
+              <Link href={`/contestants/${candidate.id}`} className={styles.candidateCard} key={candidate.id} style={{ "--card-index": index } as React.CSSProperties}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={candidate.portraitUrl || FALLBACK_CANDIDATES[index].portraitUrl || ""} alt={candidate.name} />
+                <span>{candidate.country}</span><strong>{candidate.name}</strong>
+              </Link>
+            ))}
+          </div>
+          <div className={styles.voteCopy}>
+            <span className={styles.liveBadge}><i /> Final round · Voting open</span>
+            <h3>One wallet.<br /><em>One verified vote.</em></h3>
+            <p>Select a delegate, confirm once and keep a cryptographic receipt proving your vote belongs in the official count.</p>
+            <div className={styles.actions}><Link className={styles.primaryButton} href="/vote">Vote now</Link><Link className={styles.secondaryButton} href="/verify">Verify a receipt</Link></div>
+            <div className={styles.tally}>
+              {candidates.slice(0, 3).map((candidate, index) => <div key={candidate.id}><span>{candidate.name}</span><i><b style={{ width: `${tally[index]}%` }} /></i><strong>{tally[index]}%</strong></div>)}
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="relative mx-auto max-w-4xl">
-          {/* The timeline spine */}
-          <div className="absolute left-4 top-1 h-full w-px bg-gradient-to-b from-[#d4af37] via-[#e4c358] to-transparent sm:left-1/2" />
+      <section className={styles.predictions} aria-labelledby="prediction-title">
+        <header className={styles.predictionHead}>
+          <span className={styles.eyebrow}>Prediction markets</span>
+          <h2 id="prediction-title">Predict the <em>crown.</em></h2>
+          <p>Browse freely, connect only when you participate, and follow pageant outcomes through clear pools and moving crowd odds.</p>
+        </header>
+        <div className={styles.marketConsole}>
+          <div className={styles.marketGuide}>
+            <div className={styles.guideStats}><span><b>Live</b> markets</span><span><b>USDC</b> pooled</span><span><b>24/7</b> odds</span></div>
+            <h3>How it moves</h3><p>Every action stays clear from the first position through final settlement.</p>
+            <ol><li>Pick a market</li><li>Choose an outcome</li><li>Watch the odds move</li><li>Claim after resolution</li></ol>
+            <Link href="/predictions">Open all markets →</Link>
+          </div>
+          <div className={styles.marketGrid}>
+            {marketCards.map(({ key, ...market }) => <MarketPreview key={key} {...market} />)}
+          </div>
+        </div>
+      </section>
 
-          {ROADMAP.map((p, i) => {
-            const leftSide = i % 2 === 0;
-            return (
-              <div key={p.title} className="relative pb-10 last:pb-0">
-                <span className="num-gold absolute left-4 top-1 z-10 -translate-x-1/2 sm:left-1/2">{i + 1}</span>
-                <div className={`ml-12 sm:ml-0 sm:w-1/2 ${leftSide ? "sm:pr-10" : "sm:ml-auto sm:pl-10"}`}>
-                  <div className="card-gold p-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-[#faf0d2] px-2.5 py-0.5 text-[11px] font-semibold text-[#8a6d1f]">{p.period}</span>
-                      <span className={p.status === "Shipped" ? "tag-on" : "tag-off"}>{p.status}</span>
-                    </div>
-                    <h3 className="mt-2 tracking-tight text-xl font-semibold text-[#23252f]">{p.title}</h3>
-                    <ul className="mt-2.5 space-y-1.5">
-                      {p.items.map((it) => (
-                        <li key={it} className="flex gap-2 text-xs leading-relaxed text-[#5f6172]">
-                          <span className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#d4af37]" />
-                          {it}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+      <section className={styles.platformSuite} aria-labelledby="suite-title">
+        <header className={styles.sectionIntro}>
+          <span className={styles.pill}>Inside the CrownFi platform</span>
+          <h2 id="suite-title">Every CrownFi experience, <em>on one stage.</em></h2>
+          <p>The approved dimensional system now powers the real homepage—from collecting and loyalty to future organizer tools and public proof.</p>
+        </header>
+
+        <div className={styles.productGrid}>
+          <article className={`${styles.productPanel} ${styles.collectPanel}`}>
+            <PanelMeta label="Digital collectible vault" route="/contestants" />
+            <div className={styles.collectStage}>
+              {["/nfts/thailand.webp", "/nfts/philippines.webp", "/nfts/vietnam.webp"].map((src, index) => <img src={src} alt="CrownFi delegate collectible" key={src} style={{ "--nft-index": index } as React.CSSProperties} />)}
+            </div>
+            <div className={styles.productCopy}><h3>Own the <em>moment.</em></h3><p>Support a delegate through official editions while the collectible remains portable through its onchain ownership record.</p><Link href="/contestants">Explore collectibles →</Link></div>
+          </article>
+
+          <article className={`${styles.productPanel} ${styles.loyaltyPanel}`}>
+            <PanelMeta label="Fan rewards and ranking" route="/loyalty" />
+            <div className={styles.productCopy}><h3>Participation becomes <em>momentum.</em></h3><p>Tasks, points, shop rewards and live standings share one dimensional fan dashboard.</p></div>
+            <div className={styles.loyaltyExperience}>
+              <div className={styles.pointsStage}><span className={styles.rankLeft}><b>#08</b>Global rank</span><div className={styles.pointsOrb}><b>1,250</b><span>Crown points</span></div><span className={styles.rankRight}><b>+180</b>This week</span></div>
+              <div className={styles.rewardBoard}>
+                <div className={styles.taskPanel}><h4>Earn points</h4>{REWARD_TASKS.map(([n, title, detail, points]) => <div className={styles.rewardTask} key={n}><i>{n}</i><span><b>{title}</b><small>{detail}</small></span><em>{points}</em></div>)}</div>
+                <div className={styles.podiumPanel}><h4>Live standings</h4><div className={styles.podium}><div><b>Fan 02</b><i>2</i></div><div><b>Fan 01</b><i>1</i></div><div><b>Fan 03</b><i>3</i></div></div></div>
               </div>
-            );
-          })}
+            </div>
+          </article>
+
+          <article className={`${styles.productPanel} ${styles.darkPanel} ${styles.organizerPanel}`}>
+            <PanelMeta label="Organizer command center" route="Coming soon" />
+            <div className={styles.organizerLayout}>
+              <div className={styles.productCopy}><h3>Run the show.<br /><em>Prove every result.</em></h3><p>The organizer command center is being prepared for candidate review, round controls and verified winner publishing.</p><span className={styles.comingSoon}>Coming soon</span></div>
+              <div className={styles.dashboardPreview}><div className={styles.dashboardTop}>CrownFi studio / Coronation Night</div><div className={styles.dashboardBody}><aside>Overview<br />Candidates<br />Rounds<br />Results</aside><div><h4>Your pageant</h4><div className={styles.miniMetrics}><span><b>24</b>Candidates</span><span><b>05</b>Rounds</span><span><b>98%</b>Ready</span></div></div></div><strong>Locked preview</strong></div>
+            </div>
+          </article>
+
+          <article className={`${styles.productPanel} ${styles.darkPanel} ${styles.ticketPanel}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}<img className={styles.ticketBackdrop} src="/stadium/stage.png" alt="" />
+            <PanelMeta label="Ticketing and seats" route="Coming soon" />
+            <div className={styles.ticketCopy}><span className={styles.lockOrb}>⌁</span><h3>Reserve your <em>seat.</em></h3><p>Verified tickets, digital seating and venue check-in are being prepared for release.</p><span className={styles.comingSoon}>Coming soon</span><div className={styles.seats}>{Array.from({ length: 21 }, (_, i) => <i key={i} style={{ "--seat": i % 7 } as React.CSSProperties} />)}</div></div>
+          </article>
+
+          <article className={`${styles.productPanel} ${styles.proofPanel}`}>
+            <PanelMeta label="Public receipt verification" route="/verify" />
+            <div className={styles.proofCard}><div><span>Vote receipt</span><b>Verified</b></div><dl><dt>Round</dt><dd>long-gown-2026</dd><dt>Wallet</dt><dd>0x9B3...72A1</dd><dt>Candidate</dt><dd>philippines</dd><dt>Leaf index</dt><dd>000014</dd></dl><code>4da3c871b940...e39f2b12c5a9</code></div>
+            <div className={styles.productCopy}><h3>Trust the result.<br /><em>Verify the receipt.</em></h3><p>Fast offchain intake becomes an anchored public proof when the official round closes.</p><ol className={styles.proofSteps}><li><b>01</b>Cast the vote and keep the receipt.</li><li><b>02</b>The closed-round tally becomes a Merkle tree.</li><li><b>03</b>The root is anchored publicly.</li><li><b>04</b>Confirm inclusion without exposing unnecessary data.</li></ol><Link href="/verify">Verify a receipt →</Link></div>
+          </article>
         </div>
       </section>
 
-      {/* ─── FAQ ──────────────────────────────────────────── */}
-      <section id="faq">
-        <div className="mb-6 text-center">
-          <div className="eyebrow mb-2">Got questions?</div>
-          <h2 className="tracking-tight text-3xl font-semibold text-[#23252f] sm:text-4xl">Frequently asked <span className="font-display italic text-[#c8a233]">questions</span></h2>
-        </div>
-        <div className="mx-auto max-w-3xl space-y-3">
-          {HOME_FAQ.map((f, i) => <FaqItem key={i} q={f.q} a={f.a} />)}
-        </div>
-        <div className="mt-6 text-center">
-          <Link href="/faq" className="text-sm text-[#a97f16] hover:underline">See all FAQs →</Link>
-        </div>
+      <section className={styles.partners} aria-labelledby="partners-title">
+        <header className={styles.sectionIntro}><span className={styles.pill}>Ecosystem and integrations</span><h2 id="partners-title">Connected to what <em>moves the crown.</em></h2><p>Technology and pageant communities move together in two continuous streams.</p></header>
+        <LogoMarquee labels={["Base", "USDC", "Viem", "Wagmi", "Privy", "GCash"]} />
+        <LogoMarquee labels={["Organizers", "Delegates", "Fan communities", "Media", "Sponsors", "Venues"]} reverse />
       </section>
+
+      <section className={styles.roadmap} aria-labelledby="roadmap-title">
+        <header className={styles.sectionIntro}><span className={styles.pill}>CrownFi roadmap</span><h2 id="roadmap-title">Turn the card. <em>See what comes next.</em></h2><p>Hover or focus a card to reveal each delivery milestone.</p></header>
+        <div className={styles.roadmapGrid}>{ROADMAP.map((phase) => <article className={styles.roadmapCard} tabIndex={0} key={phase.title}><div><span>{phase.period}</span><small>{phase.status}</small><h3>{phase.title}</h3><em>Hover or focus to flip</em></div><div><h3>{phase.title}</h3><ul>{phase.items.map(item => <li key={item}>{item}</li>)}</ul></div></article>)}</div>
+      </section>
+
+      <section className={styles.finale}><span><img src="/brand/logo.png" alt="CrownFi crown" /></span><h2>The crown is more than the finale.</h2><p>It connects every fan, every action and every verifiable result.</p><Link className={styles.primaryButton} href="/vote">Enter CrownFi</Link></section>
     </div>
   );
 }
 
-const ROADMAP: { period: string; status: "Shipped" | "Next" | "Planned"; title: string; items: string[] }[] = [
-  {
-    period: "Now", status: "Shipped", title: "Testnet platform — live",
-    items: [
-      "Seven Soroban contracts deployed and verified",
-      "Anchored, tamper-evident voting with fan receipts",
-      "Prediction markets, candidate NFTs and on-chain ticketing",
-      "Google/email onboarding with real self-custodial wallets",
-    ],
-  },
-  {
-    period: "Q3 2026", status: "Next", title: "First real pageant",
-    items: [
-      "Pilot regional pageant runs a live anchored round",
-      "GCash payments go live via PayMongo",
-      "External contract audit and multisig admin keys",
-      "Stellar Community Fund application",
-    ],
-  },
-  {
-    period: "Q4 2026", status: "Planned", title: "Staged mainnet",
-    items: [
-      "Audit-anchor to mainnet first — it holds no funds",
-      "Commerce contracts follow after the audit",
-      "Sponsored reserves, so fans never need XLM",
-      "Free-play predictions with loyalty points (license-free)",
-    ],
-  },
-  {
-    period: "2027", status: "Planned", title: "Beyond pageants",
-    items: [
-      "Licensed real-money markets with a PAGCOR-compliant partner",
-      "Talent shows, esports and fan awards on the same rails",
-      "Self-serve organizer platform",
-    ],
-  },
-];
+function PanelMeta({ label, route }: { label: string; route: string }) {
+  return <div className={styles.panelMeta}><span>{label}</span><b>{route}</b></div>;
+}
 
-const HOME_FAQ = [
-  { q: "How do I sign in?", a: "No passwords — click Connect Freighter, approve the popup, and sign a one-time message. Your Stellar wallet address is your identity." },
-  { q: "How does voting work?", a: "Votes are taken off-chain for speed, one per wallet per round. When a round closes, the tally is sealed into a Merkle root and anchored on Stellar so you can verify your vote." },
-  { q: "What is minting a delegate?", a: "Each candidate has an exclusive NFT-inspired collectible. Minting it on Stellar funds the delegate and earns you loyalty points — it never changes vote power." },
-  { q: "Is this real money?", a: "No. CrownFi runs on Stellar Testnet with test USDC. It’s a demo — treat all assets as disposable." },
-];
+function MarketPreview({ label, question, left, leftPct, right, rightPct }: { label: string; question: string; left: string; leftPct: number; right: string; rightPct: number }) {
+  return <article className={styles.marketCard}><span>{label}</span><h3>{question}</h3><div><p><i>{left}</i><b>{leftPct}%</b></p><em><i style={{ width: `${leftPct}%` }} /></em>{right && <><p><i>{right}</i><b>{rightPct}%</b></p><em><i style={{ width: `${rightPct}%` }} /></em></>}</div></article>;
+}
 
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="card-gold">
-      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left">
-        <span className="font-display text-base font-semibold text-[#23252f]">{q}</span>
-        <span className={`shrink-0 font-display text-xl text-[#a97f16] transition-transform ${open ? "rotate-45" : ""}`}>+</span>
-      </button>
-      {open && <div className="border-t border-[#eee6d3] px-5 py-4 text-sm leading-relaxed text-[#5f6172]">{a}</div>}
-    </div>
-  );
+function LogoMarquee({ labels, reverse = false }: { labels: string[]; reverse?: boolean }) {
+  const all = [...labels, ...labels];
+  return <div className={styles.marquee}><div className={reverse ? styles.marqueeReverse : styles.marqueeTrack}>{all.map((label, i) => <span aria-hidden={i >= labels.length} key={`${label}-${i}`}><b>{label.slice(0, 2).toUpperCase()}</b>{label}</span>)}</div></div>;
 }

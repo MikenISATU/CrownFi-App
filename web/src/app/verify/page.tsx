@@ -37,7 +37,7 @@ export default function VerifyPage() {
         <div className="eyebrow mb-2">Proof of vote</div>
         <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Verify your receipt</h1>
         <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
-          When a round closes, every vote is sealed and the seal is written to Stellar. A{" "}
+          When a round closes, every vote is sealed for a public checkpoint on Base. A{" "}
           <b>green check</b> here means your vote is inside that sealed count — nobody, including
           us, could have removed or changed it. <span className="tag-on ml-1">on-chain</span>
         </p>
@@ -51,7 +51,7 @@ export default function VerifyPage() {
           </select>
           <button className="btn-gold" disabled={!fan || !roundId} onClick={verify}>Get receipt</button>
         </div>
-        {!fan && <p className="mt-3 text-xs text-[#7a7768]">Connect your Freighter wallet (top right) to verify.</p>}
+        {!fan && <p className="mt-3 text-xs text-[#7a7768]">Connect your Base wallet at the top right to verify.</p>}
         {err && <p className="mt-3 text-sm text-ruby">{err === "round_not_closed" ? "This round has not been closed and anchored yet." : err === "no_vote_for_fan" ? "No vote found for this account in this round." : err}</p>}
       </div>
 
@@ -66,7 +66,7 @@ export default function VerifyPage() {
           </div>
           <p className="mt-3 rounded-lg surface-soft px-3 py-2 text-xs leading-relaxed text-[#5f6172]">
             {result.verified
-              ? "In plain terms: this round is closed, its results are locked on the Stellar blockchain, and your vote is provably part of the official count."
+              ? "In plain terms: this round is closed, its result checkpoint is verifiable, and your vote is provably part of the official count."
               : "This receipt doesn’t match the sealed count. If you voted in this round, contact us — this should never happen."}
           </p>
           <dl className="mt-4 space-y-2.5 text-sm">

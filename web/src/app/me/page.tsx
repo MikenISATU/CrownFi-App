@@ -61,7 +61,7 @@ export default function MePage() {
           <div className="mt-1 text-xs text-[#8a8779]">{(data?.totalStaked ?? 0).toLocaleString()} USDC staked</div>
         </div>
         <div className="card-gold p-5 sm:col-span-2">
-          <div className="text-xs uppercase tracking-wider text-[#7a7768]">Stellar wallet</div>
+          <div className="text-xs uppercase tracking-wider text-[#7a7768]">Base wallet</div>
           <div className="mono mt-2 break-all text-sm text-[#2a2d3a]">{fan?.walletAddress ?? "Created on your first purchase"}</div>
           <div className="mt-2 text-xs text-[#8a8779]">Managed for you. No seed phrase, no XLM needed.</div>
         </div>

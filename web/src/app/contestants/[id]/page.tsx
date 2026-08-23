@@ -68,7 +68,7 @@ export default function CandidatePage() {
   }
 
   async function mint(c: Collectible) {
-    if (!fan || !address) { flash("Connect your Freighter wallet first.", "err"); return; }
+    if (!fan || !address) { flash("Connect your Base wallet first.", "err"); return; }
     setMintResult({});
     setPhase("preparing");
     try {
@@ -158,7 +158,7 @@ export default function CandidatePage() {
           <div className="eyebrow mb-3">Exclusive drop</div>
           <h1 className="tracking-tight text-5xl font-semibold text-[#c8a233] sm:text-6xl">Support Your Queen</h1>
           <p className="mt-5 max-w-lg text-[#5f6172]">
-            Every official candidate portrait is a digital collectible on Stellar. Mint your favorite queen to own it.
+            Every official candidate portrait is prepared as a digital collectible on Base. Collecting opens after the Base contract release.
           </p>
           <p className="mt-3 max-w-lg text-sm text-[#7a7768]">
             Your payment goes directly to the delegate you back.
@@ -169,7 +169,7 @@ export default function CandidatePage() {
               <div className="mt-6 flex flex-wrap gap-8 border-y border-[#eee6d3] py-4">
                 <div>
                   <div className="text-[11px] uppercase tracking-wider text-[#7a7768]">Network</div>
-                  <div className="mt-0.5 flex items-center gap-1.5 font-display text-lg text-[#23252f]"><span className="inline-block h-2 w-2 rounded-full bg-emerald" /> Stellar Testnet</div>
+                  <div className="mt-0.5 flex items-center gap-1.5 font-display text-lg text-[#23252f]"><span className="inline-block h-2 w-2 rounded-full bg-emerald" /> Base Sepolia</div>
                 </div>
                 <div>
                   <div className="text-[11px] uppercase tracking-wider text-[#7a7768]">Price</div>
@@ -193,7 +193,7 @@ export default function CandidatePage() {
               {phase !== "idle" && (
                 <div className={`mt-3 rounded-xl px-3 py-2 text-sm ${phase === "error" ? "bg-[#fbe9ef] text-[#9f1239]" : phase === "success" ? "bg-[#e1f5ee] text-[#0f6e56]" : "bg-[#faf0d2] text-[#8a6d1f]"}`}>
                   {phase === "preparing" && "Preparing transaction…"}
-                  {phase === "signing" && "Awaiting signature in Freighter…"}
+                  {phase === "signing" && "Awaiting approval in your wallet…"}
                   {phase === "confirming" && "Confirming mint…"}
                   {phase === "success" && <>Minted{mintResult.tokenId ? <> · <b>Token #{mintResult.tokenId}</b></> : ""}! View it on your <Link href="/me" className="underline">collection</Link>{mintResult.mintTx ? <> · <a href={`https://stellar.expert/explorer/testnet/tx/${mintResult.mintTx}`} target="_blank" rel="noopener noreferrer" className="underline">explorer</a></> : ""}.</>}
                   {phase === "error" && (mintResult.error ?? "Something went wrong.")}

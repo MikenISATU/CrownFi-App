@@ -84,7 +84,7 @@ function TicketsPageInner() {
 
   async function getTestUsdc() {
     if (!address) {
-      flash("Connect your Freighter wallet first.", "err");
+      flash("Connect your Base wallet first.", "err");
       return;
     }
     setBusy(true);
@@ -100,7 +100,7 @@ function TicketsPageInner() {
 
   async function buy() {
     if (!fan || !address) {
-      flash("Connect your Freighter wallet first.", "err");
+      flash("Connect your Base wallet first.", "err");
       return;
     }
     setBusy(true);

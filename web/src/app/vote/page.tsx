@@ -15,7 +15,7 @@ type TallyRow = { id: string; name: string; sash: string; votes: number };
 type Board = { total: number; contestants: TallyRow[] };
 
 export default function VotePage() {
-  const { fan, ready } = useSession();
+  const { fan, ready, connect, connecting } = useSession();
   const [cons, setCons] = useState<any[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [activeCat, setActiveCat] = useState<string>(PAGEANT_SEGMENTS[0].key);
@@ -102,9 +102,9 @@ export default function VotePage() {
     else flash(messageFor(err, "Could not record your vote."), "err");
   }
 
-  const maxVotes = Math.max(1, ...(board?.contestants ?? []).map((r) => r.votes));
   const pickedSlide = slides.find((s) => s.id === picked);
   const canCast = Boolean(fan && round && round.status === "open" && picked && !votedFor);
+  const currentStep = !round ? 1 : !picked && !votedFor ? 2 : 3;
 
   return (
     <div>
@@ -112,7 +112,7 @@ export default function VotePage() {
         <div className="eyebrow mb-2">Cast your vote</div>
         <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">Who wears the <span className="font-display italic text-[#c8a233]">crown</span>?</h1>
         <p className="mt-2 max-w-xl text-sm text-[#5f6172]">
-          Pick a stage, crown your queen — one vote per wallet, per round. Closed rounds are anchored on Stellar, so
+          Pick a stage, crown your queen — one vote per wallet, per round. Closed rounds are prepared for anchoring on Base, so
           every tally can be verified.
         </p>
         <p className="mt-2 text-sm text-[#5f6172]">
@@ -123,15 +123,37 @@ export default function VotePage() {
         </p>
       </div>
 
+      <section className="glass mb-6 grid overflow-hidden sm:grid-cols-3" aria-label="Voting progress">
+        {[
+          { n: 1, title: "Choose a stage", detail: CATEGORY_LABEL[activeCat] },
+          { n: 2, title: "Select a candidate", detail: pickedSlide?.name ?? "Browse the lineup" },
+          { n: 3, title: "Confirm once", detail: votedFor ? "Vote recorded" : fan ? "Wallet ready" : "Connect your wallet" },
+        ].map((step) => {
+          const complete = currentStep > step.n || Boolean(votedFor && step.n < 3);
+          const active = currentStep === step.n;
+          return (
+            <div key={step.n} className={`flex items-center gap-3 px-4 py-3.5 ${step.n > 1 ? "border-t border-[#eee6d3] sm:border-l sm:border-t-0" : ""} ${active ? "bg-[#faf6ea]" : ""}`}>
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${complete ? "bg-[#0f6e56] text-white" : active ? "bg-[#1a1f35] text-[#f4c84e] ring-4 ring-[#d4af37]/15" : "bg-[#efe9d8] text-[#8a8779]"}`}>
+                {complete ? <Icons.Check size={14} strokeWidth={3} /> : `0${step.n}`}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-[#23252f]">{step.title}</span>
+                <span className="block truncate text-xs text-[#8a8779]">{step.detail}</span>
+              </span>
+            </div>
+          );
+        })}
+      </section>
+
       {/* Pageant stages — red dot = open now, gold check = you've voted there. */}
-      <div className="mb-8 flex flex-wrap gap-2">
+      <div className="-mx-1 mb-8 flex gap-2 overflow-x-auto px-1 pb-1 no-scrollbar" aria-label="Pageant stages">
         {PAGEANT_SEGMENTS.map((s) => {
           const hasOpen = rounds.some((r) => r.category === s.key && r.status === "open");
           const active = activeCat === s.key;
           const voted = votedCats.has(s.key);
           return (
-            <button key={s.key} onClick={() => { setActiveCat(s.key); setPicked(""); }}
-              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${active ? "border-transparent bg-gradient-to-b from-[#d4af37] to-[#b8912f] text-[#1a1f35]" : "border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
+            <button key={s.key} onClick={() => { setActiveCat(s.key); setPicked(""); }} aria-pressed={active}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${active ? "border-transparent bg-gradient-to-b from-[#d4af37] to-[#b8912f] text-[#1a1f35]" : "border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
               {hasOpen && !voted && <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#c0392b]" />}
               {s.label}
               {voted && <Icons.Check size={13} strokeWidth={3} className={active ? "text-[#1a1f35]" : "text-[#0f6e56]"} aria-label="You voted in this stage" />}
@@ -141,7 +163,13 @@ export default function VotePage() {
       </div>
 
       {ready && !fan && (
-        <div className="glass mb-6 p-4 text-sm text-[#3a3f52]">Connect your wallet (top right) to vote — Freighter, or Google/email.</div>
+        <div className="card-gold mb-6 flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
+          <div className="flex items-start gap-3 text-sm text-[#3a3f52]">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#1a1f35] text-[#f4c84e]"><Icons.Wallet size={17} strokeWidth={1.8} /></span>
+            <span><b className="block text-[#23252f]">Connect when you’re ready to confirm</b><span className="text-xs text-[#7a7768]">Use Base Account or MetaMask. You can browse every candidate first.</span></span>
+          </div>
+          <button className="btn-gold shrink-0" onClick={connect} disabled={connecting}>{connecting ? "Connecting…" : "Connect wallet"}</button>
+        </div>
       )}
 
       {/* Loading — reserve the carousel's space so nothing jumps in. */}
@@ -175,14 +203,20 @@ export default function VotePage() {
           <div className="mt-8 flex flex-col items-center gap-3">
             {votedFor ? (
               <>
-                <div className="rounded-xl border border-[#e6f6ef] bg-[#e6f6ef] px-4 py-2.5 text-sm font-semibold text-[#0f6e56]">
-                  You’ve voted in {CATEGORY_LABEL[activeCat]} — one vote per wallet.
+                <div className="flex items-center gap-2 rounded-xl border border-[#c9eadc] bg-[#e6f6ef] px-4 py-2.5 text-sm font-semibold text-[#0f6e56]">
+                  <Flag sash={pickedSlide?.sash} className="!h-4 !w-6" /> You voted for {pickedSlide?.name ?? "your candidate"} in {CATEGORY_LABEL[activeCat]}.
                 </div>
                 <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Verify your receipt</Link>
               </>
             ) : (
               <>
-                {!picked && <div className="text-sm text-[#7a7768]">Select a contestant above — your vote confirms in the bar below.</div>}
+                {pickedSlide ? (
+                  <div className="glass flex w-full max-w-xl items-center gap-3 p-3.5">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#faf0d2]"><Flag sash={pickedSlide.sash} className="!h-4 !w-6" /></span>
+                    <span className="min-w-0 flex-1"><span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9a968b]">Your selection</span><b className="block truncate text-sm text-[#23252f]">{pickedSlide.name} · {CATEGORY_LABEL[activeCat]}</b></span>
+                    <button className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#a97f16] transition hover:bg-[#faf6ea]" onClick={() => setPicked("")}>Change</button>
+                  </div>
+                ) : <div className="text-sm text-[#7a7768]">Select a contestant above — you’ll review the choice before confirming.</div>}
                 <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Already voted? Verify your receipt</Link>
               </>
             )}
@@ -201,13 +235,14 @@ export default function VotePage() {
             </div>
           </div>
           <div className="space-y-2">
-            {board.contestants.slice(0, 6).map((r) => (
+            {board.contestants.slice(0, 6).map((r, index) => (
               <div key={r.id} className="glass flex items-center gap-3 p-3">
-                <div className="flex w-28 shrink-0 items-center gap-1.5 truncate text-sm text-[#23252f]"><Flag sash={r.sash} /> {r.name}</div>
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#faf6ea] text-xs font-semibold tabular-nums text-[#a97f16]">{index + 1}</span>
+                <div className="flex w-32 shrink-0 items-center gap-1.5 truncate text-sm text-[#23252f]"><Flag sash={r.sash} /> {r.name}</div>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#efe9d8]">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912f] transition-all duration-500" style={{ width: `${Math.round((r.votes / maxVotes) * 100)}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912f] transition-all duration-500" style={{ width: `${Math.round((r.votes / board.total) * 100)}%` }} />
                 </div>
-                <div className="w-12 shrink-0 text-right font-display text-sm font-semibold tabular-nums text-[#b8912f]">{r.votes.toLocaleString()}</div>
+                <div className="w-16 shrink-0 text-right"><span className="block font-display text-sm font-semibold tabular-nums text-[#b8912f]">{Math.round((r.votes / board.total) * 100)}%</span><span className="block text-[10px] tabular-nums text-[#9a968b]">{r.votes.toLocaleString()} votes</span></div>
               </div>
             ))}
           </div>
@@ -219,11 +254,11 @@ export default function VotePage() {
         <div className="fixed inset-x-0 bottom-20 z-40 px-4 sm:bottom-6">
           <div className="glass mx-auto flex max-w-xl items-center justify-between gap-3 p-3 shadow-[0_24px_50px_-20px_rgba(120,100,40,0.5)]">
             <div className="min-w-0 text-sm text-[#5f6172]">
-              Voting for <b className="text-[#23252f]">{pickedSlide.name}</b>
+              <span className="flex items-center gap-1.5"><Flag sash={pickedSlide.sash} className="!h-4 !w-6" /> Voting for <b className="truncate text-[#23252f]">{pickedSlide.name}</b></span>
               <span className="hidden sm:inline"> in {CATEGORY_LABEL[activeCat]}</span>
             </div>
             <button className="btn-gold shrink-0" disabled={busy} onClick={cast}>
-              {busy ? "Submitting…" : "Cast vote"}
+              {busy ? "Submitting…" : "Confirm vote"}
             </button>
           </div>
         </div>

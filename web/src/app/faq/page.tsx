@@ -10,24 +10,24 @@ const GROUPS: Group[] = [
   {
     title: "Wallet & sign-in",
     items: [
-      { q: "How do I sign in?", a: "There are no passwords. Click “Connect Freighter”, approve the popup, and sign the one-time message. Your Stellar wallet address is your identity, and CrownFi never sees your private key." },
-      { q: "Which wallet and network do I need?", a: "The Freighter browser extension, set to Stellar Testnet. If you’re on the wrong network, connecting is blocked with a clear message." },
-      { q: "I don’t have Freighter — what now?", a: "Install it from freighter.app, set it to Testnet, then reload and connect. CrownFi requires a real wallet to sign in." },
-      { q: "What if I switch or lock my wallet?", a: "If you switch accounts in Freighter, you’ll be asked to sign in again as the new wallet. A locked wallet keeps your session until it expires." },
+      { q: "How do I sign in?", a: "There are no passwords. Choose Base Account or MetaMask, connect on Base, and sign the one-time message. CrownFi never sees your private key." },
+      { q: "Which wallet and network do I need?", a: "Use Base Account or MetaMask on Base Sepolia during testing. CrownFi will ask your wallet to switch if it is on another network." },
+      { q: "I don’t have MetaMask — what now?", a: "Choose Base Account from the wallet menu for a smart-wallet experience, or install MetaMask and reconnect." },
+      { q: "What if I switch or lock my wallet?", a: "If you switch Base accounts, CrownFi asks you to sign in as the new wallet. Locking the wallet does not expose its private key to CrownFi." },
     ],
   },
   {
     title: "Voting & leaderboard",
     items: [
       { q: "How does voting work?", a: "Votes are taken off-chain for speed and privacy. You can vote once per round; duplicate votes are blocked at the database level. Vote totals update live on the vote page and the leaderboard." },
-      { q: "Is my vote really counted?", a: "When a round closes, all votes are sealed into a Merkle root and anchored on Stellar. On the Verify page you can pull a cryptographic receipt proving your vote is in the official tally — without exposing your identity." },
+      { q: "Is my vote really counted?", a: "When a round closes, votes are sealed into a Merkle root for anchoring on Base. The Verify page provides a cryptographic receipt proving inclusion without exposing unnecessary identity data." },
       { q: "Does buying tickets or collectibles give me more votes?", a: "No. Support and purchases never increase voting power. Voting stays capped and fair." },
     ],
   },
   {
     title: "Tickets & seats",
     items: [
-      { q: "How do I buy a ticket?", a: "Pick a tier on the Tickets page and buy. In live mode you approve a USDC payment in Freighter; in demo mode it’s simulated. After purchase, choose your seat from the interactive stadium map." },
+      { q: "How do I buy a ticket?", a: "Ticketing is coming soon. When released, you will approve the USDC payment from your connected Base wallet and then choose a seat." },
       { q: "How does seat selection work?", a: "Each ticket unlocks its tier’s zone in the seat map. Taken seats are greyed out, and no two tickets can hold the same seat." },
       { q: "How do I get into the event?", a: "Your ticket has a printable voucher with a QR code. At the door it’s scanned once and marked redeemed — it can’t be reused." },
     ],
@@ -50,7 +50,7 @@ const GROUPS: Group[] = [
   {
     title: "Transactions & security",
     items: [
-      { q: "Is this real money?", a: "No. CrownFi runs on Stellar Testnet with test USDC. It’s a demo — don’t use it for real-money voting or ticketing." },
+      { q: "Is this real money?", a: "No. CrownFi currently targets Base Sepolia with test assets. It’s a demo — don’t use it for real-money voting or ticketing." },
       { q: "How is my identity protected?", a: "Actions are tied to a wallet-signed session, so no one can vote or act on your behalf. Voter identity is never written on-chain." },
     ],
   },
@@ -92,8 +92,8 @@ export default function FaqPage() {
         <p className="mt-2 text-sm leading-relaxed text-[#5f6172]">
           CrownFi is a hackathon/testnet demonstration. It is not production voting infrastructure, not a mainnet financial
           application, and not a replacement for legal tabulation or compliance systems. Test assets and demo data are
-          disposable. Do not submit sensitive personal information. By using CrownFi you accept that all on-chain actions occur
-          on Stellar Testnet with no real-world value.
+          disposable. Do not submit sensitive personal information. By using CrownFi you accept that current on-chain testing occurs
+          on Base Sepolia with no real-world value.
         </p>
         <div className="mt-4">
           <Link href="/" className="btn-ghost">Back to home</Link>

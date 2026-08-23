@@ -17,6 +17,6 @@ export async function GET() {
       environment: s.environment, // testnet | production
     });
   } catch {
-    return NextResponse.json({ enabled: true, maintenance: false, provider: "testnet_usdc", label: "Testnet USDC (Stellar)", gcash: false, environment: "testnet" });
+    return NextResponse.json({ enabled: true, maintenance: false, provider: "testnet_usdc", label: "Test USDC (Base Sepolia)", gcash: false, environment: "testnet" });
   }
 }

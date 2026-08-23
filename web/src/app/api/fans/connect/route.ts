@@ -1,24 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { isLikelyStellarAddress } from "@/lib/adminAuth";
+import { getAddress, isAddress } from "viem";
 import { verifyFanSignature, createFanSession, setFanCookie } from "@/lib/fanAuth";
 import { clientIpHash } from "@/lib/ip";
 
 // Anti-abuse: max NEW accounts per network (IP). Returning wallets are never capped.
 const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
 
-// Step 2 of wallet sign-in: verify the Freighter signature proves control of the
+// Step 2 of wallet sign-in: verify the Base signature proves control of the
 // address, then issue an httpOnly session cookie. fanId is never trusted from the
 // client afterwards — routes read it from this session.
 export async function POST(req: NextRequest) {
   const b = await req.json().catch(() => null);
-  const walletAddress = String(b?.walletAddress ?? b?.address ?? "").trim();
+  const rawWalletAddress = String(b?.walletAddress ?? b?.address ?? "").trim();
   const message = String(b?.message ?? "");
   const signature = String(b?.signature ?? "");
 
-  if (!isLikelyStellarAddress(walletAddress)) {
+  if (!isAddress(rawWalletAddress)) {
     return NextResponse.json({ error: "invalid_address" }, { status: 400 });
   }
+  const walletAddress = getAddress(rawWalletAddress);
   if (!message || !signature) {
     return NextResponse.json({ error: "missing_signature" }, { status: 400 });
   }
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     const fan = await db.fan.create({
-      data: { handle: `fan_${walletAddress.slice(-6)}`, walletAddress, registrationIpHash: ipHash, authProvider: "freighter" },
+      data: { handle: `fan_${walletAddress.slice(-6)}`, walletAddress, registrationIpHash: ipHash, authProvider: "base" },
     });
     const res = NextResponse.json(fan);
     setFanCookie(res, createFanSession(fan.id, walletAddress));

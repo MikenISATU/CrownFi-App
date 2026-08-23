@@ -8,21 +8,24 @@ import { MARKET_CATEGORIES } from "@/lib/segments";
 import { messageFor } from "@/lib/messages";
 import { Toast } from "@/components/ui";
 import { Icons } from "@/components/icons";
+import { MarketCandidateHint, withCandidateFlags } from "@/lib/markets";
 
 const CATEGORIES = ["all", ...MARKET_CATEGORIES.map((s) => s.key)];
 const STATUSES = [
-  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
   { key: "live", label: "Live" },
   { key: "upcoming", label: "Upcoming" },
-  { key: "resolved", label: "Resolved" },
+  { key: "previous", label: "Previous" },
+  { key: "cancelled", label: "Cancelled" },
 ];
 
 export default function PredictionsLanding() {
   const { fan, connect, connecting } = useSession();
   const [markets, setMarkets] = useState<MarketView[] | null>(null);
+  const [candidates, setCandidates] = useState<MarketCandidateHint[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState("active");
   const [showCreate, setShowCreate] = useState(false);
   const [toast, setToast] = useState({ msg: "", tone: "ok" as "ok" | "err" });
   const flash = (msg: string, tone: "ok" | "err" = "ok") => { setToast({ msg, tone }); setTimeout(() => setToast({ msg: "", tone: "ok" }), 3200); };
@@ -32,6 +35,7 @@ export default function PredictionsLanding() {
   }
   useEffect(() => {
     load();
+    fetch("/api/contestants").then((r) => r.json()).then((d) => setCandidates(Array.isArray(d) ? d : [])).catch(() => setCandidates([]));
     // Live pools — but don't hammer the API when the tab isn't being looked at.
     const iv = setInterval(() => { if (document.visibilityState === "visible") load(); }, 15000);
     return () => clearInterval(iv);
@@ -39,17 +43,20 @@ export default function PredictionsLanding() {
 
   const filtered = useMemo(() => {
     if (!markets) return [];
-    return markets.filter((m) => {
+    return markets.map((m) => withCandidateFlags(m, candidates)).filter((m) => {
       if (cat !== "all" && m.category !== cat) return false;
+      if (status === "active" && m.status !== "open") return false;
       if (status === "live" && !m.live) return false;
       if (status === "upcoming" && !(m.status === "open" && !m.live)) return false;
-      if (status === "resolved" && m.status !== "resolved") return false;
+      if (status === "previous" && !["closed", "resolved", "cancelled"].includes(m.status)) return false;
+      if (status === "cancelled" && m.status !== "cancelled") return false;
       if (q && !m.question.toLowerCase().includes(q.toLowerCase())) return false;
       return true;
     });
   }, [markets, cat, status, q]);
 
-  const live = filtered.filter((m) => m.live).sort((a, b) => (b.official ? 1 : 0) - (a.official ? 1 : 0));
+  const activeMarkets = markets?.filter((m) => m.status === "open") ?? [];
+  const live = (markets ?? []).map((m) => withCandidateFlags(m, candidates)).filter((m) => m.live).sort((a, b) => (b.official ? 1 : 0) - (a.official ? 1 : 0));
 
   return (
     <div className="space-y-8">
@@ -65,10 +72,10 @@ export default function PredictionsLanding() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#c0392b]" />
                 </span>
-                {markets.filter((m) => m.live).length} live
+                {activeMarkets.filter((m) => m.live).length} live
               </span>
-              <span className="chip tabular-nums">{markets.reduce((s, m) => s + m.totalPool, 0).toLocaleString()} USDC pooled</span>
-              <span className="chip tabular-nums">{markets.reduce((s, m) => s + m.participants, 0)} predicting</span>
+              <span className="chip tabular-nums">{activeMarkets.reduce((s, m) => s + m.totalPool, 0).toLocaleString()} USDC pooled</span>
+              <span className="chip tabular-nums">{activeMarkets.reduce((s, m) => s + m.participants, 0)} predicting</span>
             </div>
           )}
         </div>
@@ -138,7 +145,7 @@ export default function PredictionsLanding() {
       )}
 
       {/* Featured live */}
-      {markets !== null && status === "all" && cat === "all" && !q && live.length > 0 && (
+      {markets !== null && status === "active" && cat === "all" && !q && live.length > 0 && (
         <section>
           <h2 className="mb-3 flex items-center gap-2 tracking-tight text-2xl font-semibold text-[#23252f]">
             <span className="relative flex h-2 w-2">
@@ -156,15 +163,15 @@ export default function PredictionsLanding() {
       {/* All (filtered) */}
       {markets !== null && (
         <section>
-          {status === "all" && cat === "all" && !q && <h2 className="mb-3 tracking-tight text-2xl font-semibold text-[#23252f]">All markets</h2>}
+          {cat === "all" && !q && <h2 className="mb-3 tracking-tight text-2xl font-semibold text-[#23252f]">{status === "previous" ? "Previous markets" : status === "cancelled" ? "Cancelled markets" : status === "active" ? "Active markets" : `${STATUSES.find((s) => s.key === status)?.label ?? "Markets"} markets`}</h2>}
           {filtered.length === 0 ? (
             <div className="glass p-10 text-center">
               <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full surface-soft text-[#a97f16]"><Icons.Search size={20} strokeWidth={1.75} /></div>
-              {q || cat !== "all" || status !== "all" ? (
+              {q || cat !== "all" || status !== "active" ? (
                 <>
                   <div className="font-display text-xl text-[#23252f]">No markets match your filters</div>
                   <p className="mt-2 text-sm text-[#7a7768]">Try a different category or clear your search.</p>
-                  <button onClick={() => { setQ(""); setCat("all"); setStatus("all"); }} className="btn-ghost mt-4">Clear filters</button>
+                  <button onClick={() => { setQ(""); setCat("all"); setStatus("active"); }} className="btn-ghost mt-4">Clear filters</button>
                 </>
               ) : (
                 <>
@@ -234,11 +241,11 @@ function CreateMarket({ onCreated, onError }: { onCreated: () => void; onError: 
 
       {/* Outcomes — one field each, add/remove rows */}
       <div className="space-y-2">
-        <div className="text-xs font-semibold text-[#5f6172]">Outcomes <span className="font-normal text-[#9a968b]">· predict on anything</span></div>
+        <div className="text-xs font-semibold text-[#5f6172]">Outcomes <span className="font-normal text-[#9a968b]">· candidate names or any result</span></div>
         {options.map((opt, i) => (
           <div key={i} className="flex items-center gap-2">
             <span className="w-5 shrink-0 text-right text-xs tabular-nums text-[#9a968b]">{i + 1}</span>
-            <input className="field" placeholder={`Outcome ${i + 1}`} value={opt} onChange={(e) => setOption(i, e.target.value)} />
+            <input className="field" placeholder={`Candidate or outcome ${i + 1}`} value={opt} onChange={(e) => setOption(i, e.target.value)} />
             {options.length > 2 && (
               <button type="button" onClick={() => removeOption(i)} aria-label={`Remove outcome ${i + 1}`} className="shrink-0 rounded-lg border border-[#e7e2d3] p-2 text-[#9a968b] transition hover:border-[#e7d0d0] hover:text-[#9f1239]">
                 <Icons.X size={14} strokeWidth={2} />

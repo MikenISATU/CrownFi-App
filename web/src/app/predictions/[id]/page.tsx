@@ -5,15 +5,25 @@ import Link from "next/link";
 import { useSession } from "@/session/SessionProvider";
 import { Toast } from "@/components/ui";
 import { messageFor } from "@/lib/messages";
-import { estimateReward, PLATFORM_FEE_PCT } from "@/lib/markets";
+import { estimateReward, PLATFORM_FEE_PCT, withCandidateFlags, type MarketCandidateHint } from "@/lib/markets";
 import { MarketView, CATEGORY_LABEL, statusBadge, timeLeft } from "@/components/MarketCard";
 import { OddsChart } from "@/components/OddsChart";
+import { Flag } from "@/components/Flag";
 
 type Detail = MarketView & {
   activity: { option: number; amount: number; createdAt: string; status: string }[];
   mine: { option: number; amount: number; status: string }[];
   series: { t: number; pcts: number[] }[];
 };
+
+let candidateHintsPromise: Promise<MarketCandidateHint[]> | null = null;
+function candidateHints() {
+  candidateHintsPromise ??= fetch("/api/contestants")
+    .then((r) => r.json())
+    .then((d) => Array.isArray(d) ? d : [])
+    .catch(() => []);
+  return candidateHintsPromise;
+}
 
 export default function MarketDetail() {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +43,8 @@ export default function MarketDetail() {
     try {
       const r = await fetch(`/api/markets/${id}`, { cache: "no-store" });
       if (!r.ok) throw new Error();
-      setM(await r.json());
+      const detail = await r.json() as Detail;
+      setM(withCandidateFlags(detail, await candidateHints()));
       setState("ready");
     } catch { setState("error"); }
   }, [id]);
@@ -188,6 +199,14 @@ export default function MarketDetail() {
         </div>
       )}
 
+      {m.status === "cancelled" && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#edc8d4] bg-[#fff6f8] px-5 py-3 text-sm text-[#881337]">
+          <span aria-hidden>↩</span>
+          <span><b>Market cancelled.</b> All positions were refunded in full.</span>
+          <span className="ml-auto rounded-full bg-white px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-[#edc8d4]">Kept for transparency</span>
+        </div>
+      )}
+
       <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
         {/* ══ LEFT: the market ══════════════════════════════ */}
         <div className="space-y-6">
@@ -251,7 +270,7 @@ export default function MarketDetail() {
                     className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${pick === o.index ? "border-[#c9a227] bg-[#faf6ea]" : won ? "border-emerald-300 bg-emerald-50/50" : "border-[#eee6d3] bg-white"} ${canPredict ? "hover:border-[#c9a227]" : ""}`}>
                     <div className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5 truncate font-medium text-[#23252f]">
-                        {o.label}
+                        <Flag sash={o.sash ?? ""} /> {o.label}
                         {won && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">🏆 Winner</span>}
                       </span>
                       <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[#efe9d8]">
@@ -314,7 +333,7 @@ export default function MarketDetail() {
             ) : !fan ? (
               <div className="mt-4">
                 <button className="btn-gold w-full" onClick={connect}>{connecting ? "Connecting…" : "Connect wallet to predict"}</button>
-                <p className="mt-2 text-center text-[11px] text-[#9a968b]">Freighter, or Google/email — browse freely either way.</p>
+                <p className="mt-2 text-center text-[11px] text-[#9a968b]">Base Account or MetaMask — browse freely before connecting.</p>
               </div>
             ) : (
               <div className="mt-4 space-y-3">
@@ -323,7 +342,7 @@ export default function MarketDetail() {
                   {m.options.map((o) => (
                     <button key={o.index} onClick={() => setPick(o.index)}
                       className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${pick === o.index ? "border-[#a97f16]/50 bg-gradient-to-b from-[#e4c358] to-[#c39a2c] text-[#1a1f35]" : "border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
-                      {o.label} <span className="tabular-nums opacity-80">{o.percent}%</span>
+                      <Flag sash={o.sash ?? ""} /> {o.label} <span className="tabular-nums opacity-80">{o.percent}%</span>
                     </button>
                   ))}
                 </div>
