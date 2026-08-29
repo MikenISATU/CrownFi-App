@@ -10,6 +10,7 @@ const nextConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       "@farcaster/mini-app-solana": false,
+      "@react-native-async-storage/async-storage": false,
       "@stripe/crypto": false,
     };
     return config;

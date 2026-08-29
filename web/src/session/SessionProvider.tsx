@@ -5,6 +5,7 @@ import { isAddress } from "viem";
 import { useAccount, useChainId, useConnect, useDisconnect, useSignMessage, useSwitchChain } from "wagmi";
 import { targetBaseChain } from "@/base/config";
 import { messageFor } from "@/lib/messages";
+import { normalizeEnvValue } from "@/lib/publicEnv";
 
 export type Fan = { id: string; handle: string; walletAddress: string; points: number; authProvider?: string | null };
 
@@ -24,7 +25,7 @@ type Ctx = {
 };
 
 const C = createContext<Ctx | null>(null);
-const ADMIN: string[] = (process.env.NEXT_PUBLIC_ADMIN_WALLETS ?? "")
+const ADMIN: string[] = (normalizeEnvValue(process.env.NEXT_PUBLIC_ADMIN_WALLETS) ?? "")
   .split(",")
   .map((value) => value.trim().toLowerCase())
   .filter((value) => isAddress(value));

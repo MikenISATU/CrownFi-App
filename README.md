@@ -150,6 +150,13 @@ PRIVY_APP_SECRET="your-server-only-app-secret"
 
 Configure email and Google login methods and allow `http://localhost:3000` plus the deployed CrownFi domain. Never expose `PRIVY_APP_SECRET` in browser code or commit it to Git.
 
+The Privy Application ID is exactly 25 characters. In a local `.env` file the quotes above are valid,
+but in the Vercel Environment Variables UI paste only the raw value with **no surrounding quotes or
+whitespace**. Use the Application ID for both App ID variables; do not substitute a client ID, App
+Secret, or the example placeholder. If the public App ID is missing or malformed, CrownFi now keeps
+Base Account and MetaMask available while disabling only Privy email/Google login instead of failing
+the entire Next.js prerender.
+
 ### 4. Keep Base on Sepolia
 
 ```env
@@ -222,6 +229,19 @@ Never place a deployer private key, wallet seed phrase, database password, or Pr
 4. Keep `NEXT_PUBLIC_BASE_NETWORK=sepolia`.
 5. Use the deployed Base Sepolia prediction-market, audit-anchor, ticket, and collectible addresses from `web/.env.base.example`.
 6. Redeploy after changing any `NEXT_PUBLIC_*` variable because it is included in the client build.
+
+When entering values in Vercel, do not include the `KEY=` portion or `.env` quotes. Apply the variables
+to Production and Preview as needed, then trigger a fresh deployment. At minimum, double-check:
+
+- `NEXT_PUBLIC_PRIVY_APP_ID`: the 25-character Privy Application ID.
+- `PRIVY_APP_ID`: the same Application ID.
+- `PRIVY_APP_SECRET`: the server-only App Secret.
+- `NEXT_PUBLIC_APP_ORIGIN`: the exact deployed `https://...` origin, without a trailing path.
+- `DATABASE_URL` and `DIRECT_URL`: the new Supabase pooler and direct/session URLs.
+
+Do not reuse an old local `web/.env.vercel` created during the Stellar version. That file is intentionally
+gitignored and may still contain obsolete Stellar names. Use the tracked `web/.env.base.example` as the
+current source of truth for Base deployments.
 
 ## Validation
 

@@ -8,8 +8,7 @@ import { ConnectorMark, WalletMarkStack } from "./WalletMarks";
 import { PrivyAutoLink } from "@/components/PrivyAutoLink";
 import { PrivyEmailButton, PrivySessionButton } from "@/components/PrivyEmailButton";
 import { Icons } from "@/components/icons";
-
-const PRIVY_ENABLED = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
+import { privyEnabled } from "@/lib/publicEnv";
 
 function shortAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
@@ -41,8 +40,8 @@ export function BaseWalletConnect() {
   if (fan?.authProvider === "privy" && fan.walletAddress) {
     return (
       <div className="relative">
-        {PRIVY_ENABLED && <PrivyAutoLink />}
-        {PRIVY_ENABLED
+        {privyEnabled && <PrivyAutoLink />}
+        {privyEnabled
           ? <PrivySessionButton address={fan.walletAddress} />
           : <button className="btn-ghost !min-h-[38px] !rounded-[11px] !px-3 font-mono text-xs" onClick={disconnect}>{shortAddress(fan.walletAddress)}</button>}
       </div>
@@ -78,7 +77,7 @@ export function BaseWalletConnect() {
 
   return (
     <div className="relative">
-      {PRIVY_ENABLED && <PrivyAutoLink />}
+      {privyEnabled && <PrivyAutoLink />}
       <button className="btn-gold !min-h-[38px] !rounded-[11px] !px-2.5 text-xs sm:!px-4" disabled={isConnecting || authenticating}
         aria-expanded={open} onClick={() => setOpen((value) => !value)}>
         {isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /><span className="hidden min-[350px]:inline">Connect Wallet</span><span className="min-[350px]:hidden">Connect</span></>}
@@ -99,7 +98,7 @@ export function BaseWalletConnect() {
               </span>
             </button>
           ))}
-          {PRIVY_ENABLED && (
+          {privyEnabled && (
             <>
               <div className="my-1 flex items-center gap-2 px-2 text-[10px] uppercase tracking-wider text-[#9a968b]"><span className="h-px flex-1 bg-[#eee6d3]" />or<span className="h-px flex-1 bg-[#eee6d3]" /></div>
               <PrivyEmailButton onStart={() => setOpen(false)}>

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPublicClient, getAddress, http, isAddress, verifyMessage, type Address } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { signToken, verifyToken } from "@/lib/statelessToken";
+import { normalizeEnvValue, normalizeHttpOrigin, normalizeHttpUrl } from "@/lib/publicEnv";
 
 const COOKIE = "crownfi_admin";
 const SESSION_TTL_MS = 15 * 60 * 1000;
@@ -22,7 +23,7 @@ type ChallengePayload = {
 const challenges = new Map<string, Challenge>();
 
 export function adminAllowlist(): string[] {
-  const configured = process.env.ADMIN_WALLETS?.trim() || process.env.NEXT_PUBLIC_ADMIN_WALLETS || "";
+  const configured = normalizeEnvValue(process.env.ADMIN_WALLETS) || normalizeEnvValue(process.env.NEXT_PUBLIC_ADMIN_WALLETS) || "";
   return configured
     .split(",")
     .map((s) => s.trim())
@@ -42,18 +43,18 @@ export function isAdminAddress(address: string): boolean {
 }
 
 function targetChain() {
-  return process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" ? base : baseSepolia;
+  return normalizeEnvValue(process.env.NEXT_PUBLIC_BASE_NETWORK) === "mainnet" ? base : baseSepolia;
 }
 
 function targetRpcUrl(): string {
-  return process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet"
-    ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || "https://mainnet.base.org"
-    : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
+  return normalizeEnvValue(process.env.NEXT_PUBLIC_BASE_NETWORK) === "mainnet"
+    ? normalizeHttpUrl(process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL) || "https://mainnet.base.org"
+    : normalizeHttpUrl(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL) || "https://sepolia.base.org";
 }
 
 function appOrigin(req: NextRequest): string {
   return (
-    process.env.NEXT_PUBLIC_APP_ORIGIN ||
+    normalizeHttpOrigin(process.env.NEXT_PUBLIC_APP_ORIGIN) ||
     req.headers.get("origin") ||
     `${req.headers.get("x-forwarded-proto") ?? "http"}://${req.headers.get("host") ?? "localhost:3000"}`
   );

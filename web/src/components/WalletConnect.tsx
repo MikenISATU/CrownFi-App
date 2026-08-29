@@ -6,8 +6,7 @@ import { FreighterMark, GoogleMark } from "./brandIcons";
 import { short } from "@/lib/format";
 import { PrivyAutoLink } from "./PrivyAutoLink";
 import { PrivyEmailButton } from "./PrivyEmailButton";
-
-const PRIVY_ENABLED = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
+import { privyEnabled } from "@/lib/publicEnv";
 
 // Single entry point for connecting. Signed out → a "Connect Wallet" button that opens a
 // chooser (Freighter or Email/Privy, each with an icon). Signed in → the account chip + menu.
@@ -20,7 +19,7 @@ export function WalletConnect() {
   if (address) {
     return (
       <div className="relative">
-        {PRIVY_ENABLED && <PrivyAutoLink />}
+        {privyEnabled && <PrivyAutoLink />}
         <button
           onClick={() => setMenu((m) => !m)}
           className="flex items-center gap-2 rounded-full border border-[#e7e2d3] bg-white px-2.5 py-1.5 text-sm transition hover:border-[#c9a227]"
@@ -56,7 +55,7 @@ export function WalletConnect() {
   return (
     <div className="relative">
       {/* Persistent Privy linker so post-login token exchange still runs after the chooser closes. */}
-      {PRIVY_ENABLED && <PrivyAutoLink />}
+      {privyEnabled && <PrivyAutoLink />}
       <button
         onClick={() => setChooser((c) => !c)}
         disabled={connecting}
@@ -88,7 +87,7 @@ export function WalletConnect() {
             </button>
 
             {/* Email / Privy (Google or email) */}
-            {PRIVY_ENABLED && (
+            {privyEnabled && (
               <PrivyEmailButton onStart={() => setChooser(false)}>
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white ring-1 ring-[#e7e2d3]">
                   <GoogleMark />

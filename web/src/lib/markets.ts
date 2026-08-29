@@ -4,7 +4,12 @@
 // Platform fee, in basis points. Charged ONLY on winnings at claim time (the on-chain
 // contract does `fee = gross_payout * fee_bps / 10000`, never on the stake itself).
 // Keep this in sync with the contract's initialize(fee_bps=...).
-export const PLATFORM_FEE_BPS = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_BPS ?? "200"); // 2%
+import { normalizeEnvValue } from "@/lib/publicEnv";
+
+const configuredFeeBps = Number(normalizeEnvValue(process.env.NEXT_PUBLIC_PLATFORM_FEE_BPS) ?? "200");
+export const PLATFORM_FEE_BPS = Number.isFinite(configuredFeeBps) && configuredFeeBps >= 0 && configuredFeeBps <= 10_000
+  ? configuredFeeBps
+  : 200; // 2%
 export const PLATFORM_FEE_PCT = PLATFORM_FEE_BPS / 100; // for display, e.g. 2
 
 export type MarketOptionView = { index: number; label: string; pool: number; percent: number; sash?: string | null };

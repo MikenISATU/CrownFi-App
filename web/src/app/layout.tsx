@@ -5,6 +5,7 @@ import { SessionProvider } from "@/session/SessionProvider";
 import { PrivyWrapper } from "@/session/PrivyWrapper";
 import { AppShell } from "@/components/AppShell";
 import { ChainProviders } from "@/base";
+import { publicAppOrigin } from "@/lib/publicEnv";
 
 // Typography: Playfair Display for headlines/numbers (the fashion-editorial serif the gold
 // design wants), Inter for body/UI (crisp at small sizes). Self-hosted via next/font — no
@@ -15,7 +16,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swa
 const chainLabel = "Base";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_ORIGIN || "http://localhost:3000"),
+  metadataBase: new URL(publicAppOrigin),
   title: "CrownFi — Crown your queen, on-chain",
   description: `Blockchain-powered voting, ticketing, and fan experience for pageants, built on ${chainLabel}.`,
   openGraph: {

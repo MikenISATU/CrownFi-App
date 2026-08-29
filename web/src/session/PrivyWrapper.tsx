@@ -3,16 +3,15 @@ import { ReactNode } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { base, baseSepolia } from "viem/chains";
 import { targetBaseChain } from "@/base/config";
-
-const APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+import { publicPrivyAppId } from "@/lib/publicEnv";
 
 // Privy is optional locally. When configured it gives email/Google users an EVM
 // embedded wallet automatically; Base Sepolia remains the default test network.
 export function PrivyWrapper({ children }: { children: ReactNode }) {
-  if (!APP_ID) return <>{children}</>;
+  if (!publicPrivyAppId) return <>{children}</>;
   return (
     <PrivyProvider
-      appId={APP_ID}
+      appId={publicPrivyAppId}
       config={{
         loginMethods: ["email", "google"],
         defaultChain: targetBaseChain,

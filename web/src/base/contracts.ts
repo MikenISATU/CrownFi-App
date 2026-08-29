@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import { BASE_NETWORK } from "./config";
+import { normalizeEnvValue } from "@/lib/publicEnv";
 
 const OFFICIAL_USDC = {
   mainnet: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -7,7 +8,8 @@ const OFFICIAL_USDC = {
 } as const satisfies Record<typeof BASE_NETWORK, Address>;
 
 function optionalAddress(value: string | undefined): Address | undefined {
-  return value && /^0x[a-fA-F0-9]{40}$/.test(value) ? value as Address : undefined;
+  const normalized = normalizeEnvValue(value);
+  return normalized && /^0x[a-fA-F0-9]{40}$/.test(normalized) ? normalized as Address : undefined;
 }
 
 /**
@@ -26,4 +28,3 @@ export const baseContracts = {
 export const baseExplorerUrl = BASE_NETWORK === "mainnet"
   ? "https://basescan.org"
   : "https://sepolia.basescan.org";
-

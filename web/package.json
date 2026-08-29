@@ -12,9 +12,10 @@
     "keep-alive": "tsx scripts/keep-alive.ts",
     "test:merkle": "tsx src/lib/merkle.test.ts",
     "test:admin-auth": "tsx src/lib/adminAuth.test.ts",
+    "test:public-env": "tsx src/lib/publicEnv.test.ts",
     "test:ticketing": "tsx src/lib/ticketing.test.ts",
     "typecheck": "prisma generate && tsc --noEmit",
-    "check": "npm run typecheck && npm run test:merkle && npm run test:admin-auth",
+    "check": "npm run typecheck && npm run test:merkle && npm run test:admin-auth && npm run test:public-env",
     "security:audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {

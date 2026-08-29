@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeHttpOrigin } from "@/lib/publicEnv";
 import { db } from "@/lib/db";
 import { requireFan } from "@/lib/fanAuth";
 import { paymentsAllowed } from "@/lib/settings";
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
   const collectible = await db.collectible.findUnique({ where: { id: collectibleId } });
   if (!collectible) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  const origin = process.env.NEXT_PUBLIC_APP_ORIGIN || req.headers.get("origin") || "http://localhost:3000";
+  const origin = normalizeHttpOrigin(process.env.NEXT_PUBLIC_APP_ORIGIN) || req.headers.get("origin") || "http://localhost:3000";
   try {
     const checkout = await createGcashCheckout({
       amountUsd: collectible.priceUsdc,

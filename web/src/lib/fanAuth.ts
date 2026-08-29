@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createPublicClient, http, isAddress, verifyMessage } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { signToken, verifyToken } from "@/lib/statelessToken";
+import { normalizeEnvValue, normalizeHttpOrigin, normalizeHttpUrl } from "@/lib/publicEnv";
 
 // Fan (voter) authentication. Same shape as adminAuth, but there is no allowlist:
 // any wallet that proves control of its Base address gets a
@@ -20,7 +21,7 @@ const challenges = new Map<string, Challenge>();
 
 function appOrigin(req: NextRequest): string {
   return (
-    process.env.NEXT_PUBLIC_APP_ORIGIN ||
+    normalizeHttpOrigin(process.env.NEXT_PUBLIC_APP_ORIGIN) ||
     req.headers.get("origin") ||
     `${req.headers.get("x-forwarded-proto") ?? "http"}://${req.headers.get("host") ?? "localhost:3000"}`
   );
@@ -103,11 +104,11 @@ export async function verifyFanSignature(params: {
     // Base Account may use a smart-wallet signature. Public-client verification adds
     // ERC-1271/ERC-6492 support while MetaMask EOAs are handled by the offline check above.
     if (!valid) {
-      const useMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+      const useMainnet = normalizeEnvValue(process.env.NEXT_PUBLIC_BASE_NETWORK) === "mainnet";
       const chain = useMainnet ? base : baseSepolia;
       const rpcUrl = useMainnet
-        ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || "https://mainnet.base.org"
-        : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
+        ? normalizeHttpUrl(process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL) || "https://mainnet.base.org"
+        : normalizeHttpUrl(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL) || "https://sepolia.base.org";
       const client = createPublicClient({ chain, transport: http(rpcUrl) });
       valid = await client.verifyMessage({ address, message, signature: hexSignature });
     }

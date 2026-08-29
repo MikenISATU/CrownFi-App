@@ -2,14 +2,19 @@
 // surface is isolated. The client sends Privy's identity token, which the SDK verifies
 // before returning the unified user and their automatically-created EVM wallet.
 
+import { normalizeEnvValue, normalizePrivyAppId } from "@/lib/publicEnv";
+
+function configuredAppId(): string | null {
+  return normalizePrivyAppId(process.env.PRIVY_APP_ID || process.env.NEXT_PUBLIC_PRIVY_APP_ID);
+}
+
 export function privyConfigured(): boolean {
-  const appId = process.env.PRIVY_APP_ID || process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-  return Boolean(appId && process.env.PRIVY_APP_SECRET);
+  return Boolean(configuredAppId() && normalizeEnvValue(process.env.PRIVY_APP_SECRET));
 }
 
 async function getPrivyClient(): Promise<any> {
-  const appId = process.env.PRIVY_APP_ID || process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-  const secret = process.env.PRIVY_APP_SECRET;
+  const appId = configuredAppId();
+  const secret = normalizeEnvValue(process.env.PRIVY_APP_SECRET);
   if (!appId || !secret) throw new Error("privy_not_configured");
   const mod: any = await import("@privy-io/server-auth");
   return new mod.PrivyClient(appId, secret);
