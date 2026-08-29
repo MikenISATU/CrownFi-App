@@ -15,7 +15,7 @@ type TallyRow = { id: string; name: string; sash: string; votes: number };
 type Board = { total: number; contestants: TallyRow[] };
 
 export default function VotePage() {
-  const { fan, ready, connect, connecting } = useSession();
+  const { fan, address, ready, connect, connecting } = useSession();
   const [cons, setCons] = useState<any[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [activeCat, setActiveCat] = useState<string>(PAGEANT_SEGMENTS[0].key);
@@ -102,9 +102,26 @@ export default function VotePage() {
     else flash(messageFor(err, "Could not record your vote."), "err");
   }
 
+  function confirmSelection() {
+    if (!ready || connecting || busy) return;
+    if (!fan) {
+      connect();
+      return;
+    }
+    cast();
+  }
+
   const pickedSlide = slides.find((s) => s.id === picked);
-  const canCast = Boolean(fan && round && round.status === "open" && picked && !votedFor);
   const currentStep = !round ? 1 : !picked && !votedFor ? 2 : 3;
+  const confirmLabel = !ready
+    ? "Preparing wallet…"
+    : connecting
+      ? "Connecting…"
+      : !fan
+        ? "Connect wallet"
+        : busy
+          ? "Submitting…"
+          : "Confirm with wallet";
 
   return (
     <div>
@@ -127,7 +144,7 @@ export default function VotePage() {
         {[
           { n: 1, title: "Choose a stage", detail: CATEGORY_LABEL[activeCat] },
           { n: 2, title: "Select a candidate", detail: pickedSlide?.name ?? "Browse the lineup" },
-          { n: 3, title: "Confirm once", detail: votedFor ? "Vote recorded" : fan ? "Wallet ready" : "Connect your wallet" },
+          { n: 3, title: "Confirm with wallet", detail: votedFor ? "Vote recorded" : picked ? fan ? "Wallet connected" : "Wallet connection required" : "Review your selection" },
         ].map((step) => {
           const complete = currentStep > step.n || Boolean(votedFor && step.n < 3);
           const active = currentStep === step.n;
@@ -162,16 +179,6 @@ export default function VotePage() {
         })}
       </div>
 
-      {ready && !fan && (
-        <div className="card-gold mb-6 flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
-          <div className="flex items-start gap-3 text-sm text-[#3a3f52]">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#1a1f35] text-[#f4c84e]"><Icons.Wallet size={17} strokeWidth={1.8} /></span>
-            <span><b className="block text-[#23252f]">Connect when you’re ready to confirm</b><span className="text-xs text-[#7a7768]">Use Base Account or MetaMask. You can browse every candidate first.</span></span>
-          </div>
-          <button className="btn-gold shrink-0" onClick={connect} disabled={connecting}>{connecting ? "Connecting…" : "Connect wallet"}</button>
-        </div>
-      )}
-
       {/* Loading — reserve the carousel's space so nothing jumps in. */}
       {cons.length === 0 && (
         <div className="flex items-center justify-center gap-5">
@@ -194,13 +201,17 @@ export default function VotePage() {
         <>
           <SpotlightCarousel
             slides={slides}
-            onSelect={votedFor ? undefined : setPicked}
+            onSelect={votedFor || round.status !== "open" ? undefined : setPicked}
+            onConfirm={votedFor ? undefined : confirmSelection}
             selectedId={picked}
             votedId={votedFor}
-            cta="Pick"
+            cta="Pick candidate"
+            confirmLabel={confirmLabel}
+            confirmDisabled={!ready || connecting || busy || round.status !== "open"}
+            selectionDisabled={round.status !== "open"}
             ariaLabel={`${CATEGORY_LABEL[activeCat]} candidates`}
           />
-          <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="mt-6 flex flex-col items-center gap-3">
             {votedFor ? (
               <>
                 <div className="flex items-center gap-2 rounded-xl border border-[#c9eadc] bg-[#e6f6ef] px-4 py-2.5 text-sm font-semibold text-[#0f6e56]">
@@ -209,17 +220,49 @@ export default function VotePage() {
                 <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Verify your receipt</Link>
               </>
             ) : (
-              <>
-                {pickedSlide ? (
-                  <div className="glass flex w-full max-w-xl items-center gap-3 p-3.5">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#faf0d2]"><Flag sash={pickedSlide.sash} className="!h-4 !w-6" /></span>
-                    <span className="min-w-0 flex-1"><span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9a968b]">Your selection</span><b className="block truncate text-sm text-[#23252f]">{pickedSlide.name} · {CATEGORY_LABEL[activeCat]}</b></span>
-                    <button className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#a97f16] transition hover:bg-[#faf6ea]" onClick={() => setPicked("")}>Change</button>
+              pickedSlide ? (
+                <section className="w-full max-w-4xl overflow-hidden rounded-[26px] border border-[#2b2d36] bg-[#11131a] text-white shadow-[0_28px_64px_-34px_rgba(17,19,26,0.85)]" aria-labelledby="vote-review-title">
+                  <div className="grid md:grid-cols-[1.15fr_0.85fr]">
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-start gap-3.5">
+                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d4af37]/35 bg-[#f4c84e]/10"><Flag sash={pickedSlide.sash} className="!h-4 !w-6" /></span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d9b94f]">Final review</span>
+                          <b id="vote-review-title" className="mt-1 block truncate font-display text-xl font-semibold text-white sm:text-2xl">{pickedSlide.name}</b>
+                          <span className="mt-0.5 block text-xs text-[#a9adba]">{pickedSlide.country} · {CATEGORY_LABEL[activeCat]}</span>
+                        </span>
+                      </div>
+                      <p className="mt-4 max-w-lg text-xs leading-relaxed text-[#b9bdc8] sm:text-sm">
+                        Your wallet confirms your CrownFi identity once. The vote is recorded off-chain and included in the round’s verifiable closing proof.
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <Link href={pickedSlide.profileHref ?? `/contestants/${pickedSlide.id}`} className="inline-flex min-h-[38px] items-center justify-center rounded-xl border border-white/15 px-3.5 py-2 text-xs font-semibold text-white transition hover:border-[#d4af37]/60 hover:bg-white/5">View full profile</Link>
+                        <button type="button" className="inline-flex min-h-[38px] items-center justify-center rounded-xl px-3.5 py-2 text-xs font-semibold text-[#e6c45c] transition hover:bg-white/5" onClick={() => setPicked("")}>Change candidate</button>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/10 bg-[radial-gradient(circle_at_100%_0%,rgba(212,175,55,0.2),transparent_48%),#171922] p-5 sm:p-6 md:border-l md:border-t-0">
+                      <div className="flex items-center gap-2 text-xs font-semibold">
+                        <span className={`h-2 w-2 rounded-full ${fan ? "bg-[#31c98b] shadow-[0_0_0_4px_rgba(49,201,139,0.12)]" : "bg-[#d9b94f] shadow-[0_0_0_4px_rgba(217,185,79,0.12)]"}`} />
+                        <span className={fan ? "text-[#78ddb2]" : "text-[#e6c45c]"}>{fan ? "Wallet connected" : "Wallet required"}</span>
+                      </div>
+                      <p className="mt-3 text-xs leading-relaxed text-[#a9adba]">
+                        {fan ? <>Ready from <span className="font-mono text-white">{address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "your wallet"}</span>. Your choice cannot be changed after confirmation.</> : "Connect Base Account, MetaMask, or your Privy wallet to submit this one-time vote."}
+                      </p>
+                      <button type="button" className="btn-gold mt-5 w-full" onClick={confirmSelection} disabled={!ready || connecting || busy || round.status !== "open"}>
+                        <Icons.Wallet size={16} /> {confirmLabel}
+                      </button>
+                      <p className="mt-2 text-center text-[10px] text-[#777c8c]">No gas fee for vote intake.</p>
+                    </div>
                   </div>
-                ) : <div className="text-sm text-[#7a7768]">Select a contestant above — you’ll review the choice before confirming.</div>}
-                <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Already voted? Verify your receipt</Link>
-              </>
+                </section>
+              ) : (
+                <div className="text-center text-sm text-[#7a7768]">
+                  Select a candidate above. The wallet confirmation will appear on the card and in a final review panel here.
+                </div>
+              )
             )}
+            {!votedFor && <Link href="/verify" className="text-sm text-[#7a7768] underline-offset-4 hover:underline">Already voted? Verify your receipt</Link>}
           </div>
         </>
       ))}
@@ -247,21 +290,6 @@ export default function VotePage() {
             ))}
           </div>
         </section>
-      )}
-
-      {/* Sticky confirm bar — the single primary action, always reachable once a pick is made. */}
-      {canCast && pickedSlide && (
-        <div className="fixed inset-x-0 bottom-20 z-40 px-4 sm:bottom-6">
-          <div className="glass mx-auto flex max-w-xl items-center justify-between gap-3 p-3 shadow-[0_24px_50px_-20px_rgba(120,100,40,0.5)]">
-            <div className="min-w-0 text-sm text-[#5f6172]">
-              <span className="flex items-center gap-1.5"><Flag sash={pickedSlide.sash} className="!h-4 !w-6" /> Voting for <b className="truncate text-[#23252f]">{pickedSlide.name}</b></span>
-              <span className="hidden sm:inline"> in {CATEGORY_LABEL[activeCat]}</span>
-            </div>
-            <button className="btn-gold shrink-0" disabled={busy} onClick={cast}>
-              {busy ? "Submitting…" : "Confirm vote"}
-            </button>
-          </div>
-        </div>
       )}
 
       <Toast msg={toast.msg} tone={toast.tone} />
