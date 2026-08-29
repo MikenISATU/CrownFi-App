@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { isLikelyStellarAddress } from "@/lib/adminAuth";
+import { getAddress, isAddress } from "viem";
 import { verifyFanSignature, createFanSession, setFanCookie } from "@/lib/fanAuth";
 import { clientIpHash } from "@/lib/ip";
 
@@ -11,24 +11,24 @@ const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
 //
 // Flow:
 //   1. User signs in with email / Google / passkey (Privy) — no seed phrase.
-//   2. Privy provisions an embedded wallet. Its DEFAULT chain is EVM (ETH), so we
-//      EXPLICITLY create a Stellar wallet with chainType "stellar" (see src/wallet/index.ts).
-//   3. The client posts that Stellar address here to push it to the DB and open a session.
+//   2. Privy provisions an embedded EVM wallet that works on Base.
+//   3. The client posts that Base address here to push it to the DB and open a session.
 //
-// Because the embedded wallet can sign, we still require a Stellar signature over the
-// challenge (same proof-of-control as Freighter). The extra `email` lets us detect and
+// Because the embedded wallet can sign, we still require an EVM signature over the
+// challenge. The extra `email` lets us detect and
 // friendly-notify when a wallet is already linked to a DIFFERENT account.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   const b = await req.json().catch(() => null);
-  const walletAddress = String(b?.walletAddress ?? b?.address ?? "").trim();
+  const rawWalletAddress = String(b?.walletAddress ?? b?.address ?? "").trim();
   const message = String(b?.message ?? "");
   const signature = String(b?.signature ?? "");
   const email = b?.email ? String(b.email).trim().toLowerCase() : null;
 
-  if (!isLikelyStellarAddress(walletAddress)) {
+  if (!isAddress(rawWalletAddress)) {
     return NextResponse.json({ error: "invalid_address" }, { status: 400 });
   }
+  const walletAddress = getAddress(rawWalletAddress);
   if (!message || !signature) {
     return NextResponse.json({ error: "missing_signature" }, { status: 400 });
   }

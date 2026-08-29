@@ -8,7 +8,8 @@ This folder contains CrownFi's active EVM/Base wallet client while the remaining
 - Base Account and injected-wallet connectors (for example MetaMask).
 - A responsive Base wallet control with explicit network switching.
 - Official native USDC addresses for Base and Base Sepolia.
-- Empty contract-address slots for voting, audit anchoring, collectibles, predictions, and tickets.
+- Configured Base Sepolia addresses for audit anchoring, collectibles, predictions, and tickets;
+  the raw-vote slot intentionally remains empty.
 - Base is the default visible wallet layer; users choose Base Account or MetaMask.
 
 ## Local setup
@@ -16,7 +17,7 @@ This folder contains CrownFi's active EVM/Base wallet client while the remaining
 1. Copy `web/.env.base.example` values into `web/.env.local` or your deployment environment.
 2. Keep `NEXT_PUBLIC_BASE_NETWORK=sepolia` until all contracts and transaction flows pass testnet QA.
 3. Use a dedicated production RPC URL before mainnet. The public Base endpoints are rate-limited.
-4. Deploy EVM versions of the CrownFi contracts and fill the five public contract addresses.
+4. Copy the four deployed public contract addresses from `web/.env.base.example`.
 5. Keep paid actions marked as coming soon until their Base API routes replace the legacy signing paths.
 
 ## Wallet security

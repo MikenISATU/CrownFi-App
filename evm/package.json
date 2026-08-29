@@ -1,0 +1,24 @@
+{
+  "name": "crownfi-base-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "hardhat build --build-profile production",
+    "test": "hardhat test",
+    "check": "npm run build && npm run test",
+    "deploy:base-sepolia": "hardhat ignition deploy ignition/modules/CrownFiBase.ts --network baseSepolia --build-profile production",
+    "deploy:ticket:base-sepolia": "hardhat ignition deploy ignition/modules/CrownFiTicket.ts --network baseSepolia --build-profile production",
+    "deploy:collectible:base-sepolia": "hardhat ignition deploy ignition/modules/CrownFiCollectible.ts --network baseSepolia --build-profile production"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
+    "dotenv": "^17.2.2",
+    "hardhat": "^3.15.0",
+    "typescript": "^5.9.2",
+    "viem": "^2.47.6"
+  }
+}

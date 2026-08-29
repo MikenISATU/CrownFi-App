@@ -7,6 +7,10 @@ node_modules
 dev.db
 target
 /contracts/**/target
+/evm/artifacts
+/evm/cache
+/evm/coverage
+/evm/ignition/deployments
 .DS_Store
 prisma/migrations/dev.db*
 

@@ -42,12 +42,12 @@ Web container:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://api.example.com
-NEXT_PUBLIC_STELLAR_NETWORK=testnet
-NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-STELLAR_MODE=mock # switch to live only after contract IDs are deployed
-WALLET_PROVIDER=freighter
-ADMIN_WALLETS=G...
+NEXT_PUBLIC_BASE_NETWORK=sepolia
+NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+ADMIN_WALLETS=0x...
+NEXT_PUBLIC_ADMIN_WALLETS=0x...
 ADMIN_SESSION_SECRET=change-me
+NEXT_PUBLIC_APP_ORIGIN=https://crownfi.example
 DATABASE_URL=postgresql://...
 DIRECT_URL=postgresql://...
 ```

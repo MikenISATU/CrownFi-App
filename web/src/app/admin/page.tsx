@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useChainId, useSignMessage, useSwitchChain } from "wagmi";
 import { Icons } from "@/components/icons";
+import { targetBaseChain } from "@/base/config";
 import { useSession } from "@/session/SessionProvider";
 import { short } from "@/lib/format";
 import { Flag } from "@/components/Flag";
 import { Toast } from "@/components/ui";
 import { getJson, postJson } from "@/lib/api";
-import { signAdminMessage, signWithFreighter } from "@/wallet/freighter";
+import { signWithFreighter } from "@/wallet/freighter";
 import { STATUS_LABEL, STATUS_CHIP } from "@/lib/pageant";
 import { messageFor } from "@/lib/messages";
 import { BannerUpload } from "@/components/BannerUpload";
@@ -17,6 +19,9 @@ type Tab = "overview" | "rounds" | "contestants" | "requests" | "pageants" | "pa
 
 export default function AdminPage() {
   const { isAdmin, address, connect, connecting } = useSession();
+  const chainId = useChainId();
+  const { signMessageAsync } = useSignMessage();
+  const { switchChainAsync } = useSwitchChain();
   const [tab, setTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<any>(null);
   const [rounds, setRounds] = useState<any[]>([]);
@@ -114,13 +119,25 @@ export default function AdminPage() {
     const challenge = await postJson<any>("/api/admin/challenge", { address });
     if (!challenge.ok) { flash("Admin wallet is not authorized server-side.", "err"); return false; }
 
-    const signed = await signAdminMessage((challenge.data as any).message, address);
-    if (signed.error || !signed.signature) { flash(signed.error ?? "Admin signature was cancelled.", "err"); return false; }
+    const message = String((challenge.data as any).message ?? "");
+    let signature: `0x${string}`;
+    try {
+      if (chainId !== targetBaseChain.id) {
+        await switchChainAsync({ chainId: targetBaseChain.id });
+      }
+      signature = await signMessageAsync({
+        account: address as `0x${string}`,
+        message,
+      });
+    } catch {
+      flash(`Switch to ${targetBaseChain.name} and approve the admin signature.`, "err");
+      return false;
+    }
 
     const verified = await postJson<any>("/api/admin/verify", {
       address,
-      message: (challenge.data as any).message,
-      signature: signed.signature,
+      message,
+      signature,
     });
     if (!verified.ok) { flash("Could not verify admin signature.", "err"); return false; }
     return true;

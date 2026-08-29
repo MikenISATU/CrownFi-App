@@ -9,6 +9,7 @@ import { messageFor } from "@/lib/messages";
 import { Toast } from "@/components/ui";
 import { Icons } from "@/components/icons";
 import { MarketCandidateHint, withCandidateFlags } from "@/lib/markets";
+import { TestnetFundingPanel } from "@/components/TestnetFundingPanel";
 
 const CATEGORIES = ["all", ...MARKET_CATEGORIES.map((s) => s.key)];
 const STATUSES = [
@@ -85,6 +86,8 @@ export default function PredictionsLanding() {
           <button className="btn-ghost" onClick={connect}>{connecting ? "Connecting…" : "Connect to create"}</button>
         )}
       </header>
+
+      <TestnetFundingPanel compact />
 
       {/* How it works — numbered walk-through, reference-style */}
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

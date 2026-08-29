@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { isAddress } from "viem";
 import { useAccount, useChainId, useConnect, useDisconnect, useSignMessage, useSwitchChain } from "wagmi";
 import { targetBaseChain } from "@/base/config";
 import { messageFor } from "@/lib/messages";
@@ -23,10 +24,10 @@ type Ctx = {
 };
 
 const C = createContext<Ctx | null>(null);
-const ADMIN = (process.env.NEXT_PUBLIC_ADMIN_WALLETS ?? "")
+const ADMIN: string[] = (process.env.NEXT_PUBLIC_ADMIN_WALLETS ?? "")
   .split(",")
   .map((value) => value.trim().toLowerCase())
-  .filter(Boolean);
+  .filter((value) => isAddress(value));
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);

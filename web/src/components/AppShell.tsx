@@ -21,6 +21,7 @@ const USER_LINKS = [
   { href: "/contestants", label: "Collect" },
   { href: "/loyalty", label: "Rewards" },
   { href: "/organizer", label: "Organizer" },
+  { href: "/funds", label: "Testnet funds" },
   { href: "/me", label: "Me" },
 ];
 // Desktop header: the two core actions as direct links, everything else grouped into
@@ -50,6 +51,7 @@ const NAV_GROUPS: { label: string; links: { href: string; label: string }[] }[] 
     label: "Account",
     links: [
       { href: "/organizer", label: "Organizer" },
+      { href: "/funds", label: "Testnet funds" },
       { href: "/me", label: "My account" },
     ],
   },
@@ -94,7 +96,7 @@ const SOCIALS = [
 
 const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
   { title: "Explore", links: [["/", "Home"], ["/predictions", "Predict"], ["/vote", "Vote"], ["/leaderboard", "Leaderboard"]] },
-  { title: "Experience", links: [["/tickets", "Tickets"], ["/contestants", "Collect"], ["/loyalty", "Rewards"], ["/verify", "Verify a vote"]] },
+  { title: "Experience", links: [["/tickets", "Tickets"], ["/contestants", "Collect"], ["/loyalty", "Rewards"], ["/funds", "Testnet funds"], ["/verify", "Verify a vote"]] },
   { title: "Organizers", links: [["/organizer", "Host a pageant"], ["/faq", "FAQ"], ["/faq#legal", "Privacy"], ["/faq#legal", "Terms"]] },
 ];
 

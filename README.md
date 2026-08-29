@@ -2,7 +2,7 @@
 
 CrownFi is a fan-engagement platform for pageant voting, prediction markets, digital collectibles, rewards, and future ticketing. The active application is a Next.js full-stack demo backed by Prisma and Supabase Postgres.
 
-> **Current status — Base migration in progress:** CrownFi now targets **Base Sepolia**, but **no CrownFi smart contracts have been deployed to Base Sepolia yet**. Base Account, MetaMask, Privy onboarding, network configuration, and contract-address placeholders are ready. Contract-backed voting, anchoring, collectibles, prediction settlement, and tickets must remain disabled or marked as coming soon until the EVM contracts are written, tested, deployed, and verified.
+> **Current status — Base Sepolia integration in progress:** CrownFi now targets **Base Sepolia**. The prediction-market, audit-anchor, ticket, and collectible Solidity contracts are deployed on testnet. Their public addresses are configured, but contract-backed web transactions must remain disabled until source verification, security review, and end-to-end application integration are complete.
 
 This repository is suitable for development, demos, and product review. It is not production voting infrastructure, audited financial infrastructure, or ready for real-money markets.
 
@@ -15,11 +15,11 @@ This repository is suitable for development, demos, and product review. It is no
 | Base network | Configured for Base Sepolia by default |
 | Wallets | Base Account and MetaMask connection available |
 | Web2 onboarding | Privy email/Google login with an embedded EVM wallet; credentials required |
-| Base voting contract | **Not deployed** |
-| Base audit-anchor contract | **Not deployed** |
-| Base collectible contract | **Not deployed** |
-| Base prediction-market contract | **Not deployed** |
-| Base ticket contract | **Not deployed** |
+| Base voting contract | Not planned for raw votes — backend-first voting anchors compact proofs |
+| Base audit-anchor contract | Deployed on Base Sepolia — application publishing integration pending |
+| Base collectible contract | Deployed on Base Sepolia — five candidates registered, no tokens minted |
+| Base prediction-market contract | Deployed on Base Sepolia — application settlement integration pending |
+| Base ticket contract | Deployed on Base Sepolia — purchase and check-in integration pending |
 | Base Mainnet | Not enabled for production |
 | Stellar/Soroban | Legacy prototype code only; not the active wallet or deployment target |
 
@@ -37,7 +37,7 @@ The configured Base Sepolia USDC address is Circle's existing test token address
 - Off-chain vote records, market records, user profiles, pageants, candidates, and application receipts.
 - Merkle proof generation and receipt verification at the application layer.
 
-Any UI that depends on a CrownFi Base contract must be treated as a preview until its contract address is configured.
+Any UI that sends CrownFi Base transactions must still be treated as a preview until its Viem integration and end-to-end testnet QA are complete.
 
 ## On-chain and off-chain boundaries
 
@@ -50,7 +50,7 @@ Any UI that depends on a CrownFi Base contract must be treated as a preview unti
 - Candidate and collectible metadata stored in Supabase, public application assets, or IPFS where configured.
 - Merkle trees, vote receipts, tally hashes, and checkpoint data before anchoring.
 
-### Planned for Base Sepolia
+### Deployed on Base Sepolia; web integration pending
 
 - Publishing closed-round Merkle roots and tally commitments through an audit-anchor contract.
 - Collectible minting and ownership through an EVM collectible contract.
@@ -71,7 +71,7 @@ flowchart LR
   API[Next.js API routes]
   DB[(Supabase Postgres)]
   Proofs[Merkle receipts and tallies]
-  BaseContracts[Base Sepolia contracts<br/>not deployed]
+  BaseContracts[Prediction + audit + ticket + collectible<br/>deployed on Base Sepolia]
 
   Fan --> Wallet
   Fan --> Privy
@@ -80,8 +80,8 @@ flowchart LR
   Web --> API
   API --> DB
   API --> Proofs
-  Proofs -. future anchor .-> BaseContracts
-  API -. future transactions .-> BaseContracts
+  Proofs -. integration pending .-> BaseContracts
+  API -. integration pending .-> BaseContracts
 ```
 
 ## Repository layout
@@ -93,6 +93,7 @@ flowchart LR
 │   ├── supabase/schema.sql      # Fresh Supabase database schema
 │   ├── src/base/                # Base wallet, network, USDC, and address configuration
 │   └── .env.base.example        # Base/Supabase/Privy environment template
+├── evm/                         # Hardhat 3 Base contracts, tests, and deployment module
 ├── contracts/                   # Legacy Stellar/Soroban contracts; not deployable to Base
 ├── docs/                        # Product and historical technical documentation
 ├── SUPABASE.md                  # Fresh Supabase setup guide
@@ -159,14 +160,30 @@ NEXT_PUBLIC_BASE_USDC_ADDRESS="0x036CbD53842c5426634e7929541eC2318f3dCF7e"
 
 The public RPC is acceptable for development but should be replaced with a dedicated provider before production.
 
-Leave every CrownFi contract address empty for now:
+Add the public Base address of each admin to both allowlists. These are wallet addresses,
+not private keys. The server issues a 15-minute admin session only after the allowlisted
+wallet signs a Base-bound challenge.
+
+```env
+ADMIN_WALLETS="0xYourPublicAdminAddress"
+NEXT_PUBLIC_ADMIN_WALLETS="0xYourPublicAdminAddress"
+ADMIN_SESSION_SECRET="generate-a-random-secret"
+NEXT_PUBLIC_APP_ORIGIN="http://localhost:3000"
+```
+
+Use comma-separated addresses for multiple admins. `ADMIN_WALLETS` is enforced server-side;
+`NEXT_PUBLIC_ADMIN_WALLETS` is only a client-side UI hint. Never put a private key or seed phrase
+in either value. Set `NEXT_PUBLIC_APP_ORIGIN` to the exact HTTPS Vercel origin in production.
+
+The prediction-market, audit-anchor, ticket, and collectible contracts are deployed on Base Sepolia.
+Raw votes remain backend-first, so only the vote-contract address stays empty:
 
 ```env
 NEXT_PUBLIC_BASE_VOTE_CONTRACT_ADDRESS=""
-NEXT_PUBLIC_BASE_AUDIT_ANCHOR_ADDRESS=""
-NEXT_PUBLIC_BASE_COLLECTIBLE_CONTRACT_ADDRESS=""
-NEXT_PUBLIC_BASE_PREDICTION_MARKET_ADDRESS=""
-NEXT_PUBLIC_BASE_TICKET_CONTRACT_ADDRESS=""
+NEXT_PUBLIC_BASE_AUDIT_ANCHOR_ADDRESS="0xc7E6e385fCf5494cF740202c4E37fDD0977F0Be9"
+NEXT_PUBLIC_BASE_COLLECTIBLE_CONTRACT_ADDRESS="0xaBF95a64439adc98cAaB2AA05806a9dbbC79219A"
+NEXT_PUBLIC_BASE_PREDICTION_MARKET_ADDRESS="0x692c12283C2339021733a88Ba129556Ce73eff9c"
+NEXT_PUBLIC_BASE_TICKET_CONTRACT_ADDRESS="0xD1013c0dEd496B75eE8e07d723807A7939bA205c"
 ```
 
 Do not paste Stellar `C...` contract IDs into these fields. Base requires deployed EVM contract addresses in `0x...` format.
@@ -181,19 +198,19 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Base contract work still required
+## Base Sepolia deployment and remaining integration
 
-The repository does not currently contain deployable Solidity, Foundry, or Hardhat implementations for the five planned Base contracts. Before any address is added to the environment:
+The prediction-market, audit-anchor, ticket, and collectible contracts under `evm/` were deployed to Base Sepolia on
+2026-08-29. The public deployment manifest is `evm/base-sepolia.deployment.json`.
 
-1. Define the EVM interfaces and authorization model.
-2. Implement the contracts in Solidity.
-3. Add unit, invariant, and integration tests.
-4. Review upgradeability, treasury, pause, refund, and admin controls.
-5. Deploy to Base Sepolia from an encrypted deployer keystore.
-6. Verify source code on BaseScan.
-7. Add the verified `0x...` addresses to the environment.
-8. Replace remaining legacy transaction routes with Viem-based Base calls.
-9. Complete testnet QA before considering Base Mainnet.
+Remaining work before enabling real user transactions:
+
+1. Rotate the exposed test deployer and transfer ownership to a fresh wallet or multisig.
+2. Perform an independent contract review, with prediction escrow and settlement as the priority.
+3. Verify all four contract sources on BaseScan.
+4. Replace remaining legacy transaction routes with Viem-based Base calls.
+5. Run end-to-end staking, settlement, cancellation, refund, claim, and proof-anchor QA.
+6. Complete legal review before any real-money market or Base Mainnet launch.
 
 Never place a deployer private key, wallet seed phrase, database password, or Privy App Secret in a `NEXT_PUBLIC_*` variable.
 
@@ -203,7 +220,7 @@ Never place a deployer private key, wallet seed phrase, database password, or Pr
 2. Add the Supabase, Base, Privy, admin-session, and optional provider variables from `web/.env.base.example`.
 3. Set `NEXT_PUBLIC_APP_ORIGIN` to the deployed CrownFi URL.
 4. Keep `NEXT_PUBLIC_BASE_NETWORK=sepolia`.
-5. Leave CrownFi Base contract addresses empty until verified deployments exist.
+5. Use the deployed Base Sepolia prediction-market, audit-anchor, ticket, and collectible addresses from `web/.env.base.example`.
 6. Redeploy after changing any `NEXT_PUBLIC_*` variable because it is included in the client build.
 
 ## Validation
@@ -217,15 +234,23 @@ npm run test:ticketing
 npm run security:audit
 ```
 
+Run the Base contract checks from `evm/`:
+
+```bash
+npm ci
+npm run check
+```
+
 The Rust checks under `contracts/` validate legacy Soroban code only. Passing them does not validate or deploy a Base contract.
 
 ## Security and product limitations
 
 - No CrownFi Base contract has completed a security audit.
-- No CrownFi Base contract is deployed on Sepolia or Mainnet.
-- Prediction settlement is not trustless until the Base contract is deployed and integrated.
-- Vote receipts are not Base-anchored until the audit-anchor contract is deployed.
-- Collectibles and tickets do not have Base ownership records yet.
+- The prediction-market, audit-anchor, ticket, and collectible contracts are deployed only on Base Sepolia, not Base Mainnet.
+- Prediction settlement is not live in the web app until the deployed contract is integrated and tested end to end.
+- Vote receipts are not Base-anchored by the web app until the deployed audit anchor is integrated.
+- Tickets have a Base Sepolia ERC-721 contract, but purchases and seat assignment are not live until the web flow is integrated and tested.
+- The collectible contract has five registered IPFS metadata records and zero initial mints, but the web purchase fulfillment route is not yet migrated from the legacy Stellar helper.
 - In-memory challenges and rate limits remain appropriate only for development/demo use unless backed by shared infrastructure.
 - Real-money prediction markets require legal review, licensing, jurisdiction controls, and production-grade KYC/AML systems.
 
@@ -234,9 +259,9 @@ The Rust checks under `contracts/` validate legacy Soroban code only. Passing th
 | Phase | Work |
 |---|---|
 | Current | Complete Supabase migration, Privy onboarding, Base Sepolia wallets, and UI/API cleanup |
-| Next | Design and implement EVM voting and audit-anchor contracts |
-| Next | Implement collectible, prediction-market, and ticket contracts |
-| Testnet | Deploy and verify all contracts on Base Sepolia; run end-to-end QA |
+| Current | Review and BaseScan-verify the deployed prediction-market, audit-anchor, ticket, and collectible contracts |
+| Testnet | Integrate the Base Sepolia contracts with Viem and complete end-to-end QA |
+| Testnet | Replace legacy collectible fulfillment with owner-authorized Base `adminMint` calls after payment confirmation |
 | Security | External review, multisig administration, monitoring, and incident procedures |
 | Later | Consider staged Base Mainnet deployment only after testnet and security gates pass |
 

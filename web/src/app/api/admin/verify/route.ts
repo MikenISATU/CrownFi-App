@@ -15,6 +15,6 @@ export async function POST(req: NextRequest) {
   if (!verified.ok) return NextResponse.json({ error: verified.error }, { status: verified.status });
 
   const res = NextResponse.json({ ok: true });
-  setAdminCookie(res, createAdminSession(address));
+  setAdminCookie(res, createAdminSession(verified.address));
   return res;
 }

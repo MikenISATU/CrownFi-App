@@ -1,5 +1,6 @@
 "use client";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "@/session/SessionProvider";
 import { Toast } from "@/components/ui";
@@ -188,9 +189,12 @@ function TicketsPageInner() {
             <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-[#5f6172] sm:text-base">
               We’re preparing the CrownFi ticketing experience. Verified seats and on-chain tickets will open soon.
             </p>
-            <span className="mt-7 inline-flex items-center rounded-full border border-[#e7d9a8] bg-[#fbf4dd] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a7417]">
-              Launching soon
-            </span>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <span className="inline-flex items-center rounded-full border border-[#e7d9a8] bg-[#fbf4dd] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9a7417]">
+                Launching soon
+              </span>
+              <Link href="/funds" className="btn-gold !min-h-[38px] !px-4 !py-2 text-xs">Get test funds</Link>
+            </div>
           </div>
         </div>
       </div>
