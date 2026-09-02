@@ -91,6 +91,7 @@
 .tally span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tally>div>i { height:7px; overflow:hidden; border-radius:99px; background:#ebe5d7; }
 .tally>div>i b { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#a97812,#e8c24e); }
+.liveDataNote { margin-top:24px!important; color:#8a8274!important; font-size:.72rem!important; }
 
 .predictions { padding:clamp(62px,8vw,100px) clamp(22px,5vw,58px); color:#f4ecd9; border:1px solid rgba(225,186,72,.22); background:radial-gradient(circle at 82% 3%,rgba(214,172,54,.18),transparent 30rem),linear-gradient(135deg,#171920,#0d0f14); }
 .predictionHead { max-width:750px; }
@@ -108,6 +109,9 @@
 .marketGuide li::before{content:"0" counter(steps) " · ";color:#dbb64d}
 .marketGuide a{color:#e5bd4b;font-size:.72rem;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:.08em}
 .marketGrid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.emptyMarket { grid-column:1/-1; min-height:220px; display:grid; place-content:center; gap:8px; padding:28px; border:1px dashed rgba(229,192,85,.24); border-radius:19px; text-align:center; color:rgba(245,237,220,.6); background:rgba(255,255,255,.025); }
+.emptyMarket strong { color:#f0dfb4; font-family:var(--font-display),Georgia,serif; font-size:1.45rem; }
+.emptyMarket span { max-width:420px; font-size:.72rem; line-height:1.6; }
 .marketCard { min-height:220px; padding:24px; animation:marketFloat 6s ease-in-out infinite; }
 .marketCard:nth-child(2){animation-delay:-1.5s}.marketCard:nth-child(3){animation-delay:-3s}.marketCard:nth-child(4){animation-delay:-4.5s}
 .marketCard>span{color:#d9ad38;font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.marketCard h3{min-height:60px;margin:14px 0 22px;font-size:1.42rem;line-height:1.05}.marketCard p{display:flex;justify-content:space-between;margin:9px 0 5px;color:rgba(245,237,220,.56);font-size:.67rem}.marketCard p i{font-style:normal}.marketCard p b{color:#e8c555}.marketCard em{display:block;height:4px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.08)}.marketCard em i{display:block;height:100%;background:linear-gradient(90deg,#9f7313,#e6c14d)}

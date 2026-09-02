@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useChainId, useSignMessage, useSwitchChain } from "wagmi";
+import { parseEventLogs } from "viem";
+import { useChainId, usePublicClient, useSignMessage, useSwitchChain } from "wagmi";
 import { Icons } from "@/components/icons";
 import { targetBaseChain } from "@/base/config";
 import { useSession } from "@/session/SessionProvider";
@@ -8,12 +9,14 @@ import { short } from "@/lib/format";
 import { Flag } from "@/components/Flag";
 import { Toast } from "@/components/ui";
 import { getJson, postJson } from "@/lib/api";
-import { signWithFreighter } from "@/wallet/freighter";
 import { STATUS_LABEL, STATUS_CHIP } from "@/lib/pageant";
 import { messageFor } from "@/lib/messages";
 import { BannerUpload } from "@/components/BannerUpload";
 import { MarketCloseField } from "@/components/MarketCloseField";
 import { PAGEANT_SEGMENTS, MARKET_CATEGORIES, CATEGORY_LABEL } from "@/lib/segments";
+import { baseContracts } from "@/base/contracts";
+import { auditAnchorAbi, predictionMarketAbi } from "@/base/abis";
+import { useBaseWalletClient } from "@/base/useBaseWalletClient";
 
 type Tab = "overview" | "rounds" | "contestants" | "requests" | "pageants" | "payments" | "markets";
 
@@ -22,6 +25,8 @@ export default function AdminPage() {
   const chainId = useChainId();
   const { signMessageAsync } = useSignMessage();
   const { switchChainAsync } = useSwitchChain();
+  const publicClient = usePublicClient();
+  const getWalletClient = useBaseWalletClient();
   const [tab, setTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<any>(null);
   const [rounds, setRounds] = useState<any[]>([]);
@@ -57,13 +62,55 @@ export default function AdminPage() {
   async function loadMarkets() { getJson<any[]>("/api/markets", []).then(setMarkets); }
   async function createMarket(body: any) {
     if (!(await ensureAdminSession())) return;
-    const r = await fetch("/api/markets", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    if (r.ok) { flash("Market created"); loadMarkets(); } else { const d = await r.json().catch(() => ({})); flash(messageFor(d.error, "Could not create market."), "err"); }
+    if (!address || !publicClient || !baseContracts.predictionMarket) { flash("Base prediction contract is not configured.", "err"); return; }
+    setBusy("market-create");
+    try {
+      const wallet = await getWalletClient(address);
+      const closeUnix = Math.floor(new Date(body.closeTime).getTime() / 1000);
+      const txHash = await wallet.writeContract({
+        address: baseContracts.predictionMarket,
+        abi: predictionMarketAbi,
+        functionName: "createMarket",
+        args: [body.question, body.category, body.options.length, BigInt(closeUnix)],
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("market_create_reverted");
+      const events = parseEventLogs({ abi: predictionMarketAbi, logs: receipt.logs, eventName: "MarketCreated", strict: true });
+      const chainMarketId = Number(events[0]?.args.marketId);
+      if (!Number.isSafeInteger(chainMarketId) || chainMarketId <= 0) throw new Error("market_created_event_missing");
+      const r = await fetch("/api/markets", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...body, chainMarketId, createTxHash: txHash }) });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error ?? "market_database_sync_failed"); }
+      flash("Base market created and synced");
+      loadMarkets();
+    } catch (error: any) {
+      flash(transactionMessage(error, "Could not create the Base market."), "err");
+    } finally {
+      setBusy("");
+    }
   }
   async function resolveMarket(id: string, action: string, winningOption?: number) {
     if (!(await ensureAdminSession())) return;
-    const r = await fetch(`/api/markets/${id}/resolve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action, winningOption }) });
-    if (r.ok) { flash(`Market ${action}d`); loadMarkets(); } else { const d = await r.json().catch(() => ({})); flash(messageFor(d.error, "Could not update market."), "err"); }
+    const market = markets.find((item) => item.id === id);
+    if (!address || !publicClient || !baseContracts.predictionMarket || market?.chainMarketId == null) { flash("This market is not linked to Base.", "err"); return; }
+    setBusy(`market-${id}`);
+    try {
+      const wallet = await getWalletClient(address);
+      let txHash;
+      if (action === "close") txHash = await wallet.writeContract({ address: baseContracts.predictionMarket, abi: predictionMarketAbi, functionName: "closeMarket", args: [BigInt(market.chainMarketId)] });
+      else if (action === "cancel") txHash = await wallet.writeContract({ address: baseContracts.predictionMarket, abi: predictionMarketAbi, functionName: "cancelMarket", args: [BigInt(market.chainMarketId)] });
+      else if (action === "resolve" && Number.isInteger(winningOption)) txHash = await wallet.writeContract({ address: baseContracts.predictionMarket, abi: predictionMarketAbi, functionName: "resolveMarket", args: [BigInt(market.chainMarketId), winningOption!] });
+      else throw new Error("invalid_action");
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("market_action_reverted");
+      const r = await fetch(`/api/markets/${id}/resolve`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action, winningOption, txHash }) });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error ?? "market_database_sync_failed"); }
+      flash(action === "resolve" ? "Market resolved on Base" : action === "cancel" ? "Market cancelled on Base" : "Market closed on Base");
+      loadMarkets();
+    } catch (error: any) {
+      flash(transactionMessage(error, "Could not update the Base market."), "err");
+    } finally {
+      setBusy("");
+    }
   }
 
   function loadAll() {
@@ -148,31 +195,26 @@ export default function AdminPage() {
     if (!(await ensureAdminSession())) return;
     setBusy(id);
     try {
-      // Step 1 — compute the tally + build the anchor tx.
-      const prep = await postJson<any>(`/api/rounds/${id}/prepare-close`, { adminAddress: address! });
+      const prep = await postJson<any>(`/api/rounds/${id}/prepare-close`, {});
       if (!prep.ok) throw new Error((prep.data as any)?.error ?? "prepare_failed");
-
-      if ((prep.data as any).mock) {
-        const r = await postJson<any>(`/api/rounds/${id}/close`, {});
-        if (!r.ok) throw new Error((r.data as any)?.error ?? "close_failed");
-        flash(`Round anchored (mock). Root ${short((r.data as any).merkleRoot, 6)}`, "ok");
-        return;
-      }
-
-      // Step 2 — admin signs the anchor in Freighter.
-      const signed = await signWithFreighter((prep.data as any).xdr, address!);
-      if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
-
-      // Step 3 — submit + persist.
-      const conf = await postJson<any>(`/api/rounds/${id}/confirm-close`, { signedXdr: signed.signedXdr, intentId: (prep.data as any).intentId });
+      if (!address || !publicClient || !baseContracts.auditAnchor) throw new Error("audit_contract_not_configured");
+      const wallet = await getWalletClient(address);
+      const txHash = await wallet.writeContract({
+        address: baseContracts.auditAnchor,
+        abi: auditAnchorAbi,
+        functionName: "publish",
+        args: [(prep.data as any).chainRoundId, (prep.data as any).chainMerkleRoot, (prep.data as any).chainTallyHash, BigInt((prep.data as any).totalVotes)],
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("anchor_reverted");
+      const conf = await postJson<any>(`/api/rounds/${id}/confirm-close`, { txHash });
       if (!conf.ok) throw new Error((conf.data as any)?.error ?? "confirm_failed");
-
-      flash(`Anchored on Stellar ✓ Root ${short((conf.data as any).merkleRoot, 6)}`, "ok");
+      flash(`Anchored on Base ✓ Root ${short((conf.data as any).merkleRoot, 6)}`, "ok");
     } catch (e: any) {
       const m = String(e?.message ?? "");
       flash(
         m.includes("already published") ? "This round is already anchored on-chain."
-          : m.includes("auth") || m.includes("require") ? "Connect the wallet that is the audit-anchor admin (alice)."
+          : m.includes("auth") || m.includes("require") ? "Connect the allowlisted Base audit-anchor owner wallet."
           : `Could not anchor: ${m}`,
         "err"
       );
@@ -356,7 +398,7 @@ function AnchorPanel({ roundId, contestants }: { roundId: string; contestants: a
           <div className="rounded-xl surface-soft p-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-[#0f6e56]">
               <span className="grid h-5 w-5 place-items-center rounded-full bg-[#e6f6ef]"><Icons.Check size={12} strokeWidth={3} /></span>
-              Sealed on Stellar — results can no longer be altered
+              Sealed on Base — results can no longer be altered
             </div>
             <div className="mt-3 space-y-2 text-xs">
               <div className="flex items-center justify-between gap-3">
@@ -826,4 +868,12 @@ function Markets({ markets, onCreate, onResolve }: any) {
       ))}
     </div>
   );
+}
+
+function transactionMessage(error: any, fallback: string) {
+  const message = String(error?.shortMessage ?? error?.message ?? "");
+  if (/rejected|denied|cancelled/i.test(message)) return "Wallet confirmation was cancelled.";
+  if (/not owner|ownable|unauthorized/i.test(message)) return "The connected wallet is not the deployed contract owner.";
+  if (/insufficient funds/i.test(message)) return "The admin wallet needs Base Sepolia ETH for gas.";
+  return messageFor(message, fallback);
 }

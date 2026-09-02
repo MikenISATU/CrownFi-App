@@ -15,6 +15,8 @@ export const PLATFORM_FEE_PCT = PLATFORM_FEE_BPS / 100; // for display, e.g. 2
 export type MarketOptionView = { index: number; label: string; pool: number; percent: number; sash?: string | null };
 export type MarketView = {
   id: string;
+  chainMarketId: number | null;
+  onchain: boolean;
   pageantId: string | null;
   category: string;
   question: string;
@@ -65,6 +67,7 @@ export function withCandidateFlags<T extends MarketView>(market: T, candidates: 
 
 type MarketRow = {
   id: string;
+  chainMarketId?: number | null;
   pageantId: string | null;
   creatorFanId?: string | null;
   category: string;
@@ -108,6 +111,8 @@ export function computeMarketView(
   const endsInMs = m.closeTime.getTime() - now;
   return {
     id: m.id,
+    chainMarketId: m.chainMarketId ?? null,
+    onchain: m.chainMarketId != null,
     pageantId: m.pageantId,
     category: m.category,
     question: m.question,

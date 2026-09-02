@@ -2,14 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireFan } from "@/lib/fanAuth";
 import { parseOptions } from "@/lib/markets";
-import { marketConfigured, buildStakeTx } from "@/lib/stellar";
-import { createTxIntent } from "@/lib/txIntents";
 import { rateLimit } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/ip";
+import { baseContracts } from "@/base/contracts";
 
-// STEP 1 of an on-chain prediction: build the unsigned stake() tx for the fan to sign in
-// Freighter (the fan is the source, so their signature authorizes the USDC transfer into escrow).
-// Off-chain/mock markets return { mock:true } so the client falls back to the direct predict route.
+// Validate a stake before the browser asks the Base wallet to approve USDC and call stake().
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = requireFan(req);
   if (auth instanceof NextResponse) return auth;
@@ -29,15 +26,13 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (market.status !== "open" || market.closeTime.getTime() <= Date.now()) return NextResponse.json({ error: "market_closed" }, { status: 409 });
   if (option >= parseOptions(market.optionsJson).length) return NextResponse.json({ error: "invalid_option" }, { status: 400 });
 
-  if (!marketConfigured() || market.chainMarketId == null) return NextResponse.json({ mock: true });
-
-  try {
-    const { xdr, txHash } = await buildStakeTx({ fanAddress: auth.address, marketId: market.chainMarketId, option, amountUsdc: amount });
-    const intent = createTxIntent({ kind: "market-stake", fanId: auth.fanId, marketId: id, option, amountUsdc: amount, expectedSource: auth.address, txHash });
-    return NextResponse.json({ xdr, intentId: intent.id });
-  } catch (e: any) {
-    console.error("[api/markets/prepare-stake] failed:", e);
-    // A simulation failure here is usually "no USDC / no trustline".
-    return NextResponse.json({ error: e?.message ?? "prepare_failed" }, { status: 500 });
+  if (market.chainMarketId == null || !baseContracts.predictionMarket) {
+    return NextResponse.json({ error: "market_not_onchain" }, { status: 409 });
   }
+  return NextResponse.json({
+    ok: true,
+    chainMarketId: market.chainMarketId,
+    marketContract: baseContracts.predictionMarket,
+    usdcContract: baseContracts.usdc,
+  });
 }

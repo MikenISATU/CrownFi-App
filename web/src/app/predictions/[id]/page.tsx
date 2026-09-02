@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { parseUnits, type Address } from "viem";
+import { usePublicClient } from "wagmi";
 import Link from "next/link";
 import { useSession } from "@/session/SessionProvider";
 import { Toast } from "@/components/ui";
@@ -9,6 +11,9 @@ import { estimateReward, PLATFORM_FEE_PCT, withCandidateFlags, type MarketCandid
 import { MarketView, CATEGORY_LABEL, statusBadge, timeLeft } from "@/components/MarketCard";
 import { OddsChart } from "@/components/OddsChart";
 import { Flag } from "@/components/Flag";
+import { baseContracts } from "@/base/contracts";
+import { erc20Abi, predictionMarketAbi } from "@/base/abis";
+import { useBaseWalletClient } from "@/base/useBaseWalletClient";
 
 type Detail = MarketView & {
   activity: { option: number; amount: number; createdAt: string; status: string }[];
@@ -28,6 +33,8 @@ function candidateHints() {
 export default function MarketDetail() {
   const { id } = useParams<{ id: string }>();
   const { fan, address, connect, connecting } = useSession();
+  const publicClient = usePublicClient();
+  const getWalletClient = useBaseWalletClient();
   const [m, setM] = useState<Detail | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -68,56 +75,50 @@ export default function MarketDetail() {
     if (pick == null || !(Number(amount) > 0)) { flash("Pick an option and an amount.", "err"); return; }
     setBusy(true);
     try {
-      // 1) Prepare the stake (server tells us if this market is on-chain or a mock).
       const pr = await fetch(`/api/markets/${id}/prepare-stake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ option: pick, amount: Number(amount) }) });
       const pd = await pr.json().catch(() => ({}));
       if (!pr.ok) { flash(stakeErr(pd.error), "err"); return; }
-
-      // Off-chain / mock market → record directly.
-      if (pd.mock) {
-        const r = await fetch(`/api/markets/${id}/predict`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ option: pick, amount: Number(amount) }) });
-        const d = await r.json().catch(() => ({}));
-        if (r.ok) { flash(`Prediction placed! +${d.pointsAwarded ?? 0} points`); reset(); load(); refreshBalance(); }
-        else flash(messageFor(d.error, "Could not place prediction."), "err");
-        return;
+      if (!address || !publicClient || !baseContracts.predictionMarket || m?.chainMarketId == null) throw new Error("market_not_onchain");
+      const wallet = await getWalletClient(address);
+      const units = parseUnits(amount, 6);
+      const allowance = await publicClient.readContract({
+        address: baseContracts.usdc,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [address as Address, baseContracts.predictionMarket],
+      });
+      if (allowance < units) {
+        const approvalHash = await wallet.writeContract({
+          address: baseContracts.usdc,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [baseContracts.predictionMarket, units],
+        });
+        const approval = await publicClient.waitForTransactionReceipt({ hash: approvalHash });
+        if (approval.status !== "success") throw new Error("approval_reverted");
       }
-
-      // 2) Sign the stake in Freighter (authorizes the USDC transfer into escrow).
-      const { signTx } = await import("@/wallet/sign");
-      const signed = await signTx(pd.xdr, fan);
-      if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
-
-      // 3) Submit + record on-chain.
-      const cr = await fetch(`/api/markets/${id}/confirm-stake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
+      const txHash = await wallet.writeContract({
+        address: baseContracts.predictionMarket,
+        abi: predictionMarketAbi,
+        functionName: "stake",
+        args: [BigInt(m.chainMarketId), pick, units],
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("stake_reverted");
+      const cr = await fetch(`/api/markets/${id}/confirm-stake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ txHash, option: pick }) });
       const cd = await cr.json().catch(() => ({}));
       if (cr.ok) { flash(`Staked ${amount} USDC on-chain! +${cd.pointsAwarded ?? 0} points`); reset(); load(); refreshBalance(); }
       else flash(messageFor(cd.error, "Could not confirm your stake."), "err");
-    } catch {
-      flash("Something went wrong. Please try again.", "err");
+    } catch (error: any) {
+      flash(transactionError(error, "Could not place the Base stake."), "err");
     } finally {
       setBusy(false);
     }
   }
 
-  // A prepare-stake failure is usually "no test USDC / no trustline" — point the user at the faucet.
   function stakeErr(code?: string): string {
-    if (code && /balance|trustline|underfunded|insufficient/i.test(code)) return "Not enough test USDC — top up from the faucet, then try again.";
+    if (code && /balance|underfunded|insufficient/i.test(code)) return "Not enough test USDC — open Testnet funds, then try again.";
     return messageFor(code, "Could not start your prediction.");
-  }
-
-  async function getTestUsdc() {
-    if (!fan) { flash("Connect your wallet first.", "err"); return; }
-    setBusy(true);
-    try {
-      const r = await fetch("/api/faucet", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amountUsdc: 50 }) });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok) { flash("Sent 50 test USDC to your wallet. You can stake now."); refreshBalance(); }
-      else flash(messageFor(d.error, "The faucet couldn’t send test USDC right now."), "err");
-    } catch {
-      flash("Something went wrong. Please try again.", "err");
-    } finally {
-      setBusy(false);
-    }
   }
 
   // Cancel a position: withdraw the stake on `option` (on-chain unstake, refunds USDC).
@@ -128,17 +129,19 @@ export default function MarketDetail() {
       const pr = await fetch(`/api/markets/${id}/prepare-unstake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ option }) });
       const pd = await pr.json().catch(() => ({}));
       if (!pr.ok) { flash(messageFor(pd.error, "Could not start cancellation."), "err"); return; }
-      // Off-chain market: the server already reversed the position — nothing to sign.
+      // Legacy free-play market: the server already reversed the position.
       if (pd.mock) { flash("Position cancelled."); load(); refreshBalance(); return; }
-      const { signTx } = await import("@/wallet/sign");
-      const signed = await signTx(pd.xdr, fan);
-      if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
-      const cr = await fetch(`/api/markets/${id}/confirm-unstake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
+      if (!address || !publicClient || !baseContracts.predictionMarket || m?.chainMarketId == null) throw new Error("market_not_onchain");
+      const wallet = await getWalletClient(address);
+      const txHash = await wallet.writeContract({ address: baseContracts.predictionMarket, abi: predictionMarketAbi, functionName: "unstake", args: [BigInt(m.chainMarketId), option] });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("unstake_reverted");
+      const cr = await fetch(`/api/markets/${id}/confirm-unstake`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ txHash, option }) });
       const cd = await cr.json().catch(() => ({}));
       if (cr.ok) { flash("Position cancelled — USDC refunded to your wallet."); load(); refreshBalance(); }
       else flash(messageFor(cd.error, "Could not cancel your position."), "err");
-    } catch {
-      flash("Something went wrong. Please try again.", "err");
+    } catch (error: any) {
+      flash(transactionError(error, "Could not cancel your position."), "err");
     } finally {
       setBusy(false);
     }
@@ -151,15 +154,38 @@ export default function MarketDetail() {
       const pr = await fetch(`/api/markets/${id}/prepare-claim`, { method: "POST" });
       const pd = await pr.json().catch(() => ({}));
       if (!pr.ok) { flash(messageFor(pd.error, "Could not start your claim."), "err"); return; }
-      const { signTx } = await import("@/wallet/sign");
-      const signed = await signTx(pd.xdr, fan);
-      if (signed.error || !signed.signedXdr) { flash(messageFor(signed.error, "You cancelled the wallet signature."), "err"); return; }
-      const cr = await fetch(`/api/markets/${id}/confirm-claim`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ signedXdr: signed.signedXdr, intentId: pd.intentId }) });
+      if (!address || !publicClient || !baseContracts.predictionMarket || m?.chainMarketId == null) throw new Error("market_not_onchain");
+      const wallet = await getWalletClient(address);
+      const txHash = await wallet.writeContract({ address: baseContracts.predictionMarket, abi: predictionMarketAbi, functionName: "claim", args: [BigInt(m.chainMarketId)] });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("claim_reverted");
+      const cr = await fetch(`/api/markets/${id}/confirm-claim`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ txHash }) });
       const cd = await cr.json().catch(() => ({}));
       if (cr.ok) { flash("Winnings claimed to your wallet! 🎉"); load(); refreshBalance(); }
       else flash(messageFor(cd.error, "Could not claim your winnings."), "err");
-    } catch {
-      flash("Something went wrong. Please try again.", "err");
+    } catch (error: any) {
+      flash(transactionError(error, "Could not claim your winnings."), "err");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function refund() {
+    if (!fan || !address || !publicClient || !baseContracts.predictionMarket || m?.chainMarketId == null) return;
+    setBusy(true);
+    try {
+      const wallet = await getWalletClient(address);
+      const txHash = await wallet.writeContract({ address: baseContracts.predictionMarket, abi: predictionMarketAbi, functionName: "refund", args: [BigInt(m.chainMarketId)] });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("refund_reverted");
+      const response = await fetch(`/api/markets/${id}/confirm-refund`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ txHash }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error ?? "refund_confirm_failed");
+      flash("Full refund claimed to your wallet.");
+      load();
+      refreshBalance();
+    } catch (error: any) {
+      flash(transactionError(error, "Could not claim the refund."), "err");
     } finally {
       setBusy(false);
     }
@@ -169,7 +195,7 @@ export default function MarketDetail() {
   if (state === "error" || !m) return <div className="glass p-10 text-center"><div className="font-display text-2xl text-[#23252f]">Market not found</div><Link href="/predictions" className="btn-gold mt-4 inline-block">Back to markets</Link></div>;
 
   const badge = statusBadge(m);
-  const canPredict = m.status === "open" && m.endsInMs > 0;
+  const canPredict = m.onchain && m.status === "open" && m.endsInMs > 0;
   const est = pick != null && Number(amount) > 0 ? estimateReward(m, pick, Number(amount)) : 0;
 
   // Exchange-style headline: the leading outcome's implied probability + its 24h move.
@@ -202,7 +228,7 @@ export default function MarketDetail() {
       {m.status === "cancelled" && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#edc8d4] bg-[#fff6f8] px-5 py-3 text-sm text-[#881337]">
           <span aria-hidden>↩</span>
-          <span><b>Market cancelled.</b> All positions were refunded in full.</span>
+          <span><b>Market cancelled.</b> Every participant can claim a full on-chain refund.</span>
           <span className="ml-auto rounded-full bg-white px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-[#edc8d4]">Kept for transparency</span>
         </div>
       )}
@@ -328,7 +354,7 @@ export default function MarketDetail() {
 
             {!canPredict ? (
               <p className="mt-3 text-sm text-[#7a7768]">
-                {m.status === "resolved" ? "This market has been resolved — see the result above." : m.status === "cancelled" ? "This market was cancelled; stakes are refunded in full." : "This market is closed for new predictions."}
+                {!m.onchain ? "This legacy market is view-only because it is not linked to the Base contract." : m.status === "resolved" ? "This market has been resolved — see the result above." : m.status === "cancelled" ? "This market was cancelled; claim your full refund below." : "This market is closed for new predictions."}
               </p>
             ) : !fan ? (
               <div className="mt-4">
@@ -358,7 +384,7 @@ export default function MarketDetail() {
                   {[10, 50, 100].map((v) => (
                     <button key={v} type="button" onClick={() => setAmount(String(v))} className="rounded-lg border border-[#e7e2d3] bg-white px-2.5 py-1 text-xs font-semibold tabular-nums text-[#5f6172] transition hover:border-[#c9a227]">+{v}</button>
                   ))}
-                  <button type="button" onClick={getTestUsdc} disabled={busy} className="ml-auto text-xs text-[#a97f16] hover:underline disabled:opacity-50">Get test USDC</button>
+                  <Link href="/funds" className="ml-auto text-xs text-[#a97f16] hover:underline">Get test USDC</Link>
                 </div>
                 {address && (
                   <div className="flex items-center justify-between text-[11px]">
@@ -409,6 +435,12 @@ export default function MarketDetail() {
               {m.status === "resolved" && m.mine.some((p) => p.status === "won") && (
                 <button className="btn-gold mt-3 w-full" disabled={busy} onClick={claim}>{busy ? "Claiming…" : "Claim winnings"}</button>
               )}
+              {m.status === "cancelled" && m.mine.some((p) => ["active", "refundable", "lost"].includes(p.status)) && (
+                <button className="btn-gold mt-3 w-full" disabled={busy} onClick={refund}>{busy ? "Refunding…" : "Claim full refund"}</button>
+              )}
+              {m.status === "cancelled" && m.mine.some((p) => p.status === "refunded") && (
+                <div className="mt-3 rounded-lg bg-[#e1f5ee] px-3 py-2 text-center text-sm font-semibold text-[#0f6e56]">Refund claimed ✓</div>
+              )}
               {m.status === "resolved" && m.mine.some((p) => p.status === "claimed") && !m.mine.some((p) => p.status === "won") && (
                 <div className="mt-3 rounded-lg bg-[#e1f5ee] px-3 py-2 text-center text-sm font-semibold text-[#0f6e56]">Winnings claimed ✓</div>
               )}
@@ -420,6 +452,14 @@ export default function MarketDetail() {
       <Toast msg={toast.msg} tone={toast.tone} />
     </div>
   );
+}
+
+function transactionError(error: any, fallback: string) {
+  const message = String(error?.shortMessage ?? error?.message ?? "");
+  if (/rejected|denied|cancelled/i.test(message)) return "Wallet confirmation was cancelled.";
+  if (/insufficient funds|exceeds balance|transfer amount exceeds/i.test(message)) return "Not enough Base Sepolia ETH for gas or test USDC for this stake.";
+  if (/transaction_wallet_unavailable/i.test(message)) return "Open the connected Base wallet, then try again.";
+  return messageFor(message, fallback);
 }
 
 const CHART_COLORS = ["#d4af37", "#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#14b8a6", "#8b5cf6", "#6366f1"];

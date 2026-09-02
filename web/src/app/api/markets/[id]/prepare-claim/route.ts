@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireFan } from "@/lib/fanAuth";
-import { marketConfigured, buildClaimTx } from "@/lib/stellar";
-import { createTxIntent } from "@/lib/txIntents";
+import { baseContracts } from "@/base/contracts";
 
 // STEP 1 of a payout: build the unsigned claim() tx for a winner to sign in Freighter.
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -13,7 +12,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const market = await db.predictionMarket.findUnique({ where: { id } });
   if (!market) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (market.status !== "resolved") return NextResponse.json({ error: "not_resolved" }, { status: 409 });
-  if (!marketConfigured() || market.chainMarketId == null) return NextResponse.json({ error: "not_onchain" }, { status: 409 });
+  if (market.chainMarketId == null || !baseContracts.predictionMarket) return NextResponse.json({ error: "not_onchain" }, { status: 409 });
 
   // Require an unclaimed winning position.
   const winning = await db.prediction.findFirst({
@@ -21,12 +20,5 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   });
   if (!winning) return NextResponse.json({ error: "nothing_to_claim" }, { status: 409 });
 
-  try {
-    const { xdr, txHash } = await buildClaimTx({ fanAddress: auth.address, marketId: market.chainMarketId });
-    const intent = createTxIntent({ kind: "market-claim", fanId: auth.fanId, marketId: id, expectedSource: auth.address, txHash });
-    return NextResponse.json({ xdr, intentId: intent.id });
-  } catch (e: any) {
-    console.error("[api/markets/prepare-claim] failed:", e);
-    return NextResponse.json({ error: e?.message ?? "prepare_failed" }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true, chainMarketId: market.chainMarketId, marketContract: baseContracts.predictionMarket });
 }

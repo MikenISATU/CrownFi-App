@@ -12,7 +12,7 @@ type RoundLite = { id: string; title: string; status: string; category: string |
 //   ?roundId=…  / (no params)         → one round: the explicit id, else the open round, else the latest
 //
 // A CLOSED round contributes its anchored checkpoint tally (tamper-evident, matches what was
-// sealed on Stellar); an open round contributes its live count. Every contestant is listed,
+// sealed on Base); an open round contributes its live count. Every contestant is listed,
 // including those on zero, so the board is always complete.
 export async function GET(req: NextRequest) {
   const roundIdParam = req.nextUrl.searchParams.get("roundId");

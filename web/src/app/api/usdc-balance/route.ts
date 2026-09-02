@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readUsdcBalance } from "@/lib/stellar";
+import { formatUnits, isAddress } from "viem";
+import { baseContracts } from "@/base/contracts";
+import { erc20Abi } from "@/base/abis";
+import { basePublicClient } from "@/base/server";
 
-// Read a wallet's test-USDC balance (read-only). Returns 0 in mock mode.
+// Read the official USDC balance directly from Base. This endpoint never mints or moves funds.
 export async function GET(req: NextRequest) {
   const address = (req.nextUrl.searchParams.get("address") ?? "").trim();
-  if (!address.startsWith("G")) return NextResponse.json({ balanceUsdc: 0 });
+  if (!isAddress(address)) return NextResponse.json({ balanceUsdc: 0 });
   try {
-    const balanceUsdc = await readUsdcBalance(address);
+    const raw = await basePublicClient.readContract({
+      address: baseContracts.usdc,
+      abi: erc20Abi,
+      functionName: "balanceOf",
+      args: [address],
+    });
+    const balanceUsdc = Number(formatUnits(raw, 6));
     return NextResponse.json({ balanceUsdc });
   } catch (e) {
     console.error("[api/usdc-balance] read failed:", e);

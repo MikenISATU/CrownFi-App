@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireFan } from "@/lib/fanAuth";
-import { marketConfigured, buildUnstakeTx } from "@/lib/stellar";
-import { createTxIntent } from "@/lib/txIntents";
+import { baseContracts } from "@/base/contracts";
 
 // STEP 1 of cancelling a position: build the unsigned unstake() tx for the fan to sign.
 // Only valid while the market is open (on-chain enforces before-close too).
@@ -22,19 +21,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const pos = await db.prediction.findFirst({ where: { marketId: id, fanId: auth.fanId, option, status: "active" } });
   if (!pos) return NextResponse.json({ error: "nothing_to_unstake" }, { status: 409 });
 
-  // Off-chain market: the stake was recorded via the mock /predict path (no USDC moved), so
-  // the cancel is a plain DB reversal — nothing to sign. Mirrors the stake path's mock branch.
-  if (!marketConfigured() || market.chainMarketId == null) {
+  // Legacy free-play market: no USDC moved, so the reversal is database-only.
+  if (market.chainMarketId == null) {
     await db.prediction.deleteMany({ where: { marketId: id, fanId: auth.fanId, option, status: "active" } });
     return NextResponse.json({ mock: true, ok: true });
   }
-
-  try {
-    const { xdr, txHash } = await buildUnstakeTx({ fanAddress: auth.address, marketId: market.chainMarketId, option });
-    const intent = createTxIntent({ kind: "market-unstake", fanId: auth.fanId, marketId: id, option, expectedSource: auth.address, txHash });
-    return NextResponse.json({ xdr, intentId: intent.id });
-  } catch (e: any) {
-    console.error("[api/markets/prepare-unstake] failed:", e);
-    return NextResponse.json({ error: e?.message ?? "prepare_failed" }, { status: 500 });
-  }
+  if (!baseContracts.predictionMarket) return NextResponse.json({ error: "market_contract_not_configured" }, { status: 503 });
+  return NextResponse.json({ ok: true, chainMarketId: market.chainMarketId, marketContract: baseContracts.predictionMarket });
 }

@@ -4,11 +4,12 @@ import { PrivyProvider } from "@privy-io/react-auth";
 import { base, baseSepolia } from "viem/chains";
 import { targetBaseChain } from "@/base/config";
 import { publicPrivyAppId } from "@/lib/publicEnv";
+import { NoPrivyWalletBridge, PrivyWalletBridge } from "@/base/PrivyWalletBridge";
 
 // Privy is optional locally. When configured it gives email/Google users an EVM
 // embedded wallet automatically; Base Sepolia remains the default test network.
 export function PrivyWrapper({ children }: { children: ReactNode }) {
-  if (!publicPrivyAppId) return <>{children}</>;
+  if (!publicPrivyAppId) return <NoPrivyWalletBridge>{children}</NoPrivyWalletBridge>;
   return (
     <PrivyProvider
       appId={publicPrivyAppId}
@@ -23,7 +24,7 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
         appearance: { theme: "light", accentColor: "#0000FF", logo: "/brand/logo.png" },
       }}
     >
-      {children}
+      <PrivyWalletBridge>{children}</PrivyWalletBridge>
     </PrivyProvider>
   );
 }

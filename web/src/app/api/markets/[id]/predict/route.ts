@@ -5,7 +5,6 @@ import { parseOptions } from "@/lib/markets";
 import { rateLimit } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/ip";
 import { tryAwardPoints, PREDICT_POINTS } from "@/lib/loyalty";
-import { marketConfigured } from "@/lib/stellar";
 
 // POST — place a prediction (stake) on a market option. fanId from the verified session.
 // In mock mode this records the stake; live mode also submits stake() on the contract.
@@ -26,8 +25,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   try {
     const market = await db.predictionMarket.findUnique({ where: { id } });
     if (!market) return NextResponse.json({ error: "not_found" }, { status: 404 });
-    // On-chain markets must stake real USDC via prepare-stake/confirm-stake (Freighter-signed).
-    if (marketConfigured() && market.chainMarketId != null) {
+    // On-chain markets must be confirmed from a real Base transaction receipt.
+    if (market.chainMarketId != null) {
       return NextResponse.json({ error: "use_onchain_stake" }, { status: 409 });
     }
     if (market.status !== "open" || market.closeTime.getTime() <= Date.now()) {

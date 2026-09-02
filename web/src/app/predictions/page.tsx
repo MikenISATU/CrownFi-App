@@ -1,12 +1,9 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSession } from "@/session/SessionProvider";
 import { MarketCard, MarketView, CATEGORY_LABEL } from "@/components/MarketCard";
-import { BannerUpload } from "@/components/BannerUpload";
-import { MarketCloseField } from "@/components/MarketCloseField";
 import { MARKET_CATEGORIES } from "@/lib/segments";
-import { messageFor } from "@/lib/messages";
-import { Toast } from "@/components/ui";
 import { Icons } from "@/components/icons";
 import { MarketCandidateHint, withCandidateFlags } from "@/lib/markets";
 import { TestnetFundingPanel } from "@/components/TestnetFundingPanel";
@@ -21,15 +18,12 @@ const STATUSES = [
 ];
 
 export default function PredictionsLanding() {
-  const { fan, connect, connecting } = useSession();
+  const { isAdmin } = useSession();
   const [markets, setMarkets] = useState<MarketView[] | null>(null);
   const [candidates, setCandidates] = useState<MarketCandidateHint[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
   const [status, setStatus] = useState("active");
-  const [showCreate, setShowCreate] = useState(false);
-  const [toast, setToast] = useState({ msg: "", tone: "ok" as "ok" | "err" });
-  const flash = (msg: string, tone: "ok" | "err" = "ok") => { setToast({ msg, tone }); setTimeout(() => setToast({ msg: "", tone: "ok" }), 3200); };
 
   function load() {
     fetch("/api/markets", { cache: "no-store" }).then((r) => r.json()).then((d) => setMarkets(Array.isArray(d) ? d : [])).catch(() => setMarkets([]));
@@ -80,11 +74,7 @@ export default function PredictionsLanding() {
             </div>
           )}
         </div>
-        {fan ? (
-          <button className="btn-gold" onClick={() => setShowCreate((s) => !s)}>{showCreate ? "Close" : "Create a prediction"}</button>
-        ) : (
-          <button className="btn-ghost" onClick={connect}>{connecting ? "Connecting…" : "Connect to create"}</button>
-        )}
+        {isAdmin && <Link className="btn-gold" href="/admin">Manage Base markets</Link>}
       </header>
 
       <TestnetFundingPanel compact />
@@ -104,8 +94,6 @@ export default function PredictionsLanding() {
           </div>
         ))}
       </section>
-
-      {showCreate && fan && <CreateMarket onCreated={() => { setShowCreate(false); load(); flash("Prediction market created!"); }} onError={(m) => flash(m, "err")} />}
 
       {/* Search + filters (sticky so they stay reachable while scrolling the grid) */}
       <div className="sticky top-2 z-20 -mx-2 space-y-3 rounded-2xl border border-[#efe4c2]/70 bg-[#fbf9f2]/85 px-3 py-3 backdrop-blur-xl sm:top-3">
@@ -179,7 +167,7 @@ export default function PredictionsLanding() {
               ) : (
                 <>
                   <div className="font-display text-xl text-[#23252f]">No markets yet</div>
-                  <p className="mt-2 text-sm text-[#7a7768]">Prediction markets open up as pageants go live — or open your own above.</p>
+                  <p className="mt-2 text-sm text-[#7a7768]">Official Base markets open as pageant stages go live.</p>
                 </>
               )}
             </div>
@@ -191,82 +179,6 @@ export default function PredictionsLanding() {
         </section>
       )}
 
-      <Toast msg={toast.msg} tone={toast.tone} />
-    </div>
-  );
-}
-
-function CreateMarket({ onCreated, onError }: { onCreated: () => void; onError: (m: string) => void }) {
-  const [question, setQuestion] = useState("");
-  const [category, setCategory] = useState<string>(MARKET_CATEGORIES[0].key);
-  const [options, setOptions] = useState<string[]>(["", ""]); // start with two outcome fields
-  const [closeTime, setCloseTime] = useState(() => new Date(Date.now() + 72 * 3_600_000).toISOString()); // default: 3 days
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const setOption = (i: number, v: string) => setOptions((prev) => prev.map((o, idx) => (idx === i ? v : o)));
-  const addOption = () => setOptions((prev) => (prev.length < 32 ? [...prev, ""] : prev));
-  const removeOption = (i: number) => setOptions((prev) => prev.filter((_, idx) => idx !== i));
-
-  const opts = options.map((s) => s.trim()).filter(Boolean);
-  const valid = question.trim().length >= 3 && opts.length >= 2 && !!closeTime;
-  // Human-readable reason the button is disabled (so it never feels "broken").
-  const hint = question.trim().length < 3 ? "Enter a question (at least 3 characters)."
-    : opts.length < 2 ? "Add at least 2 outcomes."
-    : !closeTime ? "Choose when predictions lock." : "";
-
-  async function submit() {
-    if (!valid || busy) return;
-    setBusy(true);
-    try {
-      const r = await fetch("/api/markets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, category, options: opts, closeTime, bannerUrl }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok && d.id) onCreated();
-      else onError(messageFor(d.error, "Could not create market."));
-    } catch {
-      onError("Network error — please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="card-gold space-y-3 p-5">
-      <h3 className="tracking-tight text-xl font-semibold text-[#23252f]">Create a market</h3>
-      <input className="field" placeholder="Question (e.g. Who wins the Q&A round?)" value={question} onChange={(e) => setQuestion(e.target.value)} />
-      <select className="field" value={category} onChange={(e) => setCategory(e.target.value)}>
-        {MARKET_CATEGORIES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-      </select>
-
-      {/* Outcomes — one field each, add/remove rows */}
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-[#5f6172]">Outcomes <span className="font-normal text-[#9a968b]">· candidate names or any result</span></div>
-        {options.map((opt, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="w-5 shrink-0 text-right text-xs tabular-nums text-[#9a968b]">{i + 1}</span>
-            <input className="field" placeholder={`Candidate or outcome ${i + 1}`} value={opt} onChange={(e) => setOption(i, e.target.value)} />
-            {options.length > 2 && (
-              <button type="button" onClick={() => removeOption(i)} aria-label={`Remove outcome ${i + 1}`} className="shrink-0 rounded-lg border border-[#e7e2d3] p-2 text-[#9a968b] transition hover:border-[#e7d0d0] hover:text-[#9f1239]">
-                <Icons.X size={14} strokeWidth={2} />
-              </button>
-            )}
-          </div>
-        ))}
-        {options.length < 32 && (
-          <button type="button" onClick={addOption} className="text-sm font-semibold text-[#a97f16] hover:underline">+ Add outcome</button>
-        )}
-      </div>
-
-      <MarketCloseField value={closeTime} onChange={setCloseTime} />
-      <BannerUpload value={bannerUrl} onUploaded={setBannerUrl} />
-      <div className="flex flex-wrap items-center gap-3">
-        <button className="btn-gold w-fit" disabled={!valid || busy} onClick={submit}>{busy ? "Creating…" : "Create market"}</button>
-        {!valid && !busy && <span className="text-xs text-[#9a968b]">{hint}</span>}
-      </div>
     </div>
   );
 }

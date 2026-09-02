@@ -8,7 +8,7 @@ import { CountUp } from "@/components/ui";
 import { getJson } from "@/lib/api";
 import styles from "./home.module.css";
 
-type Stats = { votes: number; collectiblesSold: number; fans: number; predictions: number };
+type Stats = { votes: number; collectiblesSold: number; fans: number; predictions: number; topContestants?: { name: string; sash: string; votes: number }[] };
 
 const FALLBACK_CANDIDATES: Slide[] = [
   { id: "philippines", name: "Isabel Reyes", country: "Philippines", sash: "Philippines", portraitUrl: "/candidates/philippines.webp" },
@@ -16,13 +16,6 @@ const FALLBACK_CANDIDATES: Slide[] = [
   { id: "vietnam", name: "Linh Nguyen", country: "Vietnam", sash: "Vietnam", portraitUrl: "/candidates/vietnam.webp" },
   { id: "japan", name: "Aiko Mori", country: "Japan", sash: "Japan", portraitUrl: "/candidates/japan.webp" },
   { id: "indonesia", name: "Ayu Pratama", country: "Indonesia", sash: "Indonesia", portraitUrl: "/candidates/indonesia.webp" },
-];
-
-const FALLBACK_MARKETS = [
-  { label: "Live · Q&A", question: "Who wins the Q&A round?", left: "Delegate A", leftPct: 62, right: "Delegate B", rightPct: 38 },
-  { label: "Live · Long gown", question: "Top score in evening wear?", left: "Philippines", leftPct: 54, right: "Thailand", rightPct: 46 },
-  { label: "Upcoming · Crown", question: "Who takes the final crown?", left: "Open field", leftPct: 100, right: "", rightPct: 0 },
-  { label: "Resolved · Swimsuit", question: "Swimsuit round winner", left: "Resolved onchain", leftPct: 100, right: "", rightPct: 0 },
 ];
 
 const REWARD_TASKS = [
@@ -67,8 +60,8 @@ export default function Home() {
   }, []);
 
   const candidates = useMemo(() => (slides.length ? slides : FALLBACK_CANDIDATES).slice(0, 5), [slides]);
-  const marketCards = useMemo(() => markets.length ? markets.slice(0, 4).map(marketPreview) : FALLBACK_MARKETS.map((m, i) => ({ ...m, key: String(i) })), [markets]);
-  const tally = [46, 31, 23];
+  const marketCards = useMemo(() => markets.filter((market) => market.onchain).slice(0, 4).map(marketPreview), [markets]);
+  const voteTotal = stats?.topContestants?.reduce((sum, entry) => sum + entry.votes, 0) ?? 0;
 
   return (
     <div className={styles.home}>
@@ -82,7 +75,7 @@ export default function Home() {
             <Link className={styles.primaryButton} href="/vote">Enter CrownFi</Link>
             <Link className={styles.secondaryButton} href="#platform-story">Explore the platform</Link>
           </div>
-          <div className={styles.heroChips}><span>Verifiable votes</span><span>Digital collectibles</span><span>Live predictions</span></div>
+          <div className={styles.heroChips}><span>Verifiable votes</span><span>Base settlement</span><span>Live predictions</span></div>
         </div>
 
         <div className={styles.crownScene} aria-label="CrownFi crown in a dimensional orbit">
@@ -135,9 +128,13 @@ export default function Home() {
             <h3>One wallet.<br /><em>One verified vote.</em></h3>
             <p>Select a delegate, confirm once and keep a cryptographic receipt proving your vote belongs in the official count.</p>
             <div className={styles.actions}><Link className={styles.primaryButton} href="/vote">Vote now</Link><Link className={styles.secondaryButton} href="/verify">Verify a receipt</Link></div>
-            <div className={styles.tally}>
-              {candidates.slice(0, 3).map((candidate, index) => <div key={candidate.id}><span>{candidate.name}</span><i><b style={{ width: `${tally[index]}%` }} /></i><strong>{tally[index]}%</strong></div>)}
-            </div>
+            {voteTotal > 0 ? <div className={styles.tally}>
+              {candidates.slice(0, 3).map((candidate) => {
+                const votes = stats?.topContestants?.find((entry) => entry.name === candidate.name || entry.sash.toLowerCase() === candidate.sash.toLowerCase())?.votes ?? 0;
+                const percent = Math.round((votes / voteTotal) * 100);
+                return <div key={candidate.id}><span>{candidate.name}</span><i><b style={{ width: `${percent}%` }} /></i><strong>{percent}%</strong></div>;
+              })}
+            </div> : <p className={styles.liveDataNote}>Live standings appear after the first verified vote.</p>}
           </div>
         </div>
       </section>
@@ -156,7 +153,7 @@ export default function Home() {
             <Link href="/predictions">Open all markets →</Link>
           </div>
           <div className={styles.marketGrid}>
-            {marketCards.map(({ key, ...market }) => <MarketPreview key={key} {...market} />)}
+            {marketCards.length > 0 ? marketCards.map(({ key, ...market }) => <MarketPreview key={key} {...market} />) : <div className={styles.emptyMarket}><strong>No Base market is open yet.</strong><span>The first official market will appear here after it is created on Base Sepolia.</span></div>}
           </div>
         </div>
       </section>
@@ -170,16 +167,16 @@ export default function Home() {
 
         <div className={styles.productGrid}>
           <article className={`${styles.productPanel} ${styles.collectPanel}`}>
-            <PanelMeta label="Digital collectible vault" route="/contestants" />
+            <PanelMeta label="Digital collectible vault" route="Coming soon" />
             <div className={styles.collectStage}>
               {["/nfts/thailand.webp", "/nfts/philippines.webp", "/nfts/vietnam.webp"].map((src, index) => <img src={src} alt="CrownFi delegate collectible" key={src} style={{ "--nft-index": index } as React.CSSProperties} />)}
             </div>
-            <div className={styles.productCopy}><h3>Own the <em>moment.</em></h3><p>Support a delegate through official editions while the collectible remains portable through its onchain ownership record.</p><Link href="/contestants">Explore collectibles →</Link></div>
+            <div className={styles.productCopy}><h3>Own the <em>moment.</em></h3><p>Support a delegate through official editions while the collectible remains portable through its onchain ownership record.</p><span className={styles.comingSoon}>Coming soon</span></div>
           </article>
 
           <article className={`${styles.productPanel} ${styles.loyaltyPanel}`}>
             <PanelMeta label="Fan rewards and ranking" route="/loyalty" />
-            <div className={styles.productCopy}><h3>Participation becomes <em>momentum.</em></h3><p>Tasks, points, shop rewards and live standings share one dimensional fan dashboard.</p></div>
+            <div className={styles.productCopy}><h3>Participation becomes <em>momentum.</em></h3><p>Tasks, points, shop rewards and live standings share one dimensional fan dashboard.</p><Link href="/loyalty">Open fan rewards →</Link></div>
             <div className={styles.loyaltyExperience}>
               <div className={styles.pointsStage}><span className={styles.rankLeft}><b>#08</b>Global rank</span><div className={styles.pointsOrb}><b>1,250</b><span>Crown points</span></div><span className={styles.rankRight}><b>+180</b>This week</span></div>
               <div className={styles.rewardBoard}>

@@ -1,37 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
+import { formatUnits, parseEventLogs } from "viem";
 import { db } from "@/lib/db";
 import { requireFan } from "@/lib/fanAuth";
-import { submitSignedXdr } from "@/lib/stellar";
-import { consumeTxIntent } from "@/lib/txIntents";
 import { tryAwardPoints, PREDICT_POINTS } from "@/lib/loyalty";
+import { baseContracts } from "@/base/contracts";
+import { predictionMarketAbi } from "@/base/abis";
+import { addressesEqual, verifiedBaseReceipt } from "@/base/server";
 
-// STEP 2 of an on-chain prediction: submit the fan's signed stake tx, then record the prediction
-// and award loyalty points. The intent (matched by txHash) prevents tampering / replay.
+// Confirm a Base stake receipt, then mirror the verified event in Supabase.
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = requireFan(req);
   if (auth instanceof NextResponse) return auth;
 
   const { id } = await ctx.params;
   const b = await req.json().catch(() => null);
-  const signedXdr = String(b?.signedXdr ?? "");
-  const intentId = String(b?.intentId ?? "");
-  if (!signedXdr || !intentId) return NextResponse.json({ error: "missing_fields" }, { status: 400 });
+  const txHash = String(b?.txHash ?? "");
+  const option = Number(b?.option);
+  if (!txHash || !Number.isInteger(option) || option < 0) return NextResponse.json({ error: "missing_fields" }, { status: 400 });
 
   const market = await db.predictionMarket.findUnique({ where: { id } });
   if (!market) return NextResponse.json({ error: "not_found" }, { status: 404 });
-
-  const intent = consumeTxIntent(intentId);
-  if (!intent || intent.kind !== "market-stake" || intent.fanId !== auth.fanId || intent.marketId !== id) {
-    return NextResponse.json({ error: "invalid_or_expired_intent" }, { status: 409 });
-  }
+  if (market.chainMarketId == null || !baseContracts.predictionMarket) return NextResponse.json({ error: "market_not_onchain" }, { status: 409 });
 
   try {
-    const submit = await submitSignedXdr(signedXdr, { source: auth.address, txHash: intent.txHash });
+    const existing = await db.prediction.findFirst({ where: { marketId: id, fanId: auth.fanId, txHash } });
+    if (existing) return NextResponse.json({ ok: true, prediction: existing, txHash, pointsAwarded: 0 });
+
+    const receipt = await verifiedBaseReceipt({ hash: txHash, from: auth.address, to: baseContracts.predictionMarket });
+    const events = parseEventLogs({ abi: predictionMarketAbi, logs: receipt.logs, eventName: "Staked", strict: true });
+    const staked = events.find((event) =>
+      Number(event.args.marketId) === market.chainMarketId &&
+      Number(event.args.option) === option &&
+      addressesEqual(event.args.user, auth.address)
+    );
+    if (!staked) return NextResponse.json({ error: "stake_event_mismatch" }, { status: 409 });
+    const amountUsdc = Number(formatUnits(staked.args.amount, 6));
+    if (!(amountUsdc > 0)) return NextResponse.json({ error: "invalid_stake_amount" }, { status: 409 });
     const prediction = await db.prediction.create({
-      data: { marketId: id, fanId: auth.fanId, option: intent.option, amount: intent.amountUsdc, txHash: submit.txHash },
+      data: { marketId: id, fanId: auth.fanId, option, amount: amountUsdc, txHash },
     });
     await tryAwardPoints(auth.fanId, PREDICT_POINTS, "predict");
-    return NextResponse.json({ ok: true, prediction, txHash: submit.txHash, pointsAwarded: PREDICT_POINTS });
+    return NextResponse.json({ ok: true, prediction, txHash, pointsAwarded: PREDICT_POINTS });
   } catch (e: any) {
     console.error("[api/markets/confirm-stake] failed:", e);
     return NextResponse.json({ error: e?.message ?? "confirm_failed" }, { status: 500 });

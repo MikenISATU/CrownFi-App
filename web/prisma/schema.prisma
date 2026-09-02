@@ -149,7 +149,7 @@ model Vote {
   @@index([roundId])
 }
 
-// On-chain proof for a closed round. In live mode, anchorTx is the real Stellar transaction hash.
+// On-chain proof for a closed round. anchorTx is the Base transaction hash.
 model Checkpoint {
   id         String      @id @default(cuid())
   round      VotingRound @relation(fields: [roundId], references: [id])
@@ -157,7 +157,7 @@ model Checkpoint {
   merkleRoot String
   tallyHash  String
   totalVotes Int
-  anchorTx   String? // Stellar tx hash (or mock)
+  anchorTx   String? // Base transaction hash
   tallyJson  String // aggregated results snapshot
   leavesJson String // ordered leaf hashes, for proof generation
   createdAt  DateTime    @default(now())
@@ -172,7 +172,7 @@ model Ticket {
   seat      String
   priceUsdc Float
   tokenId   String? // on-chain NFT token id (or mock)
-  mintTx    String? // Stellar tx hash (or mock)
+  mintTx    String? // Base transaction hash when ticketing opens
   status    String   @default("minted")
   createdAt DateTime @default(now())
 }
@@ -202,7 +202,7 @@ model Purchase {
   collectibleId String
   priceUsdc     Float
   tokenId       String?
-  mintTx        String?
+  mintTx        String? // Base transaction hash when collectible sales open
   createdAt     DateTime    @default(now())
 
   @@unique([fanId, collectibleId]) // one collectible per fan (anti points-farming); run `prisma migrate dev`
@@ -386,7 +386,7 @@ model KycLog {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PHASE 4 — Prediction markets (mirror of on-chain state so users browse w/o a wallet).
-// Settlement lives in the prediction-market Soroban contract; this is the app's view + intake.
+// Settlement lives in the Base prediction-market contract; this is the app's indexed view.
 // ─────────────────────────────────────────────────────────────────────────────
 // Uploaded images (market banners, candidate photos). Stored in Postgres and served via
 // /api/images/[id] — the filesystem is read-only on serverless, so disk writes are not an option.

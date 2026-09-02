@@ -4,9 +4,7 @@ import { useState } from "react";
 import { Check, CircleDollarSign, Copy, ExternalLink, Fuel } from "lucide-react";
 import { useSession } from "@/session/SessionProvider";
 import { baseContracts } from "@/base/contracts";
-
-export const BASE_SEPOLIA_ETH_FAUCET = "https://portal.cdp.coinbase.com/products/faucet";
-export const BASE_SEPOLIA_USDC_FAUCET = "https://faucet.circle.com/";
+import { BASE_SEPOLIA_ETH_FAUCET, BASE_SEPOLIA_USDC_FAUCET } from "@/base/faucets";
 
 type TestnetFundingPanelProps = {
   compact?: boolean;
@@ -71,7 +69,7 @@ export function TestnetFundingPanel({ compact = false, className = "" }: Testnet
                 <h3 className="mt-0.5 font-display text-xl font-semibold">Base Sepolia ETH</h3>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Open Coinbase Developer Platform, select Base Sepolia and ETH, then paste your wallet address.</p>
+            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Open Alchemy’s Base Sepolia faucet, paste your wallet address, and request test ETH for gas.</p>
             <a href={BASE_SEPOLIA_ETH_FAUCET} target="_blank" rel="noopener noreferrer" className="btn-gold mt-4 !min-h-[38px] !px-4 !py-2 text-xs">
               Get test ETH <ExternalLink size={14} />
             </a>
@@ -87,7 +85,7 @@ export function TestnetFundingPanel({ compact = false, className = "" }: Testnet
                 <h3 className="mt-0.5 font-display text-xl font-semibold">Base Sepolia USDC</h3>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Open Circle’s faucet, choose Base Sepolia and USDC, then send it to the same wallet.</p>
+            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Open Circle’s official faucet, choose Base Sepolia and USDC, then send it to the same wallet. No swap is required.</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <a href={BASE_SEPOLIA_USDC_FAUCET} target="_blank" rel="noopener noreferrer" className="btn-gold !min-h-[38px] !px-4 !py-2 text-xs">
                 Get test USDC <ExternalLink size={14} />
