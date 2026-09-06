@@ -6,7 +6,7 @@
    is the premium secondary accent. Values follow Base's published color system. */
 :root {
   color-scheme: light;
-  --base-blue: #0000ff;
+  --base-blue: #0052ff;
   --base-white: #ffffff;
   --base-gray-10: #eef0f3;
   --base-gray-15: #dee1e7;
@@ -50,18 +50,18 @@ body {
     box-shadow: 0 1px 2px rgba(10,11,13,0.04), 0 14px 34px -24px rgba(50,53,61,0.32);
   }
   .glass-hover { @apply transition duration-200 hover:-translate-y-0.5; }
-  .glass-hover:hover { border-color: var(--crown-gold); box-shadow: 0 20px 46px -28px rgba(0,0,255,0.42); }
+  .glass-hover:hover { border-color: var(--crown-gold); box-shadow: 0 20px 46px -28px rgba(0,82,255,0.34); }
   /* Primary CTA — exact Base Blue, with a restrained CrownFi-gold edge. */
   .btn-gold {
     @apply relative inline-flex min-h-[40px] items-center justify-center gap-2 rounded-[11px] border px-6 py-2.5 text-sm font-semibold tracking-wide disabled:pointer-events-none disabled:opacity-40;
     color: var(--base-white);
     border-color: var(--base-blue);
     background: var(--base-blue);
-    box-shadow: inset 0 -2px 0 var(--crown-gold), 0 14px 26px -18px rgba(0,0,255,0.72);
+    box-shadow: inset 0 -2px 0 var(--crown-gold), 0 14px 26px -18px rgba(0,82,255,0.58);
     transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
   }
   .btn-gold::before { content: none; }
-  .btn-gold:hover { color: var(--crown-gold-bright); border-color: var(--crown-gold); background: var(--base-gray-100); box-shadow: 0 16px 30px -18px rgba(0,0,255,0.72); transform: translateY(-1px); }
+  .btn-gold:hover { color: var(--crown-gold-bright); border-color: var(--crown-gold); background: var(--base-gray-100); box-shadow: 0 16px 30px -18px rgba(0,82,255,0.58); transform: translateY(-1px); }
   .btn-gold:active { transform: translateY(0) scale(0.98); }
   /* Secondary — clean white/cool-gray with a Base-blue interaction state. */
   .btn-ghost { @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border bg-white px-5 py-2.5 text-sm font-medium tracking-wide transition duration-150 active:translate-y-px disabled:opacity-40; border-color: var(--base-gray-15); color: var(--base-gray-80); }
@@ -78,7 +78,7 @@ body {
     transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
   }
   .card-gold::before { content: none; }
-  .card-gold:hover { border-color: var(--base-blue); box-shadow: 0 18px 38px -26px rgba(0,0,255,0.46); }
+  .card-gold:hover { border-color: var(--base-blue); box-shadow: 0 18px 38px -26px rgba(0,82,255,0.38); }
   /* Selected/active variant — warm face instead of white so the chosen card reads at a glance. */
   .card-gold-active::before { background-color: #fff8e6; }
 
@@ -105,7 +105,7 @@ body {
   /* Input — touch-friendly height, crisp Base-blue focus state. */
   .field { @apply w-full min-h-[44px] rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-none transition duration-150; border-color: var(--base-gray-15); color: var(--base-gray-100); }
   .field::placeholder { color: var(--base-gray-50); }
-  .field:focus { border-color: var(--base-blue); box-shadow: 0 0 0 4px rgba(0,0,255,0.12); }
+  .field:focus { border-color: var(--base-blue); box-shadow: 0 0 0 4px rgba(0,82,255,0.12); }
   .tag-on { @apply inline-flex items-center gap-1 rounded-full bg-[#e6f6ef] px-2 py-0.5 text-[11px] font-semibold text-[#0f6e56]; }
   .tag-off { @apply inline-flex items-center gap-1 rounded-full bg-[#f1eee4] px-2 py-0.5 text-[11px] font-semibold text-[#6b6552]; }
   .surface-soft { background: var(--base-gray-10); }
@@ -298,7 +298,7 @@ html:not(.dark) .bg-\[\#1a1f35\] { background-color: var(--base-blue) !important
 html:not(.dark) .border-\[\#eee6d3\],
 html:not(.dark) .border-\[\#e7e2d3\],
 html:not(.dark) .border-\[\#dcd6c6\] { border-color: var(--base-gray-15) !important; }
-html:not(.dark) .from-\[\#d4af37\] { --tw-gradient-from: var(--base-blue) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgba(0,0,255,0) var(--tw-gradient-to-position) !important; }
+html:not(.dark) .from-\[\#d4af37\] { --tw-gradient-from: var(--base-blue) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgba(0,82,255,0) var(--tw-gradient-to-position) !important; }
 html:not(.dark) .to-\[\#b8912f\] { --tw-gradient-to: var(--base-blue) var(--tw-gradient-to-position) !important; }
 html:not(.dark) .text-\[\#1a1f35\].from-\[\#d4af37\],
 html:not(.dark) .from-\[\#d4af37\].text-\[\#1a1f35\] { color: var(--base-white) !important; }

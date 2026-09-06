@@ -123,7 +123,7 @@ export default function TicketPrintPage() {
           <div className="flex items-center gap-3">
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white shadow-md ring-1 ring-[#eee6d3]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo.png" alt="CrownFi" className="h-9 w-9 object-contain" />
+              <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-9 w-9 rounded-xl object-cover" />
             </div>
             <div>
               <div className="font-display text-xl font-bold tracking-tight text-[#23252f]">CrownFi</div>
@@ -292,7 +292,7 @@ export default function TicketPrintPage() {
             <div className="w-full my-5 flex items-center gap-3">
               <div className="flex-1 border-t border-dashed border-[#dcd6c6]"></div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo.png" alt="" className="h-4 w-4 shrink-0 object-contain" />
+              <img src="/brand/crownfi-base-logo.png" alt="" className="h-4 w-4 shrink-0 rounded object-cover" />
               <div className="flex-1 border-t border-dashed border-[#dcd6c6]"></div>
             </div>
 
@@ -348,7 +348,7 @@ export default function TicketPrintPage() {
           <div className="flex items-center justify-between border-t border-[#eee6d3] pt-3">
             <div className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo.png" alt="CrownFi" className="h-4 w-4 object-contain" />
+              <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-4 w-4 rounded object-cover" />
               <span className="text-[10px] font-bold text-[#9a968b] tracking-wider uppercase">CrownFi — Built on Base</span>
             </div>
             <div className="mono text-[9px] text-[#b8b0a0]">Page 1 / 1</div>

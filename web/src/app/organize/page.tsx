@@ -22,7 +22,7 @@ export default function OrganizePage() {
       <div className="glass mx-auto max-w-lg p-8 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full surface-soft">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo.png" alt="CrownFi" className="h-7 w-7 object-contain" />
+          <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-7 w-7 rounded-lg object-cover" />
         </div>
         <h1 className="mt-3 tracking-tight text-2xl text-[#23252f]">Request received</h1>
         <p className="mt-2 text-sm text-[#5f6172]">Thanks — we’ll review your pageant and reply at {f.email}, usually within 2–3 business days.</p>

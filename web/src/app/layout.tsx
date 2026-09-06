@@ -22,14 +22,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "CrownFi — Crown your queen, on-chain",
     description: `Vote, predict, and collect — every result sealed on ${chainLabel}.`,
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "CrownFi — crown your queen, on-chain" }],
+    images: [{ url: "/brand/crownfi-base-logo.png", width: 1256, height: 1256, alt: "CrownFi on Base" }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "CrownFi — Crown your queen, on-chain",
     description: `Vote, predict, and collect — every result sealed on ${chainLabel}.`,
-    images: ["/og.png"],
+    images: ["/brand/crownfi-base-logo.png"],
   },
 };
 

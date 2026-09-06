@@ -103,7 +103,7 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
 function SiteFooter() {
   const [subscribed, setSubscribed] = useState(false);
   return (
-    <footer className="mt-24 border-t-4 border-[#0000ff] bg-[#0a0b0d] text-[#eef0f3]">
+    <footer className="mt-24 border-t-4 border-[#0052ff] bg-[#0a0b0d] text-[#eef0f3]">
       {/* CrownFi gold sits beneath the Base-blue edge as a restrained brand accent. */}
       <div className="h-px w-full bg-[#d4af37]" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
@@ -132,7 +132,7 @@ function SiteFooter() {
             <div className="mt-5 flex items-center gap-2">
               {SOCIALS.map(({ href, label, Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-full text-[#b1b7c3] ring-1 ring-[#5b616e] transition hover:bg-[#0000ff] hover:text-white hover:ring-[#d4af37]">
+                  className="grid h-9 w-9 place-items-center rounded-full text-[#b1b7c3] ring-1 ring-[#5b616e] transition hover:bg-[#0052ff] hover:text-white hover:ring-[#d4af37]">
                   <Icon />
                 </a>
               ))}
@@ -157,7 +157,7 @@ function SiteFooter() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <span className="inline-flex items-center rounded-md bg-white px-2 py-1"><img src="/brand/gcash.svg" alt="GCash" className="h-5 w-auto" /></span>
           </span>
-          <span className="rounded-full bg-[#0000ff] px-2.5 py-1 text-[11px] text-white ring-1 ring-[#d4af37]/50">Built on {CHAIN_LABEL}</span>
+          <span className="rounded-full bg-[#0052ff] px-2.5 py-1 text-[11px] text-white ring-1 ring-[#d4af37]/50">Built on {CHAIN_LABEL}</span>
           <span className="ml-auto text-[#b1b7c3]">Crown your queen, on-chain.</span>
         </div>
 
@@ -229,7 +229,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
         <div className="mx-auto max-w-[1440px]">
-          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#d4af37]/80 bg-[#0000ff] px-2.5 py-2.5 shadow-[0_16px_38px_-20px_rgba(0,0,255,0.65)] sm:px-6">
+          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#d4af37]/80 bg-[#0052ff] px-2.5 py-2.5 shadow-[0_16px_38px_-20px_rgba(0,82,255,0.52)] sm:px-6">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <button className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#d4af37]/25 text-[#f3ddb0] transition hover:bg-white/10 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
@@ -244,7 +244,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <nav className="hidden items-center gap-1 text-sm sm:flex">
               {NAV_DIRECT.map((l) => (
                 <Link key={l.href} href={l.href}
-                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-white text-[#0000ff] shadow-[inset_0_-2px_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
+                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-white text-[#0052ff] shadow-[inset_0_-2px_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
                   {l.label}
                 </Link>
               ))}
@@ -255,7 +255,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 return (
                   <div key={g.label} className="relative">
                     <button onClick={() => setOpenGroup(open ? null : g.label)} aria-expanded={open} aria-haspopup="menu"
-                      className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${active ? "bg-white text-[#0000ff] shadow-[inset_0_-2px_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
+                      className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${active ? "bg-white text-[#0052ff] shadow-[inset_0_-2px_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
                       {g.label} <Icons.ChevronDown size={14} strokeWidth={2} className={`transition ${open ? "rotate-180" : ""}`} />
                     </button>
                     {open && (
@@ -264,7 +264,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <div role="menu" className="glass absolute right-0 z-50 mt-2 w-44 p-1.5">
                           {g.links.map((l) => (
                             <Link key={l.href} href={l.href} onClick={() => setOpenGroup(null)} role="menuitem"
-                              className={`block rounded-lg px-3 py-2 text-sm transition ${path === l.href ? "bg-[#eef0f3] font-semibold text-[#0000ff] shadow-[inset_3px_0_0_#d4af37]" : "text-[#32353d] hover:bg-[#eef0f3] hover:text-[#0000ff]"}`}>
+                              className={`block rounded-lg px-3 py-2 text-sm transition ${path === l.href ? "bg-[#eef0f3] font-semibold text-[#0052ff] shadow-[inset_3px_0_0_#d4af37]" : "text-[#32353d] hover:bg-[#eef0f3] hover:text-[#0052ff]"}`}>
                               {l.label}
                             </Link>
                           ))}
@@ -286,10 +286,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {drawer && (
             <>
               <div className="fixed inset-0 top-0 z-[-1] sm:hidden" onClick={() => setDrawer(false)} />
-              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#d4af37]/80 bg-[#0000ff] p-3 shadow-[0_24px_50px_-24px_rgba(0,0,255,0.7)] sm:hidden">
+              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#d4af37]/80 bg-[#0052ff] p-3 shadow-[0_24px_50px_-24px_rgba(0,82,255,0.58)] sm:hidden">
                 {links.map((l) => (
                   <Link key={l.href} href={l.href} onClick={() => setDrawer(false)}
-                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-white font-semibold text-[#0000ff] shadow-[inset_3px_0_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
+                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-white font-semibold text-[#0052ff] shadow-[inset_3px_0_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
                     {l.label}
                   </Link>
                 ))}
@@ -328,7 +328,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <SiteFooter />
 
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#d4af37] bg-[#0000ff]/95 backdrop-blur-xl sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#d4af37] bg-[#0052ff]/95 backdrop-blur-xl sm:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
           {TABS.map(({ href, label, Icon }) => {
             const active = path === href;

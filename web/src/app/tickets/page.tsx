@@ -178,7 +178,7 @@ function TicketsPageInner() {
           <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/brand/logo.png"
+              src="/brand/crownfi-base-logo.png"
               alt="CrownFi"
               className="mx-auto h-20 w-20 object-contain drop-shadow-[0_10px_24px_rgba(184,145,47,0.38)]"
             />

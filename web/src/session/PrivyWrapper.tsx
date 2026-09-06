@@ -21,7 +21,7 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
           ethereum: { createOnLogin: "users-without-wallets" },
           solana: { createOnLogin: "off" },
         },
-        appearance: { theme: "light", accentColor: "#0000FF", logo: "/brand/crownfi-base-logo.png" },
+        appearance: { theme: "light", accentColor: "#0052FF", logo: "/brand/crownfi-base-logo.png" },
       }}
     >
       <PrivyWalletBridge>{children}</PrivyWalletBridge>

@@ -102,7 +102,7 @@ export function BaseWalletConnect() {
             <>
               <div className="my-1 flex items-center gap-2 px-2 text-[10px] uppercase tracking-wider text-[#9a968b]"><span className="h-px flex-1 bg-[#eee6d3]" />or<span className="h-px flex-1 bg-[#eee6d3]" /></div>
               <PrivyEmailButton onStart={() => setOpen(false)}>
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#0000ff] text-white"><Icons.Mail size={16} strokeWidth={1.9} /></span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#0052ff] text-white"><Icons.Mail size={16} strokeWidth={1.9} /></span>
                 <span className="min-w-0">
                   <span className="block font-semibold text-[#23252f]">Continue with email</span>
                   <span className="mt-0.5 block text-[11px] text-[#8a8779]">Privy creates your Base wallet automatically</span>
