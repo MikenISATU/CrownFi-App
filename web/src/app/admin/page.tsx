@@ -812,6 +812,20 @@ function Markets({ markets, onCreate, onResolve }: any) {
   const setOption = (i: number, v: string) => setF((p) => ({ ...p, options: p.options.map((o, idx) => (idx === i ? v : o)) }));
   const addOption = () => setF((p) => (p.options.length < MAX_MARKET_OPTIONS ? { ...p, options: [...p.options, ""] } : p));
   const removeOption = (i: number) => setF((p) => ({ ...p, options: p.options.filter((_, idx) => idx !== i) }));
+  const isYesNo = f.category === "yes_no";
+
+  function setCategory(category: string) {
+    setF((previous) => ({
+      ...previous,
+      category,
+      options: category === "yes_no"
+        ? ["Yes", "No"]
+        : previous.category === "yes_no"
+          ? ["", ""]
+          : previous.options,
+    }));
+    setCsvStatus(null);
+  }
 
   const opts = f.options.map((s) => s.trim()).filter(Boolean);
   const valid = f.question.trim().length >= 3 && opts.length >= 2 && opts.length <= MAX_MARKET_OPTIONS && !!f.closeTime;
@@ -848,7 +862,8 @@ function Markets({ markets, onCreate, onResolve }: any) {
     <div className="space-y-4">
       <div className="glass grid gap-3 p-4">
         <input className="field" placeholder="Prediction question (e.g. Who wins the Q&A round?)" value={f.question} onChange={set("question")} />
-        <select className="field" value={f.category} onChange={set("category")}>{MARKET_CATEGORIES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select>
+        <select className="field" value={f.category} onChange={(event) => setCategory(event.target.value)}>{MARKET_CATEGORIES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select>
+        {isYesNo && <div className="rounded-xl border border-[#d9c77e] bg-[#fffaf0] px-4 py-3 text-xs leading-relaxed text-[#5f6172]"><b className="text-[#23252f]">Binary market:</b> outcomes are fixed to Yes and No so the market stays clear and consistent.</div>}
         <div className="rounded-xl border border-[#d9c77e] bg-[#fffaf0] p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -872,14 +887,14 @@ function Markets({ markets, onCreate, onResolve }: any) {
             <div key={i} className="flex items-center gap-2">
               <span className="w-5 shrink-0 text-right text-xs tabular-nums text-[#9a968b]">{i + 1}</span>
               <Flag sash={countryCodeFromText(opt) ?? ""} className="!h-4 !w-6" />
-              <input className="field" placeholder={`Outcome ${i + 1}`} value={opt} onChange={(e) => setOption(i, e.target.value)} />
-              {f.options.length > 2 && (
+              <input className="field" placeholder={`Outcome ${i + 1}`} value={opt} readOnly={isYesNo} aria-readonly={isYesNo} onChange={(e) => setOption(i, e.target.value)} />
+              {!isYesNo && f.options.length > 2 && (
                 <button type="button" onClick={() => removeOption(i)} aria-label={`Remove outcome ${i + 1}`} className="shrink-0 rounded-lg border border-[#e7e2d3] p-2 text-[#9a968b] transition hover:border-[#e7d0d0] hover:text-[#9f1239]"><Icons.X size={14} strokeWidth={2} /></button>
               )}
             </div>
           ))}
           {f.options.length > MAX_MARKET_OPTIONS && <div className="rounded-lg bg-[#f1eee4] px-3 py-2 text-xs text-[#5f6172]">Showing the first 12 of {f.options.length} imported candidates. Edit the CSV and upload it again to change the full roster.</div>}
-          {f.options.length < MAX_MARKET_OPTIONS && <button type="button" onClick={addOption} className="text-sm font-semibold text-[#a97f16] hover:underline">+ Add outcome</button>}
+          {!isYesNo && f.options.length < MAX_MARKET_OPTIONS && <button type="button" onClick={addOption} className="text-sm font-semibold text-[#a97f16] hover:underline">+ Add outcome</button>}
         </div>
         <MarketCloseField value={f.closeTime} onChange={(iso) => setF((prev) => ({ ...prev, closeTime: iso }))} />
         <BannerUpload value={f.bannerUrl} onUploaded={(url) => setF({ ...f, bannerUrl: url })} />

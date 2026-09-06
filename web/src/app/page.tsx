@@ -24,16 +24,17 @@ const ROADMAP = [
 ];
 
 function marketPreview(market: MarketView, index: number) {
-  const sorted = [...market.options].sort((a, b) => b.percent - a.percent);
+  const hasPositions = market.totalPool > 0;
+  const sorted = hasPositions ? [...market.options].sort((a, b) => b.percent - a.percent) : market.options;
   const first = sorted[0];
   const second = sorted[1];
   return {
     label: `${market.live ? "Live" : market.status === "resolved" ? "Resolved" : "Upcoming"} · ${market.category}`,
     question: market.question,
-    left: first?.label ?? "Open field",
-    leftPct: first?.percent ?? 100,
-    right: second?.label ?? "",
-    rightPct: second?.percent ?? 0,
+    left: hasPositions ? (first?.label ?? "Open field") : "Awaiting first prediction",
+    leftPct: hasPositions ? (first?.percent ?? 0) : null,
+    right: hasPositions ? (second?.label ?? "") : "",
+    rightPct: hasPositions ? (second?.percent ?? 0) : null,
     key: market.id || String(index),
   };
 }
@@ -52,25 +53,19 @@ export default function Home() {
   return (
     <div className={styles.home}>
       <section className={styles.hero} id="experience">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={styles.heroBackdrop} src="/brand/prediction-crown-hero.webp" alt="" aria-hidden="true" />
-        <div className={styles.heroVeil} aria-hidden="true" />
         <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>CrownFi prediction markets</span>
+          <span className={styles.eyebrow}>Prediction markets on Base</span>
           <h1><span>Predict the</span><em>crown.</em></h1>
-          <p>Follow pageant markets, back your outcome with test USDC and track every settlement transparently on Base Sepolia.</p>
+          <p>Back a pageant outcome with test USDC. Follow live odds and verify the final settlement on Base Sepolia.</p>
           <div className={styles.actions}>
             <Link className={styles.primaryButton} href="/predictions">Explore markets</Link>
             <Link className={styles.secondaryButton} href="#prediction-markets">How markets work</Link>
           </div>
-          <div className={styles.heroChips}><span>Live crowd odds</span><span>Test USDC positions</span><span>Base settlement</span></div>
         </div>
-        <div className={styles.heroProduct} aria-label="CrownFi prediction market features">
-          <span>Primary product</span>
-          <strong>Pageant outcomes.<br />Transparent markets.</strong>
-          <div><b>01</b> Browse before connecting</div>
-          <div><b>02</b> Enter with test USDC</div>
-          <div><b>03</b> Settle on Base Sepolia</div>
+        <div className={styles.heroVisual}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className={styles.heroImage} src="/brand/prediction-crown-hero.webp" alt="A luminous CrownFi market crown formed from financial chart bars" />
+          <div className={styles.heroCaption}><strong>Pageant outcomes.<br />Transparent markets.</strong><span>Built on Base</span></div>
         </div>
       </section>
 
@@ -96,11 +91,19 @@ export default function Home() {
       </section>
 
       <section className={styles.predictions} id="prediction-markets" aria-labelledby="prediction-title">
-        <header className={styles.predictionHead}>
-          <span className={styles.eyebrow}>Prediction markets</span>
-          <h2 id="prediction-title">Predict the <em>crown.</em></h2>
-          <p>Browse freely, connect only when you participate, and follow pageant outcomes through clear pools and moving crowd odds.</p>
-        </header>
+        <div className={styles.predictionTop}>
+          <header className={styles.predictionHead}>
+            <span className={styles.eyebrow}>Prediction markets</span>
+            <h2 id="prediction-title">Confidence for every <em>call.</em></h2>
+            <p>Choose an outcome, confirm in your wallet and follow the crowd odds through settlement.</p>
+          </header>
+          <div className={styles.marketBrand} aria-label="CrownFi, pageant outcomes and transparent markets">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <span><img src="/brand/crownfi-base-logo.png" alt="CrownFi" /></span>
+            <strong>Pageant outcomes.<br />Transparent markets.</strong>
+            <small>Built on Base</small>
+          </div>
+        </div>
         <div className={styles.marketConsole}>
           <div className={styles.marketGuide}>
             <div className={styles.guideStats}><span><b>Live</b> markets</span><span><b>USDC</b> pooled</span><span><b>24/7</b> odds</span></div>
@@ -156,7 +159,7 @@ export default function Home() {
         <LogoMarquee labels={["Organizers", "Delegates", "Fan communities", "Media", "Sponsors", "Venues"]} reverse />
       </section>
 
-      <section className={styles.roadmap} aria-labelledby="roadmap-title">
+      <section className={styles.roadmap} id="roadmap" aria-labelledby="roadmap-title">
         <header className={styles.sectionIntro}><span className={styles.pill}>CrownFi roadmap</span><h2 id="roadmap-title">Turn the card. <em>See what comes next.</em></h2><p>Hover or focus a card to reveal each delivery milestone.</p></header>
         <div className={styles.roadmapGrid}>{ROADMAP.map((phase) => <article className={styles.roadmapCard} tabIndex={0} key={phase.title}><div><span>{phase.period}</span><small>{phase.status}</small><h3>{phase.title}</h3><em>Hover or focus to flip</em></div><div><h3>{phase.title}</h3><ul>{phase.items.map(item => <li key={item}>{item}</li>)}</ul></div></article>)}</div>
       </section>
@@ -170,8 +173,8 @@ function PanelMeta({ label, route }: { label: string; route: string }) {
   return <div className={styles.panelMeta}><span>{label}</span><b>{route}</b></div>;
 }
 
-function MarketPreview({ label, question, left, leftPct, right, rightPct }: { label: string; question: string; left: string; leftPct: number; right: string; rightPct: number }) {
-  return <article className={styles.marketCard}><span>{label}</span><h3>{question}</h3><div><p><i>{left}</i><b>{leftPct}%</b></p><em><i style={{ width: `${leftPct}%` }} /></em>{right && <><p><i>{right}</i><b>{rightPct}%</b></p><em><i style={{ width: `${rightPct}%` }} /></em></>}</div></article>;
+function MarketPreview({ label, question, left, leftPct, right, rightPct }: { label: string; question: string; left: string; leftPct: number | null; right: string; rightPct: number | null }) {
+  return <article className={styles.marketCard}><span>{label}</span><h3>{question}</h3><div><p><i>{left}</i><b>{leftPct === null ? "—" : `${leftPct}%`}</b></p><em><i style={{ width: `${leftPct ?? 0}%` }} /></em>{right && <><p><i>{right}</i><b>{rightPct === null ? "—" : `${rightPct}%`}</b></p><em><i style={{ width: `${rightPct ?? 0}%` }} /></em></>}</div></article>;
 }
 
 function LogoMarquee({ labels, reverse = false }: { labels: string[]; reverse?: boolean }) {

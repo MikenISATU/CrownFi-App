@@ -21,34 +21,11 @@ const USER_LINKS = [
   { href: "/funds", label: "Testnet funds" },
   { href: "/me", label: "Me" },
 ];
-// Desktop header: the two core actions as direct links, everything else grouped into
-// labeled dropdowns (reference-style categorized nav).
 const NAV_DIRECT = [
-  { href: "/predictions", label: "Predictions" },
-];
-const NAV_GROUPS: { label: string; links: { href: string; label: string }[] }[] = [
-  {
-    label: "Experience",
-    links: [
-      { href: "/loyalty", label: "Rewards" },
-    ],
-  },
-  {
-    label: "Results",
-    links: [
-      { href: "/leaderboard", label: "Leaderboard" },
-      { href: "/winners", label: "Winners" },
-      { href: "/verify", label: "Verify a vote" },
-    ],
-  },
-  {
-    label: "Account",
-    links: [
-      { href: "/organizer", label: "Organizer" },
-      { href: "/funds", label: "Testnet funds" },
-      { href: "/me", label: "My account" },
-    ],
-  },
+  { href: "/predictions", label: "Markets" },
+  { href: "/loyalty", label: "Rewards" },
+  { href: "/verify", label: "Verify" },
+  { href: "/#roadmap", label: "Roadmap" },
 ];
 
 const TABS = [
@@ -97,7 +74,7 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
 function SiteFooter() {
   const [subscribed, setSubscribed] = useState(false);
   return (
-    <footer className="mt-24 border-t-4 border-[#061333] bg-[#061333] text-[#eef0f3]">
+    <footer className="mt-24 border-t-4 border-[#050a4f] bg-[#050a4f] text-[#f3f3fb]">
       {/* Light gold separates the dark CrownFi surface from the page. */}
       <div className="h-px w-full bg-[#d4af37]" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
@@ -170,13 +147,8 @@ function SiteFooter() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [drawer, setDrawer] = useState(false);
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [maintenance, setMaintenance] = useState(false);
   const { isAdmin, error, clearError } = useSession();
-  // Admin slots into the Account group when the wallet is on the allowlist.
-  const navGroups = isAdmin
-    ? NAV_GROUPS.map((g) => (g.label === "Account" ? { ...g, links: [...g.links, { href: "/admin", label: "Admin" }] } : g))
-    : NAV_GROUPS;
 
   // Reflect the admin "Maintenance mode" switch with a site-wide banner.
   // Fetch ONCE per session — not per navigation (that cost a DB round-trip on every tab change).
@@ -223,51 +195,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
         <div className="mx-auto max-w-[1440px]">
-          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#f2d784]/65 bg-[#061333] px-2.5 py-2.5 shadow-[0_16px_38px_-20px_rgba(6,19,51,0.72)] sm:px-6">
+          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#e0e2f2] bg-white/95 px-2.5 py-2.5 shadow-[0_18px_42px_-24px_rgba(5,10,79,0.42)] backdrop-blur-xl sm:px-6">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-              <button className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#d4af37]/25 text-[#f3ddb0] transition hover:bg-white/10 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
+              <button className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#e0e2f2] text-[#050a4f] transition hover:bg-[#f3f3fb] sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
               </button>
               <Link href="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2" onClick={() => setDrawer(false)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-8 w-8 rounded-[10px] object-cover ring-1 ring-white/20" />
-                <span className="hidden font-display text-base font-semibold tracking-wide text-[#f1cf68] min-[421px]:inline min-[480px]:text-xl">CrownFi</span>
+                <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-8 w-8 rounded-[10px] object-cover ring-1 ring-[#e0e2f2]" />
+                <span className="hidden font-display text-base font-semibold tracking-wide text-[#050a4f] min-[421px]:inline min-[480px]:text-xl">CrownFi</span>
               </Link>
             </div>
 
             <nav className="hidden items-center gap-1 text-sm sm:flex">
               {NAV_DIRECT.map((l) => (
                 <Link key={l.href} href={l.href}
-                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-white text-[#0052ff] shadow-[inset_0_-2px_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
+                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-[#050a4f] text-white" : "text-[#5e6075] hover:bg-[#f3f3fb] hover:text-[#050a4f]"}`}>
                   {l.label}
                 </Link>
               ))}
-              {/* Categorized dropdowns — grouped destinations, reference-style. */}
-              {navGroups.map((g) => {
-                const active = g.links.some((l) => l.href === path);
-                const open = openGroup === g.label;
-                return (
-                  <div key={g.label} className="relative">
-                    <button onClick={() => setOpenGroup(open ? null : g.label)} aria-expanded={open} aria-haspopup="menu"
-                      className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 transition ${active ? "bg-white text-[#0052ff] shadow-[inset_0_-2px_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
-                      {g.label} <Icons.ChevronDown size={14} strokeWidth={2} className={`transition ${open ? "rotate-180" : ""}`} />
-                    </button>
-                    {open && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setOpenGroup(null)} />
-                        <div role="menu" className="glass absolute right-0 z-50 mt-2 w-44 p-1.5">
-                          {g.links.map((l) => (
-                            <Link key={l.href} href={l.href} onClick={() => setOpenGroup(null)} role="menuitem"
-                              className={`block rounded-lg px-3 py-2 text-sm transition ${path === l.href ? "bg-[#eef0f3] font-semibold text-[#0052ff] shadow-[inset_3px_0_0_#d4af37]" : "text-[#32353d] hover:bg-[#eef0f3] hover:text-[#0052ff]"}`}>
-                              {l.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
             </nav>
 
             <div className="flex items-center gap-2">
@@ -280,10 +226,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {drawer && (
             <>
               <div className="fixed inset-0 top-0 z-[-1] sm:hidden" onClick={() => setDrawer(false)} />
-              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#f2d784]/65 bg-[#061333] p-3 shadow-[0_24px_50px_-24px_rgba(6,19,51,0.72)] sm:hidden">
+              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#e0e2f2] bg-white p-3 shadow-[0_24px_50px_-24px_rgba(5,10,79,0.42)] sm:hidden">
                 {links.map((l) => (
                   <Link key={l.href} href={l.href} onClick={() => setDrawer(false)}
-                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-white font-semibold text-[#0052ff] shadow-[inset_3px_0_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
+                    className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-[#050a4f] font-semibold text-white shadow-[inset_3px_0_0_#d4af37]" : "text-[#5e6075] hover:bg-[#f3f3fb] hover:text-[#050a4f]"}`}>
                     {l.label}
                   </Link>
                 ))}
@@ -322,7 +268,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <SiteFooter />
 
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#f2d784] bg-[#061333]/95 backdrop-blur-xl sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#f4e3a1] bg-[#050a4f]/95 backdrop-blur-xl sm:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
           {TABS.map(({ href, label, Icon }) => {
             const active = path === href;

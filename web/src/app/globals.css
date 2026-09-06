@@ -2,24 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CrownFi on Base: deep navy is the foundation, Base Blue provides the network
-   layer, white carries content, and CrownFi gold marks primary actions. */
+/* CrownFi Luminous Editorial: white-first surfaces, midnight structure,
+   royal-blue interaction cues, and gold reserved for primary actions. */
 :root {
   color-scheme: light;
-  --base-blue: #0052ff;
-  --crown-navy: #061333;
+  --base-blue: #0000c8;
+  --base-electric: #0002fd;
+  --crown-navy: #050a4f;
   --base-white: #ffffff;
-  --base-gray-10: #eef0f3;
-  --base-gray-15: #dee1e7;
-  --base-gray-30: #b1b7c3;
-  --base-gray-50: #717886;
-  --base-gray-60: #5b616e;
-  --base-gray-80: #32353d;
-  --base-gray-100: #0a0b0d;
+  --base-gray-10: #f3f3fb;
+  --base-gray-15: #e0e2f2;
+  --base-gray-30: #b6b8ca;
+  --base-gray-50: #74768a;
+  --base-gray-60: #65677a;
+  --base-gray-80: #30324f;
+  --base-gray-100: #050a4f;
   --crown-gold: #d4af37;
-  --crown-gold-bright: #ffd12f;
-  --crown-gold-light: #f2d784;
-  --crown-gold-soft: #fff8dd;
+  --crown-gold-bright: #f4e3a1;
+  --crown-gold-light: #f4e3a1;
+  --crown-gold-soft: #fffaf0;
 }
 
 /* `clip` (not `hidden`) so full-bleed strips never open a horizontal scrollbar, while the
@@ -32,7 +33,7 @@ button, a, [role="button"], summary, label { touch-action: manipulation; }
 body {
   color: var(--base-gray-100);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
-  background: var(--base-white);
+  background: #fbfbff;
   min-height: 100vh;
   min-height: 100dvh;
   /* Lets full-bleed strips (the collectibles carousel) run past the page container without
@@ -118,7 +119,7 @@ body {
 .brand-header .btn-gold { color: var(--crown-navy); border-color: var(--crown-gold-light); background: linear-gradient(135deg, var(--crown-gold-light), var(--crown-gold)); box-shadow: none; }
 .brand-header .btn-gold:hover { color: var(--base-white); border-color: var(--base-blue); background: var(--base-blue); }
 .brand-header .btn-gold:disabled { opacity: .72; }
-.brand-header .btn-ghost { color: var(--base-blue); border-color: var(--base-white); background: var(--base-white); }
+.brand-header .btn-ghost { color: var(--crown-navy); border-color: var(--base-gray-15); background: var(--base-gray-10); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
