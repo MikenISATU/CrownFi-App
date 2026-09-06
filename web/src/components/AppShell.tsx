@@ -112,7 +112,7 @@ function SiteFooter() {
           <div className="max-w-xs">
             <div className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo.png" alt="CrownFi" className="h-8 w-8 object-contain" />
+              <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/20" />
               <span className="font-display text-2xl font-semibold tracking-wide text-[#e6c65a]">CrownFi</span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-[#bac4eb]">
@@ -236,7 +236,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
               <Link href="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2" onClick={() => setDrawer(false)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/brand/logo.png" alt="CrownFi" className="h-7 w-7 object-contain" />
+                <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-8 w-8 rounded-[10px] object-cover ring-1 ring-white/20" />
                 <span className="font-display text-base font-semibold tracking-wide text-[#f1cf68] min-[375px]:text-xl">CrownFi</span>
               </Link>
             </div>

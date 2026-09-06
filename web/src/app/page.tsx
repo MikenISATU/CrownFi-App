@@ -82,7 +82,7 @@ export default function Home() {
           <div className={styles.crownHalo} />
           <div className={styles.crownOrbit}><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/logo.png" alt="CrownFi crown" />
+          <img src="/brand/crownfi-base-logo.png" alt="CrownFi market crown" />
           <span className={styles.crownLabel}>Crown protocol active</span>
         </div>
       </section>
@@ -219,7 +219,7 @@ export default function Home() {
         <div className={styles.roadmapGrid}>{ROADMAP.map((phase) => <article className={styles.roadmapCard} tabIndex={0} key={phase.title}><div><span>{phase.period}</span><small>{phase.status}</small><h3>{phase.title}</h3><em>Hover or focus to flip</em></div><div><h3>{phase.title}</h3><ul>{phase.items.map(item => <li key={item}>{item}</li>)}</ul></div></article>)}</div>
       </section>
 
-      <section className={styles.finale}><span><img src="/brand/logo.png" alt="CrownFi crown" /></span><h2>The crown is more than the finale.</h2><p>It connects every fan, every action and every verifiable result.</p><Link className={styles.primaryButton} href="/vote">Enter CrownFi</Link></section>
+      <section className={styles.finale}><span><img src="/brand/crownfi-base-logo.png" alt="CrownFi market crown" /></span><h2>The crown is more than the finale.</h2><p>It connects every fan, every action and every verifiable result.</p><Link className={styles.primaryButton} href="/vote">Enter CrownFi</Link></section>
     </div>
   );
 }

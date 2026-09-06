@@ -11,7 +11,7 @@ export default function TestnetFundsPage() {
           Get ready for <span className="font-display italic text-[#c8a233]">Base Sepolia.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[#5f6172] sm:text-base">
-          CrownFi’s testnet uses ETH to pay network gas and USDC for prediction stakes and ticket payments. Follow both steps below using the same wallet address.
+          CrownFi’s testnet uses ETH to pay network gas and Circle’s Base Sepolia USDC for prediction stakes. Use the same wallet address for both assets; direct faucets are recommended over testnet swaps.
         </p>
       </header>
 
@@ -30,7 +30,7 @@ export default function TestnetFundsPage() {
           <span className="num-gold">2</span>
           <div>
             <h2 className="font-display text-xl font-semibold text-[#23252f]">Claim and return</h2>
-            <p className="mt-1 text-sm leading-relaxed text-[#5f6172]">Claim ETH and USDC from the official faucets, then return to CrownFi. Faucet limits and sign-in requirements are set by each provider.</p>
+            <p className="mt-1 text-sm leading-relaxed text-[#5f6172]">Claim ETH and USDC directly, then return to CrownFi. Some providers require an account and enforce their own limits.</p>
           </div>
         </div>
       </section>

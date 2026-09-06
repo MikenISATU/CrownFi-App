@@ -2,7 +2,7 @@
 
 CrownFi is a fan-engagement platform for pageant voting, prediction markets, digital collectibles, rewards, and future ticketing. The active application is a Next.js full-stack demo backed by Prisma and Supabase Postgres.
 
-> **Current status — Base Sepolia integration in progress:** CrownFi now targets **Base Sepolia**. The prediction-market, audit-anchor, ticket, and collectible Solidity contracts are deployed on testnet. Their public addresses are configured, but contract-backed web transactions must remain disabled until source verification, security review, and end-to-end application integration are complete.
+> **Current status — Base Sepolia testnet:** CrownFi now targets **Base Sepolia**. The prediction-market, audit-anchor, ticket, and collectible Solidity contracts are deployed. The web app includes Viem-based prediction-market and vote-proof anchoring flows; ticket sales and collectible checkout remain visibly locked while those fulfillment paths are migrated and reviewed.
 
 This repository is suitable for development, demos, and product review. It is not production voting infrastructure, audited financial infrastructure, or ready for real-money markets.
 
@@ -16,9 +16,9 @@ This repository is suitable for development, demos, and product review. It is no
 | Wallets | Base Account and MetaMask connection available |
 | Web2 onboarding | Privy email/Google login with an embedded EVM wallet; credentials required |
 | Base voting contract | Not planned for raw votes — backend-first voting anchors compact proofs |
-| Base audit-anchor contract | Deployed on Base Sepolia — application publishing integration pending |
+| Base audit-anchor contract | Deployed — admin close flow publishes and verifies the closed-round checkpoint |
 | Base collectible contract | Deployed on Base Sepolia — five candidates registered, no tokens minted |
-| Base prediction-market contract | Deployed on Base Sepolia — application settlement integration pending |
+| Base prediction-market contract | Deployed — create, stake, unstake, close, resolve, cancel, refund, and claim paths integrated |
 | Base ticket contract | Deployed on Base Sepolia — purchase and check-in integration pending |
 | Base Mainnet | Not enabled for production |
 | Stellar/Soroban | Legacy prototype code only; not the active wallet or deployment target |
@@ -36,8 +36,12 @@ The configured Base Sepolia USDC address is Circle's existing test token address
 - Wallet-signed CrownFi sessions and EVM-address-based admin allowlisting.
 - Off-chain vote records, market records, user profiles, pageants, candidates, and application receipts.
 - Merkle proof generation and receipt verification at the application layer.
+- Admin-signed Base market creation, closing, resolution, and cancellation.
+- User-signed USDC approval, market staking, pre-close unstaking, winner claims, and cancellation refunds.
+- Server-side validation of successful Base receipts and matching contract events before Supabase is updated.
+- Admin-signed publication of closed-round Merkle roots and tally commitments to the deployed audit anchor.
 
-Any UI that sends CrownFi Base transactions must still be treated as a preview until its Viem integration and end-to-end testnet QA are complete.
+The deployed prediction contract currently has no created markets, so a real wallet stake cannot be tested until an admin creates the first Base Sepolia market. Automated contract and application-flow tests do not replace a security audit or wallet-based testnet QA.
 
 ## On-chain and off-chain boundaries
 
@@ -45,20 +49,19 @@ Any UI that sends CrownFi Base transactions must still be treated as a preview u
 
 - User profiles and Privy identity mappings.
 - Pageants, candidates, voting rounds, and raw vote records.
-- Prediction-market questions, options, positions, status, and application-controlled settlement records.
+- Prediction-market questions, options, positions, and status mirrors used by the UI; USDC escrow and final settlement are authoritative on Base.
 - Rewards, rankings, organizer data, payment logs, and KYC-provider references.
 - Candidate and collectible metadata stored in Supabase, public application assets, or IPFS where configured.
 - Merkle trees, vote receipts, tally hashes, and checkpoint data before anchoring.
 
-### Deployed on Base Sepolia; web integration pending
+### Deployed on Base Sepolia
 
-- Publishing closed-round Merkle roots and tally commitments through an audit-anchor contract.
+- Closed-round Merkle roots and tally commitments published through the audit-anchor contract.
+- Prediction-market creation, USDC escrow, resolution, cancellation, refunds, and claims.
 - Collectible minting and ownership through an EVM collectible contract.
-- Prediction escrow, resolution, refunds, and claims through a prediction-market contract.
 - Verifiable ticket ownership and ticket-state transitions.
-- USDC-based contract interactions after contract and security testing.
 
-CrownFi does not need to publish every raw vote on-chain. The intended design keeps private and high-volume application data in Postgres while publishing compact proofs and ownership or settlement state to Base. Until the Base audit-anchor contract is deployed, receipt verification proves consistency with the application's generated Merkle data but is not yet independently anchored on Base.
+CrownFi does not deploy a raw-vote smart contract. Votes remain fast and inexpensive in Postgres; when a round closes, the admin publishes its Merkle root, tally hash, and vote count to `CrownFiAuditAnchor`. Prediction-market USDC, by contrast, is escrowed and settled directly by `CrownFiPredictionMarket`. This keeps high-volume vote data off-chain while making closed tallies and market settlement independently checkable on Base.
 
 ## Current architecture
 
@@ -80,8 +83,8 @@ flowchart LR
   Web --> API
   API --> DB
   API --> Proofs
-  Proofs -. integration pending .-> BaseContracts
-  API -. integration pending .-> BaseContracts
+  Proofs -->|closed-round checkpoint| BaseContracts
+  API <-->|verified market events| BaseContracts
 ```
 
 ## Repository layout
@@ -195,6 +198,15 @@ NEXT_PUBLIC_BASE_TICKET_CONTRACT_ADDRESS="0xD1013c0dEd496B75eE8e07d723807A7939bA
 
 Do not paste Stellar `C...` contract IDs into these fields. Base requires deployed EVM contract addresses in `0x...` format.
 
+### Fund a Base Sepolia test wallet
+
+Open `/funds` in CrownFi or use these provider pages directly:
+
+- Test ETH for gas: [Alchemy Base Sepolia faucet](https://www.alchemy.com/faucets/base-sepolia), [Coinbase Developer Platform faucet](https://portal.cdp.coinbase.com/products/faucet), or the [Base funding guide](https://docs.base.org/get-started/get-funds).
+- Test USDC for prediction stakes: [Circle's public faucet](https://faucet.circle.com/) or the [Coinbase Developer Platform faucet](https://portal.cdp.coinbase.com/products/faucet). Select **Base Sepolia** and **USDC**.
+
+Use the direct USDC faucet instead of swapping test ETH. A testnet DEX may issue or route through a different mock token that the CrownFi prediction contract will reject. CrownFi accepts Circle's Base Sepolia test USDC at `0x036CbD53842c5426634e7929541eC2318f3dCF7e`.
+
 ### 5. Start CrownFi
 
 ```bash
@@ -210,13 +222,13 @@ Open `http://localhost:3000`.
 The prediction-market, audit-anchor, ticket, and collectible contracts under `evm/` were deployed to Base Sepolia on
 2026-08-29. The public deployment manifest is `evm/base-sepolia.deployment.json`.
 
-Remaining work before enabling real user transactions:
+Remaining work before treating the testnet release as production-ready:
 
 1. Rotate the exposed test deployer and transfer ownership to a fresh wallet or multisig.
 2. Perform an independent contract review, with prediction escrow and settlement as the priority.
 3. Verify all four contract sources on BaseScan.
-4. Replace remaining legacy transaction routes with Viem-based Base calls.
-5. Run end-to-end staking, settlement, cancellation, refund, claim, and proof-anchor QA.
+4. Create the first testnet market and run wallet-based staking, unstaking, settlement, cancellation, refund, claim, and proof-anchor QA against Supabase.
+5. Replace the locked ticket and collectible fulfillment routes with reviewed Base-native services.
 6. Complete legal review before any real-money market or Base Mainnet launch.
 
 Never place a deployer private key, wallet seed phrase, database password, or Privy App Secret in a `NEXT_PUBLIC_*` variable.
@@ -248,9 +260,7 @@ current source of truth for Base deployments.
 Run the application checks from `web/`:
 
 ```bash
-npm run typecheck
-npm run test:merkle
-npm run test:ticketing
+npm run check
 npm run security:audit
 ```
 
@@ -267,8 +277,8 @@ The Rust checks under `contracts/` validate legacy Soroban code only. Passing th
 
 - No CrownFi Base contract has completed a security audit.
 - The prediction-market, audit-anchor, ticket, and collectible contracts are deployed only on Base Sepolia, not Base Mainnet.
-- Prediction settlement is not live in the web app until the deployed contract is integrated and tested end to end.
-- Vote receipts are not Base-anchored by the web app until the deployed audit anchor is integrated.
+- Prediction transaction paths are integrated, but the deployed contract has no market yet and has not completed wallet-based end-to-end QA against the new Supabase database.
+- Raw votes are deliberately off-chain. Only a closed round's compact Merkle/tally checkpoint is published to Base.
 - Tickets have a Base Sepolia ERC-721 contract, but purchases and seat assignment are not live until the web flow is integrated and tested.
 - The collectible contract has five registered IPFS metadata records and zero initial mints, but the web purchase fulfillment route is not yet migrated from the legacy Stellar helper.
 - In-memory challenges and rate limits remain appropriate only for development/demo use unless backed by shared infrastructure.
@@ -278,9 +288,9 @@ The Rust checks under `contracts/` validate legacy Soroban code only. Passing th
 
 | Phase | Work |
 |---|---|
-| Current | Complete Supabase migration, Privy onboarding, Base Sepolia wallets, and UI/API cleanup |
+| Current | Complete Supabase configuration, Privy onboarding, Base Sepolia wallets, and UI/API cleanup |
 | Current | Review and BaseScan-verify the deployed prediction-market, audit-anchor, ticket, and collectible contracts |
-| Testnet | Integrate the Base Sepolia contracts with Viem and complete end-to-end QA |
+| Testnet | Create the first market and complete wallet-based prediction and vote-anchor QA |
 | Testnet | Replace legacy collectible fulfillment with owner-authorized Base `adminMint` calls after payment confirmation |
 | Security | External review, multisig administration, monitoring, and incident procedures |
 | Later | Consider staged Base Mainnet deployment only after testnet and security gates pass |

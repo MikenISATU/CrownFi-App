@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, CircleDollarSign, Copy, ExternalLink, Fuel } from "lucide-react";
 import { useSession } from "@/session/SessionProvider";
 import { baseContracts } from "@/base/contracts";
-import { BASE_SEPOLIA_ETH_FAUCET, BASE_SEPOLIA_USDC_FAUCET } from "@/base/faucets";
+import { BASE_SEPOLIA_ETH_FAUCETS, BASE_SEPOLIA_USDC_FAUCETS } from "@/base/faucets";
 
 type TestnetFundingPanelProps = {
   compact?: boolean;
@@ -69,10 +69,15 @@ export function TestnetFundingPanel({ compact = false, className = "" }: Testnet
                 <h3 className="mt-0.5 font-display text-xl font-semibold">Base Sepolia ETH</h3>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Open Alchemy’s Base Sepolia faucet, paste your wallet address, and request test ETH for gas.</p>
-            <a href={BASE_SEPOLIA_ETH_FAUCET} target="_blank" rel="noopener noreferrer" className="btn-gold mt-4 !min-h-[38px] !px-4 !py-2 text-xs">
-              Get test ETH <ExternalLink size={14} />
-            </a>
+            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Paste the same public wallet address into any provider below and request Base Sepolia ETH for gas.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {BASE_SEPOLIA_ETH_FAUCETS.map((faucet, index) => (
+                <a key={faucet.href} href={faucet.href} target="_blank" rel="noopener noreferrer"
+                  className={index === 0 ? "btn-gold !min-h-[38px] !px-4 !py-2 text-xs" : "inline-flex min-h-[38px] items-center gap-1.5 rounded-[11px] border border-white/18 bg-white/8 px-3 text-xs font-medium text-[#eef1ff] transition hover:border-[#f2cf67]/60 hover:bg-white/12"}>
+                  {faucet.label} <ExternalLink size={13} />
+                </a>
+              ))}
+            </div>
           </div>
 
           <div className={`${compact ? "p-5 sm:p-6" : "p-6 sm:p-8"}`}>
@@ -85,11 +90,14 @@ export function TestnetFundingPanel({ compact = false, className = "" }: Testnet
                 <h3 className="mt-0.5 font-display text-xl font-semibold">Base Sepolia USDC</h3>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Open Circle’s official faucet, choose Base Sepolia and USDC, then send it to the same wallet. No swap is required.</p>
+            <p className="mt-3 text-xs leading-relaxed text-[#b8c4eb]">Use a direct faucet, select Base Sepolia and USDC, then fund the same wallet. No swap is required, and direct funding avoids receiving an incompatible mock token.</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href={BASE_SEPOLIA_USDC_FAUCET} target="_blank" rel="noopener noreferrer" className="btn-gold !min-h-[38px] !px-4 !py-2 text-xs">
-                Get test USDC <ExternalLink size={14} />
-              </a>
+              {BASE_SEPOLIA_USDC_FAUCETS.map((faucet, index) => (
+                <a key={faucet.href} href={faucet.href} target="_blank" rel="noopener noreferrer"
+                  className={index === 0 ? "btn-gold !min-h-[38px] !px-4 !py-2 text-xs" : "inline-flex min-h-[38px] items-center gap-1.5 rounded-[11px] border border-white/18 bg-white/8 px-3 text-xs font-medium text-[#eef1ff] transition hover:border-[#f2cf67]/60 hover:bg-white/12"}>
+                  {faucet.label} <ExternalLink size={13} />
+                </a>
+              ))}
               <button
                 type="button"
                 onClick={() => copy(baseContracts.usdc, "usdc")}
