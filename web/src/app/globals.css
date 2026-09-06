@@ -2,8 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CrownFi light theme: Base blue for infrastructure, CrownFi gold for status and action. */
-:root { color-scheme: light; }
+/* CrownFi on Base: Base Blue leads, white/cool grays create space, CrownFi gold
+   is the premium secondary accent. Values follow Base's published color system. */
+:root {
+  color-scheme: light;
+  --base-blue: #0000ff;
+  --base-white: #ffffff;
+  --base-gray-10: #eef0f3;
+  --base-gray-15: #dee1e7;
+  --base-gray-30: #b1b7c3;
+  --base-gray-50: #717886;
+  --base-gray-60: #5b616e;
+  --base-gray-80: #32353d;
+  --base-gray-100: #0a0b0d;
+  --crown-gold: #d4af37;
+  --crown-gold-bright: #ffd12f;
+  --crown-gold-soft: #fff8dd;
+}
 
 /* `clip` (not `hidden`) so full-bleed strips never open a horizontal scrollbar, while the
    sticky header keeps working — `hidden` would make this a scroll container and break it. */
@@ -13,13 +28,9 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: clip
 button, a, [role="button"], summary, label { touch-action: manipulation; }
 
 body {
-  color: #23252f;
+  color: var(--base-gray-100);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
-  background:
-    radial-gradient(900px 430px at 8% -10%, rgba(0,82,255,0.10), transparent 62%),
-    radial-gradient(1100px 520px at 68% -12%, rgba(201,162,39,0.10), transparent 60%),
-    linear-gradient(180deg, #ffffff 0%, #faf7ef 100%);
-  background-attachment: fixed;
+  background: var(--base-white);
   min-height: 100vh;
   min-height: 100dvh;
   /* Lets full-bleed strips (the collectibles carousel) run past the page container without
@@ -33,90 +44,78 @@ body {
 
 @layer components {
   /* Card — hairline border + layered neutral shadow (crisp/premium, not warm-soft). */
-  .glass { @apply rounded-2xl border border-[#ece6d8] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-14px_rgba(16,24,40,0.12)]; }
-  .glass-hover { @apply transition duration-200 hover:-translate-y-0.5 hover:border-[#e3cf8f] hover:shadow-[0_2px_6px_rgba(16,24,40,0.05),0_20px_44px_-18px_rgba(184,145,47,0.30)]; }
-  /* Primary CTA — Base-blue face with CrownFi's gold hairline and type. */
+  .glass {
+    @apply rounded-2xl border bg-white;
+    border-color: var(--base-gray-15);
+    box-shadow: 0 1px 2px rgba(10,11,13,0.04), 0 14px 34px -24px rgba(50,53,61,0.32);
+  }
+  .glass-hover { @apply transition duration-200 hover:-translate-y-0.5; }
+  .glass-hover:hover { border-color: var(--crown-gold); box-shadow: 0 20px 46px -28px rgba(0,0,255,0.42); }
+  /* Primary CTA — exact Base Blue, with a restrained CrownFi-gold edge. */
   .btn-gold {
     @apply relative inline-flex min-h-[40px] items-center justify-center gap-2 rounded-[11px] border px-6 py-2.5 text-sm font-semibold tracking-wide disabled:pointer-events-none disabled:opacity-40;
-    color: #f4c84e;
-    border-color: #a87508;
-    background: linear-gradient(145deg, #061044, #0b1b71);
-    box-shadow: inset 0 0 0 1px rgba(255, 215, 104, 0.05), 0 12px 24px -20px rgba(0, 43, 180, 0.9);
+    color: var(--base-white);
+    border-color: var(--base-blue);
+    background: var(--base-blue);
+    box-shadow: inset 0 -2px 0 var(--crown-gold), 0 14px 26px -18px rgba(0,0,255,0.72);
     transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
   }
   .btn-gold::before { content: none; }
-  .btn-gold:hover { color: #ffdc78; border-color: #d5a629; background: linear-gradient(145deg, #0b1b71, #0052ff); box-shadow: 0 16px 28px -20px rgba(0, 50, 200, 0.85); transform: translateY(-1px); }
+  .btn-gold:hover { color: var(--crown-gold-bright); border-color: var(--crown-gold); background: var(--base-gray-100); box-shadow: 0 16px 30px -18px rgba(0,0,255,0.72); transform: translateY(-1px); }
   .btn-gold:active { transform: translateY(0) scale(0.98); }
-  /* Secondary — solid white, hairline, gold on hover. */
-  .btn-ghost { @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border border-[#e4dfce] bg-white px-5 py-2.5 text-sm font-medium tracking-wide text-[#3a3f52] transition duration-150 hover:border-[#d4af37] hover:bg-[#faf7ef] active:translate-y-px disabled:opacity-40; }
-  .chip { @apply inline-flex items-center gap-1 rounded-full border border-[#ece6d8] bg-[#faf7ef] px-2.5 py-1 text-xs font-medium text-[#5f6172]; }
+  /* Secondary — clean white/cool-gray with a Base-blue interaction state. */
+  .btn-ghost { @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border bg-white px-5 py-2.5 text-sm font-medium tracking-wide transition duration-150 active:translate-y-px disabled:opacity-40; border-color: var(--base-gray-15); color: var(--base-gray-80); }
+  .btn-ghost:hover { border-color: var(--base-blue); color: var(--base-blue); background: var(--base-gray-10); }
+  .chip { @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium; border-color: var(--base-gray-15); background: var(--base-gray-10); color: var(--base-gray-60); }
 
   /* Panel form of the gold CTA — the same molten rim sweeping on hover, but a white face
      instead of black, so boxes and buttons read as one family. Rim is a uniform 2px inset
      rather than the button's percentages, which would go lopsided on a wide, short card. */
   .card-gold {
-    @apply relative z-0 overflow-hidden rounded-xl border-0;
-    background: linear-gradient(to right, #77530a, #ffd277, #77530a, #77530a, #ffd277, #77530a);
-    background-size: 250%;
-    background-position: left;
-    transition: background-position 1s ease;
+    @apply relative z-0 overflow-hidden rounded-xl border bg-white;
+    border-color: rgba(212,175,55,0.78);
+    box-shadow: 0 12px 30px -24px rgba(50,53,61,0.34);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
   }
-  .card-gold::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    inset: 2px;
-    border-radius: 10px;
-    background-color: #ffffff;
-  }
-  .card-gold:hover { background-position: right; }
+  .card-gold::before { content: none; }
+  .card-gold:hover { border-color: var(--base-blue); box-shadow: 0 18px 38px -26px rgba(0,0,255,0.46); }
   /* Selected/active variant — warm face instead of white so the chosen card reads at a glance. */
   .card-gold-active::before { background-color: #fff8e6; }
 
   /* Numbered step chip, in the gold-button treatment: gold rim, dark face, gold numeral. */
   .num-gold {
-    @apply relative z-0 grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full text-xs font-semibold;
-    color: #ffd277;
-    background: linear-gradient(to right, #77530a, #ffd277, #77530a, #77530a, #ffd277, #77530a);
-    background-size: 250%;
-    background-position: left;
-    transition: background-position 1s ease;
+    @apply relative z-0 grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border text-xs font-semibold;
+    color: var(--base-white);
+    border-color: var(--crown-gold);
+    background: var(--base-blue);
+    box-shadow: 0 0 0 4px rgba(212,175,55,0.12);
   }
-  .num-gold::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    inset: 2px;
-    border-radius: 9999px;
-    background-color: #07145d;
-  }
-  .num-gold:hover { background-position: right; }
+  .num-gold::before { content: none; }
+  .num-gold:hover { background: var(--base-gray-100); color: var(--crown-gold-bright); }
 
   /* Section label — same gold rim, pill sized. */
   .eyebrow {
-    @apply relative z-0 inline-flex items-center overflow-hidden rounded-full px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#a97f16];
-    background: linear-gradient(to right, #77530a, #ffd277, #77530a, #77530a, #ffd277, #77530a);
-    background-size: 250%;
-    background-position: left;
-    transition: background-position 1s ease;
+    @apply relative z-0 inline-flex items-center overflow-hidden rounded-full border bg-white px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em];
+    color: var(--base-blue);
+    border-color: var(--crown-gold);
+    box-shadow: inset 3px 0 0 var(--base-blue);
   }
-  .eyebrow::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    inset: 1.5px;
-    border-radius: 9999px;
-    background-color: #ffffff;
-  }
-  .eyebrow:hover { background-position: right; }
-  /* Input — touch-friendly height, crisp gold focus ring. */
-  .field { @apply w-full min-h-[44px] rounded-xl border border-[#e0dac9] bg-white px-3.5 py-2.5 text-sm text-[#23252f] placeholder-[#9a968b] outline-none transition duration-150 focus:border-[#d4af37] focus:ring-4 focus:ring-[#d4af37]/15; }
+  .eyebrow::before { content: none; }
+  .eyebrow:hover { background: var(--base-gray-10); }
+  /* Input — touch-friendly height, crisp Base-blue focus state. */
+  .field { @apply w-full min-h-[44px] rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-none transition duration-150; border-color: var(--base-gray-15); color: var(--base-gray-100); }
+  .field::placeholder { color: var(--base-gray-50); }
+  .field:focus { border-color: var(--base-blue); box-shadow: 0 0 0 4px rgba(0,0,255,0.12); }
   .tag-on { @apply inline-flex items-center gap-1 rounded-full bg-[#e6f6ef] px-2 py-0.5 text-[11px] font-semibold text-[#0f6e56]; }
   .tag-off { @apply inline-flex items-center gap-1 rounded-full bg-[#f1eee4] px-2 py-0.5 text-[11px] font-semibold text-[#6b6552]; }
-  .surface-soft { @apply bg-[#faf7ef]; }
+  .surface-soft { background: var(--base-gray-10); }
 }
 
 .mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace; }
+.brand-header .btn-gold { color: var(--crown-gold-bright); border-color: var(--crown-gold); background: var(--base-gray-100); box-shadow: none; }
+.brand-header .btn-gold:hover { color: var(--base-blue); border-color: var(--base-white); background: var(--base-white); }
+.brand-header .btn-gold:disabled { opacity: .72; }
+.brand-header .btn-ghost { color: var(--base-blue); border-color: var(--base-white); background: var(--base-white); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -260,8 +259,8 @@ body {
   .filmstrip__item, .filmstrip__item * { transition: none; }
 }
 
-/* Home banner: warm frame behind the looping GIF (dark variant lives with the other html.dark rules). */
-.sfl-band { background: radial-gradient(120% 120% at 50% 0%, #fdf6e2 0%, #f6eed6 55%, #efe4c2 100%); }
+/* Home banner: cool Base surface with a gold hairline around the editorial media. */
+.sfl-band { background: var(--base-gray-10); border-color: var(--crown-gold); }
 
 /* Scroll reveal: sections start lowered + transparent, then rise into place the first time
    they enter the viewport (classes applied by the AppShell effect). Content is fully visible
@@ -283,7 +282,28 @@ body {
   .animate-sheen { animation: none; }
 }
 
-*:focus-visible { outline: 2px solid #c9a227; outline-offset: 2px; border-radius: 6px; }
+/* Bridge legacy arbitrary-color utilities to the shared Base/CrownFi palette. This keeps
+   older functional pages consistent while they are progressively moved to semantic tokens. */
+html:not(.dark) .text-\[\#23252f\] { color: var(--base-gray-100) !important; }
+html:not(.dark) .text-\[\#3a3f52\] { color: var(--base-gray-80) !important; }
+html:not(.dark) .text-\[\#5f6172\] { color: var(--base-gray-60) !important; }
+html:not(.dark) .text-\[\#7a7768\] { color: var(--base-gray-50) !important; }
+html:not(.dark) .text-\[\#9a968b\],
+html:not(.dark) .text-\[\#8a8779\] { color: var(--base-gray-50) !important; }
+html:not(.dark) .text-\[\#a97f16\] { color: var(--base-blue) !important; }
+html:not(.dark) .bg-\[\#faf7ef\],
+html:not(.dark) .bg-\[\#faf6ea\] { background-color: var(--base-gray-10) !important; }
+html:not(.dark) .bg-\[\#efe9d8\] { background-color: var(--base-gray-15) !important; }
+html:not(.dark) .bg-\[\#1a1f35\] { background-color: var(--base-blue) !important; }
+html:not(.dark) .border-\[\#eee6d3\],
+html:not(.dark) .border-\[\#e7e2d3\],
+html:not(.dark) .border-\[\#dcd6c6\] { border-color: var(--base-gray-15) !important; }
+html:not(.dark) .from-\[\#d4af37\] { --tw-gradient-from: var(--base-blue) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgba(0,0,255,0) var(--tw-gradient-to-position) !important; }
+html:not(.dark) .to-\[\#b8912f\] { --tw-gradient-to: var(--base-blue) var(--tw-gradient-to-position) !important; }
+html:not(.dark) .text-\[\#1a1f35\].from-\[\#d4af37\],
+html:not(.dark) .from-\[\#d4af37\].text-\[\#1a1f35\] { color: var(--base-white) !important; }
+
+*:focus-visible { outline: 2px solid var(--base-blue); outline-offset: 2px; border-radius: 6px; box-shadow: 0 0 0 4px rgba(212,175,55,0.20); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
