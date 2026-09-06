@@ -32,7 +32,7 @@ export function TestnetFundingPanel({ compact = false, className = "" }: Testnet
   return (
     <section
       aria-labelledby="testnet-funds-title"
-      className={`overflow-hidden rounded-2xl border border-[#d4af37]/70 bg-[#0052ff] text-white shadow-[0_24px_55px_-36px_rgba(0,82,255,0.58)] ${className}`}
+      className={`overflow-hidden rounded-2xl border border-[#f2d784]/70 bg-[#061333] text-white shadow-[0_24px_55px_-36px_rgba(6,19,51,0.68)] ${className}`}
     >
       <div className={`grid ${compact ? "lg:grid-cols-[0.95fr_1.55fr]" : "lg:grid-cols-[0.9fr_1.45fr]"}`}>
         <div className={`${compact ? "p-5 sm:p-6" : "p-6 sm:p-8"}`}>

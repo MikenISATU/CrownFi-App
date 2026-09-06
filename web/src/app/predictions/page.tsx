@@ -7,6 +7,8 @@ import { MARKET_CATEGORIES } from "@/lib/segments";
 import { Icons } from "@/components/icons";
 import { MarketCandidateHint, withCandidateFlags } from "@/lib/markets";
 import { TestnetFundingPanel } from "@/components/TestnetFundingPanel";
+import { BaseWalletConnect } from "@/base/BaseWalletConnect";
+import { TestnetNotice } from "@/components/TestnetNotice";
 
 const CATEGORIES = ["all", ...MARKET_CATEGORIES.map((s) => s.key)];
 const STATUSES = [
@@ -18,7 +20,7 @@ const STATUSES = [
 ];
 
 export default function PredictionsLanding() {
-  const { isAdmin } = useSession();
+  const { isAdmin, fan } = useSession();
   const [markets, setMarkets] = useState<MarketView[] | null>(null);
   const [candidates, setCandidates] = useState<MarketCandidateHint[]>([]);
   const [q, setQ] = useState("");
@@ -55,26 +57,39 @@ export default function PredictionsLanding() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="eyebrow mb-2">Prediction markets</div>
-          <h1 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Predict the <span className="font-display italic text-[#c8a233]">crown</span></h1>
-          <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Back your call on pageant outcomes. Browse freely — connect only when you stake.</p>
+      <TestnetNotice />
+      <header className="relative z-30 isolate rounded-[28px] border border-[#d4af37]/60 bg-[#061333] px-5 py-8 text-white shadow-[0_28px_70px_-42px_rgba(0,82,255,0.85)] sm:px-8 sm:py-10">
+        <div aria-hidden className="absolute inset-0 -z-10 rounded-[28px] bg-[radial-gradient(circle_at_85%_12%,rgba(0,82,255,0.72),transparent_38%),linear-gradient(125deg,rgba(0,82,255,0.18),transparent_48%)]" />
+        <div aria-hidden className="absolute right-4 top-4 -z-10 h-40 w-40 rounded-full border border-white/15 shadow-[0_0_80px_rgba(0,82,255,0.45)]" />
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#f2d784]/60 bg-[#f2d784]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#f2d784]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#0052ff] shadow-[0_0_0_4px_rgba(0,82,255,0.24)]" />
+              Prediction markets on Base
+            </div>
+            <h1 className="max-w-3xl tracking-tight text-4xl font-semibold text-white sm:text-5xl">Predict the <span className="font-display italic text-[#f2d784]">crown</span></h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">Every signed-in fan can place a prediction with test USDC. Browse freely, connect only when you stake, and confirm each position in your own wallet.</p>
+            <p className="mt-2 text-xs text-white/55">Market creation, cancellation, and settlement remain owner-controlled for verifiable outcomes.</p>
           {markets !== null && markets.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <span className="chip tabular-nums">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 font-medium text-white/85 tabular-nums backdrop-blur">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#c0392b]" />
                 </span>
                 {activeMarkets.filter((m) => m.live).length} live
               </span>
-              <span className="chip tabular-nums">{activeMarkets.reduce((s, m) => s + m.totalPool, 0).toLocaleString()} USDC pooled</span>
-              <span className="chip tabular-nums">{activeMarkets.reduce((s, m) => s + m.participants, 0)} predicting</span>
+              <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 font-medium text-white/85 tabular-nums backdrop-blur">{activeMarkets.reduce((s, m) => s + m.totalPool, 0).toLocaleString()} USDC pooled</span>
+              <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 font-medium text-white/85 tabular-nums backdrop-blur">{activeMarkets.reduce((s, m) => s + m.participants, 0)} predicting</span>
             </div>
           )}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {!fan && <BaseWalletConnect menuAlign="left" />}
+            {fan && <span className="rounded-xl border border-[#0052ff]/70 bg-[#0052ff]/20 px-4 py-2.5 text-sm font-semibold text-white">Ready to predict</span>}
+            {isAdmin && <Link className="btn-ghost !border-white/25 !bg-white/10 !text-white hover:!border-[#f2d784] hover:!bg-white/15" href="/admin">Manage markets</Link>}
+          </div>
         </div>
-        {isAdmin && <Link className="btn-gold" href="/admin">Manage Base markets</Link>}
       </header>
 
       <TestnetFundingPanel compact />

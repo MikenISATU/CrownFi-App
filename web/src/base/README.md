@@ -5,12 +5,12 @@ This folder contains CrownFi's active EVM/Base wallet client while the remaining
 ## What is ready
 
 - Wagmi and Viem configuration for Base Sepolia and Base Mainnet.
-- Base Account and injected-wallet connectors (for example MetaMask).
+- Base Account plus explicit Coinbase Wallet and MetaMask connectors.
 - A responsive Base wallet control with explicit network switching.
 - Official native USDC addresses for Base and Base Sepolia.
 - Configured Base Sepolia addresses for audit anchoring, collectibles, predictions, and tickets;
   the raw-vote slot intentionally remains empty.
-- Base is the default visible wallet layer; users choose Base Account or MetaMask.
+- Base is the default visible wallet layer; users choose Base Account, Coinbase Wallet, or MetaMask.
 
 ## Local setup
 

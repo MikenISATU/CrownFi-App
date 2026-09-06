@@ -14,7 +14,14 @@ function shortAddress(address: string) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-export function BaseWalletConnect() {
+function connectorDetails(connector: Connector) {
+  const identity = `${connector.id} ${connector.name}`.toLowerCase();
+  if (identity.includes("metamask")) return { label: "MetaMask", detail: "Browser wallet on Base" };
+  if (identity.includes("coinbase")) return { label: "Coinbase Wallet", detail: "Coinbase wallet on Base" };
+  return { label: connector.name, detail: "Base smart-wallet experience" };
+}
+
+export function BaseWalletConnect({ menuAlign = "right" }: { menuAlign?: "left" | "right" } = {}) {
   const [open, setOpen] = useState(false);
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const chainId = useChainId();
@@ -80,24 +87,23 @@ export function BaseWalletConnect() {
       {privyEnabled && <PrivyAutoLink />}
       <button className="btn-gold !min-h-[38px] !rounded-[11px] !px-2.5 text-xs sm:!px-4" disabled={isConnecting || authenticating}
         aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        {isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /><span className="hidden min-[350px]:inline">Connect Wallet</span><span className="min-[350px]:hidden">Connect</span></>}
+        {isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /><span className="hidden min-[480px]:inline">Connect Wallet</span><span className="min-[480px]:hidden">Connect</span></>}
       </button>
       {open && (
-        <div className="glass absolute right-0 z-50 mt-2 grid w-64 gap-1 p-2">
-          {connectors.map((connector) => (
-            <button key={connector.uid} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-[#3a3f52] transition hover:bg-[#faf6ea]"
-              onClick={() => connectWith(connector)}>
-              <ConnectorMark connector={connector} />
-              <span className="min-w-0">
-                <span className="block font-semibold text-[#23252f]">
-                  {connector.id.toLowerCase().includes("metamask") ? "MetaMask" : connector.name}
+        <div className={`glass absolute z-50 mt-2 grid w-64 max-w-[calc(100vw-2rem)] gap-1 p-2 ${menuAlign === "left" ? "left-0" : "right-0"}`}>
+          {connectors.map((connector) => {
+            const details = connectorDetails(connector);
+            return (
+              <button key={connector.uid} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-[#3a3f52] transition hover:bg-[#faf6ea]"
+                onClick={() => connectWith(connector)}>
+                <ConnectorMark connector={connector} />
+                <span className="min-w-0">
+                  <span className="block font-semibold text-[#23252f]">{details.label}</span>
+                  <span className="mt-0.5 block text-[11px] text-[#8a8779]">{details.detail}</span>
                 </span>
-                <span className="mt-0.5 block text-[11px] text-[#8a8779]">
-                  {connector.id.toLowerCase().includes("metamask") ? "Browser wallet on Base" : "Smart wallet for Base"}
-                </span>
-              </span>
-            </button>
-          ))}
+              </button>
+            );
+          })}
           {privyEnabled && (
             <>
               <div className="my-1 flex items-center gap-2 px-2 text-[10px] uppercase tracking-wider text-[#9a968b]"><span className="h-px flex-1 bg-[#eee6d3]" />or<span className="h-px flex-1 bg-[#eee6d3]" /></div>

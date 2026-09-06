@@ -2,11 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CrownFi on Base: Base Blue leads, white/cool grays create space, CrownFi gold
-   is the premium secondary accent. Values follow Base's published color system. */
+/* CrownFi on Base: deep navy is the foundation, Base Blue provides the network
+   layer, white carries content, and CrownFi gold marks primary actions. */
 :root {
   color-scheme: light;
   --base-blue: #0052ff;
+  --crown-navy: #061333;
   --base-white: #ffffff;
   --base-gray-10: #eef0f3;
   --base-gray-15: #dee1e7;
@@ -17,6 +18,7 @@
   --base-gray-100: #0a0b0d;
   --crown-gold: #d4af37;
   --crown-gold-bright: #ffd12f;
+  --crown-gold-light: #f2d784;
   --crown-gold-soft: #fff8dd;
 }
 
@@ -51,17 +53,18 @@ body {
   }
   .glass-hover { @apply transition duration-200 hover:-translate-y-0.5; }
   .glass-hover:hover { border-color: var(--crown-gold); box-shadow: 0 20px 46px -28px rgba(0,82,255,0.34); }
-  /* Primary CTA — exact Base Blue, with a restrained CrownFi-gold edge. */
+  /* Primary CTA — CrownFi gold is the strongest action color; Base Blue stays
+     available for network, status, focus, and secondary interaction cues. */
   .btn-gold {
     @apply relative inline-flex min-h-[40px] items-center justify-center gap-2 rounded-[11px] border px-6 py-2.5 text-sm font-semibold tracking-wide disabled:pointer-events-none disabled:opacity-40;
-    color: var(--base-white);
-    border-color: var(--base-blue);
-    background: var(--base-blue);
-    box-shadow: inset 0 -2px 0 var(--crown-gold), 0 14px 26px -18px rgba(0,82,255,0.58);
+    color: var(--crown-navy);
+    border-color: var(--crown-gold-light);
+    background: linear-gradient(135deg, var(--crown-gold-light), var(--crown-gold));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 14px 26px -18px rgba(212,175,55,0.72);
     transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
   }
   .btn-gold::before { content: none; }
-  .btn-gold:hover { color: var(--crown-gold-bright); border-color: var(--crown-gold); background: var(--base-gray-100); box-shadow: 0 16px 30px -18px rgba(0,82,255,0.58); transform: translateY(-1px); }
+  .btn-gold:hover { color: var(--base-white); border-color: var(--base-blue); background: var(--base-blue); box-shadow: 0 16px 30px -18px rgba(0,82,255,0.58); transform: translateY(-1px); }
   .btn-gold:active { transform: translateY(0) scale(0.98); }
   /* Secondary — clean white/cool-gray with a Base-blue interaction state. */
   .btn-ghost { @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border bg-white px-5 py-2.5 text-sm font-medium tracking-wide transition duration-150 active:translate-y-px disabled:opacity-40; border-color: var(--base-gray-15); color: var(--base-gray-80); }
@@ -112,8 +115,8 @@ body {
 }
 
 .mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace; }
-.brand-header .btn-gold { color: var(--crown-gold-bright); border-color: var(--crown-gold); background: var(--base-gray-100); box-shadow: none; }
-.brand-header .btn-gold:hover { color: var(--base-blue); border-color: var(--base-white); background: var(--base-white); }
+.brand-header .btn-gold { color: var(--crown-navy); border-color: var(--crown-gold-light); background: linear-gradient(135deg, var(--crown-gold-light), var(--crown-gold)); box-shadow: none; }
+.brand-header .btn-gold:hover { color: var(--base-white); border-color: var(--base-blue); background: var(--base-blue); }
 .brand-header .btn-gold:disabled { opacity: .72; }
 .brand-header .btn-ghost { color: var(--base-blue); border-color: var(--base-white); background: var(--base-white); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -290,18 +293,18 @@ html:not(.dark) .text-\[\#5f6172\] { color: var(--base-gray-60) !important; }
 html:not(.dark) .text-\[\#7a7768\] { color: var(--base-gray-50) !important; }
 html:not(.dark) .text-\[\#9a968b\],
 html:not(.dark) .text-\[\#8a8779\] { color: var(--base-gray-50) !important; }
-html:not(.dark) .text-\[\#a97f16\] { color: var(--base-blue) !important; }
+html:not(.dark) .text-\[\#a97f16\] { color: var(--crown-gold) !important; }
 html:not(.dark) .bg-\[\#faf7ef\],
 html:not(.dark) .bg-\[\#faf6ea\] { background-color: var(--base-gray-10) !important; }
 html:not(.dark) .bg-\[\#efe9d8\] { background-color: var(--base-gray-15) !important; }
-html:not(.dark) .bg-\[\#1a1f35\] { background-color: var(--base-blue) !important; }
+html:not(.dark) .bg-\[\#1a1f35\] { background-color: var(--crown-navy) !important; }
 html:not(.dark) .border-\[\#eee6d3\],
 html:not(.dark) .border-\[\#e7e2d3\],
 html:not(.dark) .border-\[\#dcd6c6\] { border-color: var(--base-gray-15) !important; }
-html:not(.dark) .from-\[\#d4af37\] { --tw-gradient-from: var(--base-blue) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgba(0,82,255,0) var(--tw-gradient-to-position) !important; }
-html:not(.dark) .to-\[\#b8912f\] { --tw-gradient-to: var(--base-blue) var(--tw-gradient-to-position) !important; }
+html:not(.dark) .from-\[\#d4af37\] { --tw-gradient-from: var(--crown-gold-light) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgba(242,215,132,0) var(--tw-gradient-to-position) !important; }
+html:not(.dark) .to-\[\#b8912f\] { --tw-gradient-to: var(--crown-gold) var(--tw-gradient-to-position) !important; }
 html:not(.dark) .text-\[\#1a1f35\].from-\[\#d4af37\],
-html:not(.dark) .from-\[\#d4af37\].text-\[\#1a1f35\] { color: var(--base-white) !important; }
+html:not(.dark) .from-\[\#d4af37\].text-\[\#1a1f35\] { color: var(--crown-navy) !important; }
 
 *:focus-visible { outline: 2px solid var(--base-blue); outline-offset: 2px; border-radius: 6px; box-shadow: 0 0 0 4px rgba(212,175,55,0.20); }
 

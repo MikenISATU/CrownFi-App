@@ -17,6 +17,9 @@ import { PAGEANT_SEGMENTS, MARKET_CATEGORIES, CATEGORY_LABEL } from "@/lib/segme
 import { baseContracts } from "@/base/contracts";
 import { auditAnchorAbi, predictionMarketAbi } from "@/base/abis";
 import { useBaseWalletClient } from "@/base/useBaseWalletClient";
+import { parseCandidateCsv } from "@/lib/candidateCsv";
+import { countryCodeFromText } from "@/lib/countryCodes";
+import { MAX_MARKET_OPTIONS } from "@/lib/markets";
 
 type Tab = "overview" | "rounds" | "contestants" | "requests" | "pageants" | "payments" | "markets";
 
@@ -804,19 +807,41 @@ function LogTable({ title, rows, cols }: { title: string; rows: any[]; cols: str
 function Markets({ markets, onCreate, onResolve }: any) {
   const default3d = () => new Date(Date.now() + 72 * 3_600_000).toISOString();
   const [f, setF] = useState<{ question: string; category: string; options: string[]; closeTime: string; bannerUrl: string }>({ question: "", category: MARKET_CATEGORIES[0].key, options: ["", ""], closeTime: default3d(), bannerUrl: "" });
+  const [csvStatus, setCsvStatus] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
   const set = (k: string) => (e: any) => setF({ ...f, [k]: e.target.value });
   const setOption = (i: number, v: string) => setF((p) => ({ ...p, options: p.options.map((o, idx) => (idx === i ? v : o)) }));
-  const addOption = () => setF((p) => (p.options.length < 32 ? { ...p, options: [...p.options, ""] } : p));
+  const addOption = () => setF((p) => (p.options.length < MAX_MARKET_OPTIONS ? { ...p, options: [...p.options, ""] } : p));
   const removeOption = (i: number) => setF((p) => ({ ...p, options: p.options.filter((_, idx) => idx !== i) }));
 
   const opts = f.options.map((s) => s.trim()).filter(Boolean);
-  const valid = f.question.trim().length >= 3 && opts.length >= 2 && !!f.closeTime;
-  const hint = f.question.trim().length < 3 ? "Enter a question (at least 3 characters)." : opts.length < 2 ? "Add at least 2 outcomes." : "";
+  const valid = f.question.trim().length >= 3 && opts.length >= 2 && opts.length <= MAX_MARKET_OPTIONS && !!f.closeTime;
+  const hint = f.question.trim().length < 3
+    ? "Enter a question (at least 3 characters)."
+    : opts.length < 2
+      ? "Add at least 2 outcomes."
+      : opts.length > MAX_MARKET_OPTIONS
+        ? `This deployed Base contract supports ${MAX_MARKET_OPTIONS} outcomes per market. Split the roster or deploy a larger-market contract before creating it.`
+        : "";
+
+  async function importCandidates(file?: File) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".csv")) { setCsvStatus({ tone: "err", text: "Choose a .csv file." }); return; }
+    const parsed = parseCandidateCsv(await file.text());
+    if (!parsed.rows.length) {
+      setCsvStatus({ tone: "err", text: parsed.errors[0] ?? "No valid candidates were found." });
+      return;
+    }
+    setF((previous) => ({ ...previous, category: "candidates", options: parsed.rows.map((row) => row.label) }));
+    const skipped = parsed.errors.length ? ` ${parsed.errors.length} row${parsed.errors.length === 1 ? " was" : "s were"} skipped: ${parsed.errors.slice(0, 2).join(" ")}` : "";
+    const limit = parsed.rows.length > MAX_MARKET_OPTIONS ? ` The roster exceeds the deployed ${MAX_MARKET_OPTIONS}-outcome contract limit and is not ready to submit.` : " Ready to review and create.";
+    setCsvStatus({ tone: parsed.errors.length || parsed.rows.length > MAX_MARKET_OPTIONS ? "err" : "ok", text: `${parsed.rows.length} candidate${parsed.rows.length === 1 ? "" : "s"} imported.${skipped}${limit}` });
+  }
 
   function submit() {
     if (!valid) return;
     onCreate({ question: f.question, category: f.category, options: opts, closeTime: f.closeTime, bannerUrl: f.bannerUrl || null });
     setF({ question: "", category: MARKET_CATEGORIES[0].key, options: ["", ""], closeTime: default3d(), bannerUrl: "" });
+    setCsvStatus(null);
   }
 
   return (
@@ -824,18 +849,37 @@ function Markets({ markets, onCreate, onResolve }: any) {
       <div className="glass grid gap-3 p-4">
         <input className="field" placeholder="Prediction question (e.g. Who wins the Q&A round?)" value={f.question} onChange={set("question")} />
         <select className="field" value={f.category} onChange={set("category")}>{MARKET_CATEGORIES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select>
+        <div className="rounded-xl border border-[#d9c77e] bg-[#fffaf0] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-[#23252f]">Bulk candidate CSV</div>
+              <p className="mt-1 text-xs leading-relaxed text-[#5f6172]">Use exactly two columns: <b>Name</b> and <b>Country</b>. Include the header row and one candidate per line. Country names are converted to local ISO flags automatically—no API key required.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <label className="btn-gold cursor-pointer !px-3 !py-2 text-xs">
+                Upload CSV
+                <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(event) => { const input = event.currentTarget; void importCandidates(input.files?.[0]).finally(() => { input.value = ""; }); }} />
+              </label>
+              <a className="btn-ghost !px-3 !py-2 text-xs" href="/templates/candidate-market-options.csv" download>Download template</a>
+            </div>
+          </div>
+          <div className="mt-2 text-[11px] font-medium text-[#8a6d1f]">Current Base contract limit: {MAX_MARKET_OPTIONS} outcomes per market.</div>
+          {csvStatus && <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${csvStatus.tone === "ok" ? "bg-[#e1f5ee] text-[#0f6e56]" : "bg-[#fff1f2] text-[#9f1239]"}`}>{csvStatus.text}</div>}
+        </div>
         <div className="space-y-2">
-          <div className="text-xs font-semibold text-[#5f6172]">Outcomes</div>
-          {f.options.map((opt, i) => (
+          <div className="flex items-center justify-between gap-3 text-xs font-semibold text-[#5f6172]"><span>Outcomes</span><span className="font-normal tabular-nums text-[#9a968b]">{opts.length} / {MAX_MARKET_OPTIONS}</span></div>
+          {(f.options.length > MAX_MARKET_OPTIONS ? f.options.slice(0, 12) : f.options).map((opt, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="w-5 shrink-0 text-right text-xs tabular-nums text-[#9a968b]">{i + 1}</span>
+              <Flag sash={countryCodeFromText(opt) ?? ""} className="!h-4 !w-6" />
               <input className="field" placeholder={`Outcome ${i + 1}`} value={opt} onChange={(e) => setOption(i, e.target.value)} />
               {f.options.length > 2 && (
                 <button type="button" onClick={() => removeOption(i)} aria-label={`Remove outcome ${i + 1}`} className="shrink-0 rounded-lg border border-[#e7e2d3] p-2 text-[#9a968b] transition hover:border-[#e7d0d0] hover:text-[#9f1239]"><Icons.X size={14} strokeWidth={2} /></button>
               )}
             </div>
           ))}
-          {f.options.length < 32 && <button type="button" onClick={addOption} className="text-sm font-semibold text-[#a97f16] hover:underline">+ Add outcome</button>}
+          {f.options.length > MAX_MARKET_OPTIONS && <div className="rounded-lg bg-[#f1eee4] px-3 py-2 text-xs text-[#5f6172]">Showing the first 12 of {f.options.length} imported candidates. Edit the CSV and upload it again to change the full roster.</div>}
+          {f.options.length < MAX_MARKET_OPTIONS && <button type="button" onClick={addOption} className="text-sm font-semibold text-[#a97f16] hover:underline">+ Add outcome</button>}
         </div>
         <MarketCloseField value={f.closeTime} onChange={(iso) => setF((prev) => ({ ...prev, closeTime: iso }))} />
         <BannerUpload value={f.bannerUrl} onUploaded={(url) => setF({ ...f, bannerUrl: url })} />

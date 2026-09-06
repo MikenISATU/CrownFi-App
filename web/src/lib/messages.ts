@@ -68,7 +68,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
 
   // ── Prediction markets ──
   market_limit_reached: "You’ve reached your limit of open community markets. Close or resolve one before creating another.",
-  invalid_options: "Add at least two options (comma-separated) for people to predict on.",
+  invalid_options: "Add between 2 and 32 outcomes for this Base market.",
   invalid_close_time: "Choose a closing date and time in the future.",
   market_closed: "This market is closed — predictions are no longer accepted.",
   onchain_create_failed: "We couldn’t open this market on-chain. Please try again.",

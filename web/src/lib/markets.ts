@@ -5,12 +5,14 @@
 // contract does `fee = gross_payout * fee_bps / 10000`, never on the stake itself).
 // Keep this in sync with the contract's initialize(fee_bps=...).
 import { normalizeEnvValue } from "@/lib/publicEnv";
+import { countryCodeFromText } from "@/lib/countryCodes";
 
 const configuredFeeBps = Number(normalizeEnvValue(process.env.NEXT_PUBLIC_PLATFORM_FEE_BPS) ?? "200");
 export const PLATFORM_FEE_BPS = Number.isFinite(configuredFeeBps) && configuredFeeBps >= 0 && configuredFeeBps <= 10_000
   ? configuredFeeBps
   : 200; // 2%
 export const PLATFORM_FEE_PCT = PLATFORM_FEE_BPS / 100; // for display, e.g. 2
+export const MAX_MARKET_OPTIONS = 32; // deployed Base contract: MAX_OPTIONS
 
 export type MarketOptionView = { index: number; label: string; pool: number; percent: number; sash?: string | null };
 export type MarketView = {
@@ -60,7 +62,7 @@ export function withCandidateFlags<T extends MarketView>(market: T, candidates: 
       const label = normalizedWords(option.label);
       const padded = ` ${label} `;
       const match = aliases.find(({ alias }) => label === alias || (alias.length > 2 && padded.includes(` ${alias} `)));
-      return { ...option, sash: match?.sash ?? null };
+      return { ...option, sash: match?.sash ?? countryCodeFromText(option.label) };
     }),
   };
 }

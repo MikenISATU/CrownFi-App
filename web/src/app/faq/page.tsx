@@ -10,9 +10,9 @@ const GROUPS: Group[] = [
   {
     title: "Wallet & sign-in",
     items: [
-      { q: "How do I sign in?", a: "There are no passwords. Choose Base Account or MetaMask, connect on Base, and sign the one-time message. CrownFi never sees your private key." },
-      { q: "Which wallet and network do I need?", a: "Use Base Account or MetaMask on Base Sepolia during testing. CrownFi will ask your wallet to switch if it is on another network." },
-      { q: "I don’t have MetaMask — what now?", a: "Choose Base Account from the wallet menu for a smart-wallet experience, or install MetaMask and reconnect." },
+      { q: "How do I sign in?", a: "There are no passwords. Choose Base Account, Coinbase Wallet, or MetaMask, connect on Base, and sign the one-time message. CrownFi never sees your private key." },
+      { q: "Which wallet and network do I need?", a: "Use Base Account, Coinbase Wallet, or MetaMask on Base Sepolia during testing. CrownFi will ask your wallet to switch if it is on another network." },
+      { q: "I don’t have MetaMask — what now?", a: "Choose Base Account for a smart-wallet experience, or use Coinbase Wallet from the same wallet menu." },
       { q: "What if I switch or lock my wallet?", a: "If you switch Base accounts, CrownFi asks you to sign in as the new wallet. Locking the wallet does not expose its private key to CrownFi." },
     ],
   },

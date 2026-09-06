@@ -1,6 +1,6 @@
 import { cookieStorage, createConfig, createStorage, http } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
-import { baseAccount, injected } from "wagmi/connectors";
+import { baseAccount, coinbaseWallet, injected } from "wagmi/connectors";
 import { normalizeEnvValue, normalizeHttpUrl } from "@/lib/publicEnv";
 
 // CrownFi now presents Base as its wallet/network layer. The old Stellar client remains
@@ -20,6 +20,7 @@ export const baseConfig = createConfig({
   chains: [baseSepolia, base],
   connectors: [
     baseAccount({ appName: "CrownFi" }),
+    coinbaseWallet({ appName: "CrownFi", preference: "all", version: "4" }),
     injected({ target: "metaMask" }),
   ],
   multiInjectedProviderDiscovery: false,

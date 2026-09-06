@@ -131,7 +131,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
       const connector = connectors.find((item) => item.id.toLowerCase().includes("metamask")) ?? connectors[0];
       if (!connector) {
-        setError("No Base-compatible wallet was found. Install MetaMask or use Base Account.");
+        setError("No Base-compatible wallet was found. Install Coinbase Wallet or MetaMask, or use Base Account.");
         return;
       }
       const result = await connectAsync({ connector, chainId: targetBaseChain.id });

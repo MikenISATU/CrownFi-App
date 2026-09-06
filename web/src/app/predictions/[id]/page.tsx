@@ -14,6 +14,7 @@ import { Flag } from "@/components/Flag";
 import { baseContracts } from "@/base/contracts";
 import { erc20Abi, predictionMarketAbi } from "@/base/abis";
 import { useBaseWalletClient } from "@/base/useBaseWalletClient";
+import { TestnetNotice } from "@/components/TestnetNotice";
 
 type Detail = MarketView & {
   activity: { option: number; amount: number; createdAt: string; status: string }[];
@@ -199,7 +200,7 @@ export default function MarketDetail() {
   const est = pick != null && Number(amount) > 0 ? estimateReward(m, pick, Number(amount)) : 0;
 
   // Exchange-style headline: the leading outcome's implied probability + its 24h move.
-  const leader = [...m.options].sort((a, b) => b.percent - a.percent)[0];
+  const leader = m.totalPool > 0 ? [...m.options].sort((a, b) => b.percent - a.percent)[0] : undefined;
   const closeAt = m.endsInMs > 0 ? new Date(Date.now() + m.endsInMs) : null;
   let delta24: number | null = null;
   if (leader && m.series.length >= 2) {
@@ -215,6 +216,7 @@ export default function MarketDetail() {
 
   return (
     <div className="space-y-6">
+      <TestnetNotice compact />
       <Link href="/predictions" className="text-sm text-[#7a7768] hover:text-[#23252f]">← All markets</Link>
 
       {m.status === "resolved" && m.winningOption != null && (
@@ -257,24 +259,24 @@ export default function MarketDetail() {
               <div>
                 <div className="text-[10px] font-semibold uppercase tracking-wider text-[#9a968b]">Market says</div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-display text-5xl font-semibold tabular-nums text-[#23252f]">{leader?.percent ?? 0}%</span>
+                  <span className="font-display text-5xl font-semibold tabular-nums text-[#23252f]">{leader ? `${leader.percent}%` : "—"}</span>
                   {delta24 != null && delta24 !== 0 && (
                     <span className={`text-sm font-semibold tabular-nums ${delta24 > 0 ? "text-emerald-600" : "text-[#9f1239]"}`}>
                       {delta24 > 0 ? "+" : ""}{delta24}% 24h
                     </span>
                   )}
                 </div>
-                <div className="mt-0.5 text-xs text-[#7a7768]">{leader?.label ?? "—"} implied probability</div>
+                <div className="mt-0.5 text-xs text-[#7a7768]">{leader ? `${leader.label} implied probability` : "Awaiting the first prediction"}</div>
               </div>
             </div>
             <div className="mt-4">
-              <OddsChart series={m.series} labels={m.options.map((o) => o.label)} colors={CHART_COLORS} />
+              <OddsChart series={m.series} labels={m.options.map((o) => o.label)} sashes={m.options.map((o) => o.sash)} colors={CHART_COLORS} />
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               <StatTile label="Total pool" value={`${m.totalPool.toLocaleString()} USDC`} />
               <StatTile label="Participants" value={String(m.participants)} />
               <StatTile label="Options" value={String(m.options.length)} />
-              <StatTile label="Leading" value={leader?.label ?? "—"} />
+              <StatTile label="Leading" value={leader?.label ?? "No leader yet"} />
             </div>
           </div>
 
@@ -359,7 +361,7 @@ export default function MarketDetail() {
             ) : !fan ? (
               <div className="mt-4">
                 <button className="btn-gold w-full" onClick={connect}>{connecting ? "Connecting…" : "Connect wallet to predict"}</button>
-                <p className="mt-2 text-center text-[11px] text-[#9a968b]">Base Account or MetaMask — browse freely before connecting.</p>
+                <p className="mt-2 text-center text-[11px] text-[#9a968b]">Base Account, Coinbase Wallet, or MetaMask — browse freely before connecting.</p>
               </div>
             ) : (
               <div className="mt-4 space-y-3">

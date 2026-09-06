@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseEventLogs } from "viem";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/adminAuth";
-import { computeMarketView } from "@/lib/markets";
+import { computeMarketView, MAX_MARKET_OPTIONS } from "@/lib/markets";
 import { baseContracts } from "@/base/contracts";
 import { predictionMarketAbi } from "@/base/abis";
 import { verifiedBaseReceipt } from "@/base/server";
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const createTxHash = String(b?.createTxHash ?? "");
 
   if (!question || !category) return NextResponse.json({ error: "missing_fields" }, { status: 400 });
-  if (options.length < 2 || options.length > 32) return NextResponse.json({ error: "invalid_options" }, { status: 400 });
+  if (options.length < 2 || options.length > MAX_MARKET_OPTIONS) return NextResponse.json({ error: "invalid_options" }, { status: 400 });
   if (!closeTime || isNaN(closeTime.getTime()) || closeTime.getTime() <= Date.now()) return NextResponse.json({ error: "invalid_close_time" }, { status: 400 });
   if (!Number.isSafeInteger(chainMarketId) || chainMarketId <= 0 || !createTxHash) {
     return NextResponse.json({ error: "missing_onchain_confirmation" }, { status: 400 });

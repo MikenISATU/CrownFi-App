@@ -13,7 +13,7 @@ This repository is suitable for development, demos, and product review. It is no
 | Web application | Active — Next.js 15, React 19, TypeScript, and Tailwind CSS |
 | Database | Active — Prisma with a new Supabase Postgres project |
 | Base network | Configured for Base Sepolia by default |
-| Wallets | Base Account and MetaMask connection available |
+| Wallets | Base Account, Coinbase Wallet, and MetaMask connection available |
 | Web2 onboarding | Privy email/Google login with an embedded EVM wallet; credentials required |
 | Base voting contract | Not planned for raw votes — backend-first voting anchors compact proofs |
 | Base audit-anchor contract | Deployed — admin close flow publishes and verifies the closed-round checkpoint |
@@ -31,13 +31,14 @@ The configured Base Sepolia USDC address is Circle's existing test token address
 - Candidate, voting, leaderboard, rewards, prediction, receipt, and organizer interfaces.
 - Next.js API routes with Prisma/Postgres persistence.
 - Base Sepolia network configuration through Wagmi and Viem.
-- Base Account and injected EVM wallet support, including MetaMask.
+- Base Account plus explicit Coinbase Wallet and MetaMask support.
 - Privy email/Google onboarding and automatic embedded EVM-wallet creation when configured.
 - Wallet-signed CrownFi sessions and EVM-address-based admin allowlisting.
 - Off-chain vote records, market records, user profiles, pageants, candidates, and application receipts.
 - Merkle proof generation and receipt verification at the application layer.
 - Admin-signed Base market creation, closing, resolution, and cancellation.
 - User-signed USDC approval, market staking, pre-close unstaking, winner claims, and cancellation refunds.
+- Every signed-in fan may place prediction positions; creating, cancelling, and settling official markets remains owner-controlled.
 - Server-side validation of successful Base receipts and matching contract events before Supabase is updated.
 - Admin-signed publication of closed-round Merkle roots and tally commitments to the deployed audit anchor.
 
@@ -68,7 +69,7 @@ CrownFi does not deploy a raw-vote smart contract. Votes remain fast and inexpen
 ```mermaid
 flowchart LR
   Fan[Fan]
-  Wallet[Base Account / MetaMask]
+  Wallet[Base Account / Coinbase Wallet / MetaMask]
   Privy[Privy email or Google]
   Web[Next.js application]
   API[Next.js API routes]
@@ -157,7 +158,7 @@ The Privy Application ID is exactly 25 characters. In a local `.env` file the qu
 but in the Vercel Environment Variables UI paste only the raw value with **no surrounding quotes or
 whitespace**. Use the Application ID for both App ID variables; do not substitute a client ID, App
 Secret, or the example placeholder. If the public App ID is missing or malformed, CrownFi now keeps
-Base Account and MetaMask available while disabling only Privy email/Google login instead of failing
+Base Account, Coinbase Wallet, and MetaMask available while disabling only Privy email/Google login instead of failing
 the entire Next.js prerender.
 
 ### 4. Keep Base on Sepolia

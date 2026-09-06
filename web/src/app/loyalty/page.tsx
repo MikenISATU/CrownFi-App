@@ -107,7 +107,7 @@ export default function LoyaltyPage() {
       {!fan && (
         <div className="glass p-8 text-center">
           <div className="font-display text-xl text-[#23252f]">Connect to start earning</div>
-          <p className="mt-2 text-sm text-[#7a7768]">Sign in with Base Account or MetaMask to track points, complete tasks, and redeem rewards.</p>
+          <p className="mt-2 text-sm text-[#7a7768]">Sign in with Base Account, Coinbase Wallet, or MetaMask to track points, complete tasks, and redeem rewards.</p>
           <button onClick={connect} disabled={connecting} className="btn-gold mt-4">{connecting ? "Connecting…" : "Connect wallet"}</button>
         </div>
       )}

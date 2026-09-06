@@ -12,13 +12,10 @@ const CHAIN_LABEL = "Base";
 // Full list (mobile burger drawer shows everything).
 const USER_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/vote", label: "Vote" },
   { href: "/predictions", label: "Predict" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/winners", label: "Winners" },
   { href: "/verify", label: "Verify" },
-  { href: "/tickets", label: "Tickets" },
-  { href: "/contestants", label: "Collect" },
   { href: "/loyalty", label: "Rewards" },
   { href: "/organizer", label: "Organizer" },
   { href: "/funds", label: "Testnet funds" },
@@ -27,15 +24,12 @@ const USER_LINKS = [
 // Desktop header: the two core actions as direct links, everything else grouped into
 // labeled dropdowns (reference-style categorized nav).
 const NAV_DIRECT = [
-  { href: "/vote", label: "Vote" },
+  { href: "/predictions", label: "Predictions" },
 ];
 const NAV_GROUPS: { label: string; links: { href: string; label: string }[] }[] = [
   {
     label: "Experience",
     links: [
-      { href: "/predictions", label: "Predict" },
-      { href: "/tickets", label: "Tickets" },
-      { href: "/contestants", label: "Collect" },
       { href: "/loyalty", label: "Rewards" },
     ],
   },
@@ -58,10 +52,10 @@ const NAV_GROUPS: { label: string; links: { href: string; label: string }[] }[] 
 ];
 
 const TABS = [
-  { href: "/vote", label: "Vote", Icon: Icons.Vote },
+  { href: "/", label: "Home", Icon: Icons.Home },
+  { href: "/predictions", label: "Predict", Icon: Icons.TrendingUp },
+  { href: "/loyalty", label: "Rewards", Icon: Icons.Crown },
   { href: "/verify", label: "Verify", Icon: Icons.Verify },
-  { href: "/tickets", label: "Tickets", Icon: Icons.Tickets },
-  { href: "/contestants", label: "Collect", Icon: Icons.Collect },
   { href: "/me", label: "Me", Icon: Icons.Me },
 ];
 
@@ -95,16 +89,16 @@ const SOCIALS = [
 ];
 
 const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
-  { title: "Explore", links: [["/", "Home"], ["/predictions", "Predict"], ["/vote", "Vote"], ["/leaderboard", "Leaderboard"]] },
-  { title: "Experience", links: [["/tickets", "Tickets"], ["/contestants", "Collect"], ["/loyalty", "Rewards"], ["/funds", "Testnet funds"], ["/verify", "Verify a vote"]] },
+  { title: "Explore", links: [["/", "Home"], ["/predictions", "Predict"], ["/leaderboard", "Leaderboard"]] },
+  { title: "Experience", links: [["/loyalty", "Rewards"], ["/funds", "Testnet funds"], ["/verify", "Verify a receipt"]] },
   { title: "Organizers", links: [["/organizer", "Host a pageant"], ["/faq", "FAQ"], ["/faq#legal", "Privacy"], ["/faq#legal", "Terms"]] },
 ];
 
 function SiteFooter() {
   const [subscribed, setSubscribed] = useState(false);
   return (
-    <footer className="mt-24 border-t-4 border-[#0052ff] bg-[#0a0b0d] text-[#eef0f3]">
-      {/* CrownFi gold sits beneath the Base-blue edge as a restrained brand accent. */}
+    <footer className="mt-24 border-t-4 border-[#061333] bg-[#061333] text-[#eef0f3]">
+      {/* Light gold separates the dark CrownFi surface from the page. */}
       <div className="h-px w-full bg-[#d4af37]" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
@@ -116,7 +110,7 @@ function SiteFooter() {
               <span className="font-display text-2xl font-semibold tracking-wide text-[#e6c65a]">CrownFi</span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-[#b1b7c3]">
-              Blockchain-powered voting, tickets, and prediction markets for pageants — built on {CHAIN_LABEL}.
+              Prediction markets and verifiable fan engagement for pageants — built on {CHAIN_LABEL}.
             </p>
             <form className="mt-5" onSubmit={(e) => { e.preventDefault(); setSubscribed(true); }}>
               {subscribed ? (
@@ -229,7 +223,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
         <div className="mx-auto max-w-[1440px]">
-          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#d4af37]/80 bg-[#0052ff] px-2.5 py-2.5 shadow-[0_16px_38px_-20px_rgba(0,82,255,0.52)] sm:px-6">
+          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#f2d784]/65 bg-[#061333] px-2.5 py-2.5 shadow-[0_16px_38px_-20px_rgba(6,19,51,0.72)] sm:px-6">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <button className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#d4af37]/25 text-[#f3ddb0] transition hover:bg-white/10 sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
@@ -237,7 +231,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link href="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2" onClick={() => setDrawer(false)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-8 w-8 rounded-[10px] object-cover ring-1 ring-white/20" />
-                <span className="font-display text-base font-semibold tracking-wide text-[#f1cf68] min-[375px]:text-xl">CrownFi</span>
+                <span className="hidden font-display text-base font-semibold tracking-wide text-[#f1cf68] min-[421px]:inline min-[480px]:text-xl">CrownFi</span>
               </Link>
             </div>
 
@@ -286,7 +280,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {drawer && (
             <>
               <div className="fixed inset-0 top-0 z-[-1] sm:hidden" onClick={() => setDrawer(false)} />
-              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#d4af37]/80 bg-[#0052ff] p-3 shadow-[0_24px_50px_-24px_rgba(0,82,255,0.58)] sm:hidden">
+              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#f2d784]/65 bg-[#061333] p-3 shadow-[0_24px_50px_-24px_rgba(6,19,51,0.72)] sm:hidden">
                 {links.map((l) => (
                   <Link key={l.href} href={l.href} onClick={() => setDrawer(false)}
                     className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-white font-semibold text-[#0052ff] shadow-[inset_3px_0_0_#d4af37]" : "text-white hover:bg-white/15 hover:text-[#ffd12f]"}`}>
@@ -318,7 +312,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto mt-3 max-w-7xl px-4 sm:px-6">
           <div className="flex items-center gap-2 rounded-xl border border-[#f0d9a0] bg-[#fff8e6] px-4 py-2.5 text-sm text-[#6b5410]">
             <Icons.Lock size={15} strokeWidth={2} className="shrink-0" />
-            <span><b>Maintenance mode.</b> Buying tickets and collectibles is paused right now — browsing stays open. Please check back soon.</span>
+            <span><b>Maintenance mode.</b> Some experiences are paused while the Base migration continues. Prediction-market browsing stays open.</span>
           </div>
         </div>
       )}
@@ -328,7 +322,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <SiteFooter />
 
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#d4af37] bg-[#0052ff]/95 backdrop-blur-xl sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#f2d784] bg-[#061333]/95 backdrop-blur-xl sm:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-between px-2">
           {TABS.map(({ href, label, Icon }) => {
             const active = path === href;

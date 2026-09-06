@@ -2,21 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { Slide } from "@/components/Carousel";
 import type { MarketView } from "@/components/MarketCard";
 import { CountUp } from "@/components/ui";
 import { getJson } from "@/lib/api";
 import styles from "./home.module.css";
 
-type Stats = { votes: number; collectiblesSold: number; fans: number; predictions: number; topContestants?: { name: string; sash: string; votes: number }[] };
-
-const FALLBACK_CANDIDATES: Slide[] = [
-  { id: "philippines", name: "Isabel Reyes", country: "Philippines", sash: "Philippines", portraitUrl: "/candidates/philippines.webp" },
-  { id: "thailand", name: "Ratana Somsri", country: "Thailand", sash: "Thailand", portraitUrl: "/candidates/thailand.webp" },
-  { id: "vietnam", name: "Linh Nguyen", country: "Vietnam", sash: "Vietnam", portraitUrl: "/candidates/vietnam.webp" },
-  { id: "japan", name: "Aiko Mori", country: "Japan", sash: "Japan", portraitUrl: "/candidates/japan.webp" },
-  { id: "indonesia", name: "Ayu Pratama", country: "Indonesia", sash: "Indonesia", portraitUrl: "/candidates/indonesia.webp" },
-];
+type Stats = { votes: number; collectiblesSold: number; fans: number; predictions: number };
 
 const REWARD_TASKS = [
   ["01", "Cast a verified vote", "Once per active round", "+25"],
@@ -48,42 +39,38 @@ function marketPreview(market: MarketView, index: number) {
 }
 
 export default function Home() {
-  const [slides, setSlides] = useState<Slide[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [markets, setMarkets] = useState<MarketView[]>([]);
 
   useEffect(() => {
-    getJson<any[]>("/api/contestants", [], { ttl: 60_000 }).then((cs) =>
-      setSlides(cs.map((c: any) => ({ id: c.id, name: c.name, country: c.country, sash: c.sash, portraitUrl: c.portraitUrl }))));
     getJson<Stats | null>("/api/stats", null, { ttl: 30_000 }).then(setStats);
     getJson<MarketView[]>("/api/markets", [], { ttl: 30_000 }).then(setMarkets);
   }, []);
 
-  const candidates = useMemo(() => (slides.length ? slides : FALLBACK_CANDIDATES).slice(0, 5), [slides]);
   const marketCards = useMemo(() => markets.filter((market) => market.onchain).slice(0, 4).map(marketPreview), [markets]);
-  const voteTotal = stats?.topContestants?.reduce((sum, entry) => sum + entry.votes, 0) ?? 0;
 
   return (
     <div className={styles.home}>
       <section className={styles.hero} id="experience">
-        <div className={styles.heroGlow} aria-hidden="true" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={styles.heroBackdrop} src="/brand/prediction-crown-hero.webp" alt="" aria-hidden="true" />
+        <div className={styles.heroVeil} aria-hidden="true" />
         <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>Built for the onchain stage</span>
-          <h1>The future wears <em>the crown.</em></h1>
-          <p>A transparent pageant platform for voting, collecting and predicting—designed for a new generation of fans.</p>
+          <span className={styles.eyebrow}>CrownFi prediction markets</span>
+          <h1><span>Predict the</span><em>crown.</em></h1>
+          <p>Follow pageant markets, back your outcome with test USDC and track every settlement transparently on Base Sepolia.</p>
           <div className={styles.actions}>
-            <Link className={styles.primaryButton} href="/vote">Enter CrownFi</Link>
-            <Link className={styles.secondaryButton} href="#platform-story">Explore the platform</Link>
+            <Link className={styles.primaryButton} href="/predictions">Explore markets</Link>
+            <Link className={styles.secondaryButton} href="#prediction-markets">How markets work</Link>
           </div>
-          <div className={styles.heroChips}><span>Verifiable votes</span><span>Base settlement</span><span>Live predictions</span></div>
+          <div className={styles.heroChips}><span>Live crowd odds</span><span>Test USDC positions</span><span>Base settlement</span></div>
         </div>
-
-        <div className={styles.crownScene} aria-label="CrownFi crown in a dimensional orbit">
-          <div className={styles.crownHalo} />
-          <div className={styles.crownOrbit}><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/crownfi-base-logo.png" alt="CrownFi market crown" />
-          <span className={styles.crownLabel}>Crown protocol active</span>
+        <div className={styles.heroProduct} aria-label="CrownFi prediction market features">
+          <span>Primary product</span>
+          <strong>Pageant outcomes.<br />Transparent markets.</strong>
+          <div><b>01</b> Browse before connecting</div>
+          <div><b>02</b> Enter with test USDC</div>
+          <div><b>03</b> Settle on Base Sepolia</div>
         </div>
       </section>
 
@@ -108,38 +95,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={styles.voteSection} id="platform-story" aria-labelledby="vote-title">
-        <header className={styles.splitHeading}>
-          <div><span className={styles.eyebrow}>Cast your vote</span><h2 id="vote-title">Who wears the <em>crown?</em></h2></div>
-          <p>A dimensional voting room with live standings and one clear, receipt-backed action.</p>
-        </header>
-        <div className={styles.voteRoom}>
-          <div className={styles.candidateDeck} aria-label="Featured CrownFi delegates">
-            {candidates.slice(0, 3).map((candidate, index) => (
-              <Link href={`/contestants/${candidate.id}`} className={styles.candidateCard} key={candidate.id} style={{ "--card-index": index } as React.CSSProperties}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={candidate.portraitUrl || FALLBACK_CANDIDATES[index].portraitUrl || ""} alt={candidate.name} />
-                <span>{candidate.country}</span><strong>{candidate.name}</strong>
-              </Link>
-            ))}
-          </div>
-          <div className={styles.voteCopy}>
-            <span className={styles.liveBadge}><i /> Final round · Voting open</span>
-            <h3>One wallet.<br /><em>One verified vote.</em></h3>
-            <p>Select a delegate, confirm once and keep a cryptographic receipt proving your vote belongs in the official count.</p>
-            <div className={styles.actions}><Link className={styles.primaryButton} href="/vote">Vote now</Link><Link className={styles.secondaryButton} href="/verify">Verify a receipt</Link></div>
-            {voteTotal > 0 ? <div className={styles.tally}>
-              {candidates.slice(0, 3).map((candidate) => {
-                const votes = stats?.topContestants?.find((entry) => entry.name === candidate.name || entry.sash.toLowerCase() === candidate.sash.toLowerCase())?.votes ?? 0;
-                const percent = Math.round((votes / voteTotal) * 100);
-                return <div key={candidate.id}><span>{candidate.name}</span><i><b style={{ width: `${percent}%` }} /></i><strong>{percent}%</strong></div>;
-              })}
-            </div> : <p className={styles.liveDataNote}>Live standings appear after the first verified vote.</p>}
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.predictions} aria-labelledby="prediction-title">
+      <section className={styles.predictions} id="prediction-markets" aria-labelledby="prediction-title">
         <header className={styles.predictionHead}>
           <span className={styles.eyebrow}>Prediction markets</span>
           <h2 id="prediction-title">Predict the <em>crown.</em></h2>
@@ -162,18 +118,10 @@ export default function Home() {
         <header className={styles.sectionIntro}>
           <span className={styles.pill}>Inside the CrownFi platform</span>
           <h2 id="suite-title">Every CrownFi experience, <em>on one stage.</em></h2>
-          <p>The approved dimensional system now powers the real homepage—from collecting and loyalty to future organizer tools and public proof.</p>
+          <p>The dimensional system brings fan rewards, future organizer tools and public proof into one focused Base experience.</p>
         </header>
 
         <div className={styles.productGrid}>
-          <article className={`${styles.productPanel} ${styles.collectPanel}`}>
-            <PanelMeta label="Digital collectible vault" route="Coming soon" />
-            <div className={styles.collectStage}>
-              {["/nfts/thailand.webp", "/nfts/philippines.webp", "/nfts/vietnam.webp"].map((src, index) => <img src={src} alt="CrownFi delegate collectible" key={src} style={{ "--nft-index": index } as React.CSSProperties} />)}
-            </div>
-            <div className={styles.productCopy}><h3>Own the <em>moment.</em></h3><p>Support a delegate through official editions while the collectible remains portable through its onchain ownership record.</p><span className={styles.comingSoon}>Coming soon</span></div>
-          </article>
-
           <article className={`${styles.productPanel} ${styles.loyaltyPanel}`}>
             <PanelMeta label="Fan rewards and ranking" route="/loyalty" />
             <div className={styles.productCopy}><h3>Participation becomes <em>momentum.</em></h3><p>Tasks, points, shop rewards and live standings share one dimensional fan dashboard.</p><Link href="/loyalty">Open fan rewards →</Link></div>
@@ -192,12 +140,6 @@ export default function Home() {
               <div className={styles.productCopy}><h3>Run the show.<br /><em>Prove every result.</em></h3><p>The organizer command center is being prepared for candidate review, round controls and verified winner publishing.</p><span className={styles.comingSoon}>Coming soon</span></div>
               <div className={styles.dashboardPreview}><div className={styles.dashboardTop}>CrownFi studio / Coronation Night</div><div className={styles.dashboardBody}><aside>Overview<br />Candidates<br />Rounds<br />Results</aside><div><h4>Your pageant</h4><div className={styles.miniMetrics}><span><b>24</b>Candidates</span><span><b>05</b>Rounds</span><span><b>98%</b>Ready</span></div></div></div><strong>Locked preview</strong></div>
             </div>
-          </article>
-
-          <article className={`${styles.productPanel} ${styles.darkPanel} ${styles.ticketPanel}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}<img className={styles.ticketBackdrop} src="/stadium/stage.png" alt="" />
-            <PanelMeta label="Ticketing and seats" route="Coming soon" />
-            <div className={styles.ticketCopy}><span className={styles.lockOrb}>⌁</span><h3>Reserve your <em>seat.</em></h3><p>Verified tickets, digital seating and venue check-in are being prepared for release.</p><span className={styles.comingSoon}>Coming soon</span><div className={styles.seats}>{Array.from({ length: 21 }, (_, i) => <i key={i} style={{ "--seat": i % 7 } as React.CSSProperties} />)}</div></div>
           </article>
 
           <article className={`${styles.productPanel} ${styles.proofPanel}`}>
@@ -219,7 +161,7 @@ export default function Home() {
         <div className={styles.roadmapGrid}>{ROADMAP.map((phase) => <article className={styles.roadmapCard} tabIndex={0} key={phase.title}><div><span>{phase.period}</span><small>{phase.status}</small><h3>{phase.title}</h3><em>Hover or focus to flip</em></div><div><h3>{phase.title}</h3><ul>{phase.items.map(item => <li key={item}>{item}</li>)}</ul></div></article>)}</div>
       </section>
 
-      <section className={styles.finale}><span><img src="/brand/crownfi-base-logo.png" alt="CrownFi market crown" /></span><h2>The crown is more than the finale.</h2><p>It connects every fan, every action and every verifiable result.</p><Link className={styles.primaryButton} href="/vote">Enter CrownFi</Link></section>
+      <section className={styles.finale}><span><img src="/brand/crownfi-base-logo.png" alt="CrownFi market crown" /></span><h2>The crown is more than the finale.</h2><p>It connects every fan, every prediction and every verifiable result.</p><Link className={styles.primaryButton} href="/predictions">Explore markets</Link></section>
     </div>
   );
 }

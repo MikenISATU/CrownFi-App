@@ -13,6 +13,7 @@ export type SegmentKey = (typeof PAGEANT_SEGMENTS)[number]["key"];
 // (Voting stays limited to PAGEANT_SEGMENTS; markets are free-form.)
 export const MARKET_CATEGORIES = [
   ...PAGEANT_SEGMENTS,
+  { key: "candidates", label: "Candidates / Full Roster", short: "Candidates" },
   { key: "general", label: "General / Other", short: "General" },
 ] as const;
 

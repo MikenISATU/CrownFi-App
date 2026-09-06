@@ -26,7 +26,8 @@ export function timeLeft(ms: number): string {
 
 export function MarketCard({ m }: { m: MarketView }) {
   const badge = statusBadge(m);
-  const sorted = [...m.options].sort((a, b) => b.percent - a.percent);
+  const hasPositions = m.totalPool > 0;
+  const sorted = hasPositions ? [...m.options].sort((a, b) => b.percent - a.percent) : m.options;
   const top = sorted.slice(0, 2);
   const extra = m.options.length - top.length;
   const resolvedWin = m.status === "resolved" && m.winningOption != null ? m.options.find((o) => o.index === m.winningOption) : null;
@@ -68,14 +69,15 @@ export function MarketCard({ m }: { m: MarketView }) {
               <div key={o.index}>
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="flex min-w-0 items-center gap-1.5 text-[#5f6172]"><Flag sash={o.sash ?? ""} /><span className="truncate">{o.label}</span></span>
-                  <span className={`shrink-0 font-semibold tabular-nums ${i === 0 ? "text-[#a97f16]" : "text-[#9a968b]"}`}>{o.percent}%</span>
+                  <span className={`shrink-0 font-semibold tabular-nums ${hasPositions && i === 0 ? "text-[#a97f16]" : "text-[#9a968b]"}`}>{o.percent}%</span>
                 </div>
                 <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#efe9d8]">
-                  <div className={`h-full rounded-full ${i === 0 ? "bg-gradient-to-r from-[#d4af37] to-[#b8912f]" : "bg-[#d9d3c3]"}`} style={{ width: `${o.percent}%` }} />
+                  <div className={`h-full rounded-full ${hasPositions && i === 0 ? "bg-gradient-to-r from-[#d4af37] to-[#b8912f]" : "bg-[#d9d3c3]"}`} style={{ width: `${o.percent}%` }} />
                 </div>
               </div>
             ))}
             {extra > 0 && <div className="pt-0.5 text-[11px] text-[#9a968b]">+{extra} more outcome{extra > 1 ? "s" : ""}</div>}
+            {!hasPositions && <div className="pt-0.5 text-[11px] font-medium text-[#7a7768]">No leading outcome yet</div>}
           </div>
         )}
 

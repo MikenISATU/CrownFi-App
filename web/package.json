@@ -15,8 +15,9 @@
     "test:public-env": "tsx src/lib/publicEnv.test.ts",
     "test:ticketing": "tsx src/lib/ticketing.test.ts",
     "test:base-flows": "tsx src/lib/baseFlows.test.ts",
+    "test:candidate-csv": "tsx src/lib/candidateCsv.test.ts",
     "typecheck": "prisma generate && tsc --noEmit",
-    "check": "npm run typecheck && npm run test:merkle && npm run test:admin-auth && npm run test:public-env && npm run test:base-flows && npm run test:ticketing",
+    "check": "npm run typecheck && npm run test:merkle && npm run test:admin-auth && npm run test:public-env && npm run test:base-flows && npm run test:candidate-csv && npm run test:ticketing",
     "security:audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
