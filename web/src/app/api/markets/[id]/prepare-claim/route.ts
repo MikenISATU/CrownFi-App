@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireFan } from "@/lib/fanAuth";
 import { baseContracts } from "@/base/contracts";
 
-// STEP 1 of a payout: build the unsigned claim() tx for a winner to sign in Freighter.
+// STEP 1 of a payout: validate the claim before the connected Base wallet signs claim().
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = requireFan(req);
   if (auth instanceof NextResponse) return auth;

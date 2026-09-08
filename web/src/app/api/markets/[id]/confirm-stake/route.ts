@@ -23,8 +23,13 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (market.chainMarketId == null || !baseContracts.predictionMarket) return NextResponse.json({ error: "market_not_onchain" }, { status: 409 });
 
   try {
-    const existing = await db.prediction.findFirst({ where: { marketId: id, fanId: auth.fanId, txHash } });
-    if (existing) return NextResponse.json({ ok: true, prediction: existing, txHash, pointsAwarded: 0 });
+    const existing = await db.prediction.findUnique({ where: { txHash } });
+    if (existing) {
+      if (existing.marketId !== id || existing.fanId !== auth.fanId || existing.option !== option) {
+        return NextResponse.json({ error: "transaction_already_recorded" }, { status: 409 });
+      }
+      return NextResponse.json({ ok: true, prediction: existing, txHash, pointsAwarded: 0 });
+    }
 
     const receipt = await verifiedBaseReceipt({ hash: txHash, from: auth.address, to: baseContracts.predictionMarket });
     const events = parseEventLogs({ abi: predictionMarketAbi, logs: receipt.logs, eventName: "Staked", strict: true });
@@ -43,6 +48,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     return NextResponse.json({ ok: true, prediction, txHash, pointsAwarded: PREDICT_POINTS });
   } catch (e: any) {
     console.error("[api/markets/confirm-stake] failed:", e);
+    if (e?.code === "P2002") return NextResponse.json({ error: "transaction_already_recorded" }, { status: 409 });
     return NextResponse.json({ error: e?.message ?? "confirm_failed" }, { status: 500 });
   }
 }

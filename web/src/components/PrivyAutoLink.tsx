@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useIdentityToken, usePrivy } from "@privy-io/react-auth";
+import { getAccessToken, useIdentityToken, usePrivy } from "@privy-io/react-auth";
 import { useSession } from "@/session/SessionProvider";
 import { messageFor } from "@/lib/messages";
 
@@ -17,11 +17,15 @@ export function PrivyAutoLink() {
   const linkSession = useCallback(async () => {
     setErr("");
     try {
-      if (!identityToken) return;
+      // Identity tokens are the preferred path when enabled in the Privy dashboard.
+      // Fall back to the standard access token so email login still completes for apps
+      // that have not enabled "Return user data in an identity token" yet.
+      const accessToken = identityToken ? null : await getAccessToken();
+      if (!identityToken && !accessToken) return;
       const res = await fetch("/api/fans/privy-connect", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ identityToken }),
+        body: JSON.stringify(identityToken ? { identityToken } : { accessToken }),
       });
       if (res.ok) {
         await refresh();
@@ -37,7 +41,6 @@ export function PrivyAutoLink() {
 
   useEffect(() => {
     if (!authenticated) { attempted.current = false; return; }
-    if (!identityToken) return;
     if (fan || attempted.current) return;
     attempted.current = true;
     linkSession();

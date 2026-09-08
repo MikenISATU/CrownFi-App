@@ -78,6 +78,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   not_resolved: "This market hasn’t been resolved yet.",
   nothing_to_claim: "You don’t have a winning payout to claim here.",
   nothing_to_unstake: "You don’t have an active position to cancel here.",
+  transaction_already_recorded: "That on-chain transaction has already been recorded.",
   file_too_large: "That image is too large (max 8MB).",
   invalid_file_type: "Please upload a PNG, JPG, WebP, or GIF image.",
 

@@ -7,20 +7,13 @@ import { CountUp } from "@/components/ui";
 import { getJson } from "@/lib/api";
 import styles from "./home.module.css";
 
-type Stats = { votes: number; collectiblesSold: number; fans: number; predictions: number };
-
-const REWARD_TASKS = [
-  ["01", "Cast a verified vote", "Once per active round", "+25"],
-  ["02", "Collect a delegate", "Official portrait edition", "+50"],
-  ["03", "Join a prediction", "Before the market locks", "+15"],
-  ["04", "Verify your receipt", "Confirm the anchored proof", "+10"],
-];
+type Stats = { fans: number; predictions: number };
 
 const ROADMAP = [
-  { period: "Now", status: "Foundation", title: "Base migration", items: ["Base Sepolia integration", "EVM wallet connection", "Contract interface mapping", "Existing data preserved"] },
-  { period: "Phase 02", status: "Next", title: "Fan actions", items: ["Receipt-backed voting", "USDC collectibles", "Free-play prediction pools", "Loyalty points and rankings"] },
-  { period: "Phase 03", status: "Planned", title: "Live pageants", items: ["Organizer command center", "Candidate review workflow", "Public result settlement", "Partner pilot event"] },
-  { period: "Phase 04", status: "Planned", title: "Mainnet stage", items: ["Audited Base contracts", "Production RPC provider", "Sponsored fan transactions", "Base ecosystem launch"] },
+  { period: "Now", status: "Testnet", title: "Prediction markets", items: ["Base Sepolia settlement", "Official test USDC", "Privy and EVM wallets", "Live crowd odds"] },
+  { period: "Phase 02", status: "Next", title: "Market hardening", items: ["Independent contract audit", "Indexed odds history", "Result-source policy", "Sponsored transactions"] },
+  { period: "Phase 03", status: "Planned", title: "Live pageants", items: ["Partner pilot event", "Market moderation", "Official result feeds", "Mobile experience"] },
+  { period: "Phase 04", status: "Planned", title: "Mainnet stage", items: ["Base mainnet contracts", "Production liquidity", "Risk and dispute controls", "Ecosystem launch"] },
 ];
 
 function marketPreview(market: MarketView, index: number) {
@@ -48,7 +41,10 @@ export default function Home() {
     getJson<MarketView[]>("/api/markets", [], { ttl: 30_000 }).then(setMarkets);
   }, []);
 
-  const marketCards = useMemo(() => markets.filter((market) => market.onchain).slice(0, 4).map(marketPreview), [markets]);
+  const onchainMarkets = useMemo(() => markets.filter((market) => market.onchain), [markets]);
+  const marketCards = useMemo(() => onchainMarkets.slice(0, 4).map(marketPreview), [onchainMarkets]);
+  const liveMarkets = onchainMarkets.filter((market) => market.live).length;
+  const pooledUsdc = onchainMarkets.reduce((sum, market) => sum + market.totalPool, 0);
 
   return (
     <div className={styles.home}>
@@ -78,9 +74,9 @@ export default function Home() {
         <div className={styles.statsGrid}>
           {[
             ["Users registered", stats?.fans ?? 0],
-            ["Votes cast", stats?.votes ?? 0],
+            ["Markets live", liveMarkets],
             ["Predictions made", stats?.predictions ?? 0],
-            ["NFTs collected", stats?.collectiblesSold ?? 0],
+            ["Test USDC pooled", pooledUsdc],
           ].map(([label, value]) => (
             <div className={styles.stat} key={label}>
               <b><CountUp to={Number(value)} /><span>+</span></b>
@@ -117,39 +113,22 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={styles.platformSuite} aria-labelledby="suite-title">
+      <section className={styles.comingSoonSection} id="coming-soon" aria-labelledby="coming-soon-title">
         <header className={styles.sectionIntro}>
-          <span className={styles.pill}>Inside the CrownFi platform</span>
-          <h2 id="suite-title">Every CrownFi experience, <em>on one stage.</em></h2>
-          <p>The dimensional system brings fan rewards, future organizer tools and public proof into one focused Base experience.</p>
+          <span className={styles.pill}>After prediction markets</span>
+          <h2 id="coming-soon-title">More ways to join the <em>stage.</em></h2>
+          <p>These experiences stay intentionally out of the main navigation until they are ready.</p>
         </header>
-
-        <div className={styles.productGrid}>
-          <article className={`${styles.productPanel} ${styles.loyaltyPanel}`}>
-            <PanelMeta label="Fan rewards and ranking" route="/loyalty" />
-            <div className={styles.productCopy}><h3>Participation becomes <em>momentum.</em></h3><p>Tasks, points, shop rewards and live standings share one dimensional fan dashboard.</p><Link href="/loyalty">Open fan rewards →</Link></div>
-            <div className={styles.loyaltyExperience}>
-              <div className={styles.pointsStage}><span className={styles.rankLeft}><b>#08</b>Global rank</span><div className={styles.pointsOrb}><b>1,250</b><span>Crown points</span></div><span className={styles.rankRight}><b>+180</b>This week</span></div>
-              <div className={styles.rewardBoard}>
-                <div className={styles.taskPanel}><h4>Earn points</h4>{REWARD_TASKS.map(([n, title, detail, points]) => <div className={styles.rewardTask} key={n}><i>{n}</i><span><b>{title}</b><small>{detail}</small></span><em>{points}</em></div>)}</div>
-                <div className={styles.podiumPanel}><h4>Live standings</h4><div className={styles.podium}><div><b>Fan 02</b><i>2</i></div><div><b>Fan 01</b><i>1</i></div><div><b>Fan 03</b><i>3</i></div></div></div>
-              </div>
-            </div>
-          </article>
-
-          <article className={`${styles.productPanel} ${styles.darkPanel} ${styles.organizerPanel}`}>
-            <PanelMeta label="Organizer command center" route="Coming soon" />
-            <div className={styles.organizerLayout}>
-              <div className={styles.productCopy}><h3>Run the show.<br /><em>Prove every result.</em></h3><p>The organizer command center is being prepared for candidate review, round controls and verified winner publishing.</p><span className={styles.comingSoon}>Coming soon</span></div>
-              <div className={styles.dashboardPreview}><div className={styles.dashboardTop}>CrownFi studio / Coronation Night</div><div className={styles.dashboardBody}><aside>Overview<br />Candidates<br />Rounds<br />Results</aside><div><h4>Your pageant</h4><div className={styles.miniMetrics}><span><b>24</b>Candidates</span><span><b>05</b>Rounds</span><span><b>98%</b>Ready</span></div></div></div><strong>Locked preview</strong></div>
-            </div>
-          </article>
-
-          <article className={`${styles.productPanel} ${styles.proofPanel}`}>
-            <PanelMeta label="Public receipt verification" route="/verify" />
-            <div className={styles.proofCard}><div><span>Vote receipt</span><b>Verified</b></div><dl><dt>Round</dt><dd>long-gown-2026</dd><dt>Wallet</dt><dd>0x9B3...72A1</dd><dt>Candidate</dt><dd>philippines</dd><dt>Leaf index</dt><dd>000014</dd></dl><code>4da3c871b940...e39f2b12c5a9</code></div>
-            <div className={styles.productCopy}><h3>Trust the result.<br /><em>Verify the receipt.</em></h3><p>Fast offchain intake becomes an anchored public proof when the official round closes.</p><ol className={styles.proofSteps}><li><b>01</b>Cast the vote and keep the receipt.</li><li><b>02</b>The closed-round tally becomes a Merkle tree.</li><li><b>03</b>The root is anchored publicly.</li><li><b>04</b>Confirm inclusion without exposing unnecessary data.</li></ol><Link href="/verify">Verify a receipt →</Link></div>
-          </article>
+        <div className={styles.comingSoonGrid}>
+          {[
+            ["01", "Fan voting", "One-wallet voting with a verifiable receipt."],
+            ["02", "Rewards", "Participation points and fan benefits."],
+            ["03", "Organizer tools", "Pageant setup, moderation and result publishing."],
+          ].map(([number, title, copy]) => (
+            <article className={styles.comingSoonCard} key={number}>
+              <span>{number}</span><small>Coming soon</small><h3>{title}</h3><p>{copy}</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -164,13 +143,9 @@ export default function Home() {
         <div className={styles.roadmapGrid}>{ROADMAP.map((phase) => <article className={styles.roadmapCard} tabIndex={0} key={phase.title}><div><span>{phase.period}</span><small>{phase.status}</small><h3>{phase.title}</h3><em>Hover or focus to flip</em></div><div><h3>{phase.title}</h3><ul>{phase.items.map(item => <li key={item}>{item}</li>)}</ul></div></article>)}</div>
       </section>
 
-      <section className={styles.finale}><span><img src="/brand/crownfi-base-logo.png" alt="CrownFi market crown" /></span><h2>The crown is more than the finale.</h2><p>It connects every fan, every prediction and every verifiable result.</p><Link className={styles.primaryButton} href="/predictions">Explore markets</Link></section>
+      <section className={styles.finale}><span><img src="/brand/crownfi-base-logo.png" alt="CrownFi market crown" /></span><h2>Make your call before the crown falls.</h2><p>Choose a live outcome, confirm with test USDC and follow the market to settlement.</p><Link className={styles.primaryButton} href="/predictions">Create a prediction</Link></section>
     </div>
   );
-}
-
-function PanelMeta({ label, route }: { label: string; route: string }) {
-  return <div className={styles.panelMeta}><span>{label}</span><b>{route}</b></div>;
 }
 
 function MarketPreview({ label, question, left, leftPct, right, rightPct }: { label: string; question: string; left: string; leftPct: number | null; right: string; rightPct: number | null }) {

@@ -469,10 +469,19 @@ CREATE INDEX "PredictionMarket_category_idx" ON "PredictionMarket"("category");
 CREATE INDEX "PredictionMarket_creatorFanId_idx" ON "PredictionMarket"("creatorFanId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "PredictionMarket_chainMarketId_key" ON "PredictionMarket"("chainMarketId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PredictionMarket_createTxHash_key" ON "PredictionMarket"("createTxHash");
+
+-- CreateIndex
 CREATE INDEX "Prediction_marketId_idx" ON "Prediction"("marketId");
 
 -- CreateIndex
 CREATE INDEX "Prediction_fanId_idx" ON "Prediction"("fanId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Prediction_txHash_key" ON "Prediction"("txHash");
 
 -- AddForeignKey
 ALTER TABLE "LoyaltyTransaction" ADD CONSTRAINT "LoyaltyTransaction_fanId_fkey" FOREIGN KEY ("fanId") REFERENCES "Fan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -580,4 +589,3 @@ ALTER TABLE public."Prediction" ENABLE ROW LEVEL SECURITY;
 
 -- No anon/authenticated policies are intentional. The Prisma database role remains server-only.
 COMMIT;
-

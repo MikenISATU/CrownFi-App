@@ -14,14 +14,14 @@ export function PrivyWrapper({ children }: { children: ReactNode }) {
     <PrivyProvider
       appId={publicPrivyAppId}
       config={{
-        loginMethods: ["email", "google"],
+        loginMethods: ["email"],
         defaultChain: targetBaseChain,
         supportedChains: [baseSepolia, base],
         embeddedWallets: {
           ethereum: { createOnLogin: "users-without-wallets" },
           solana: { createOnLogin: "off" },
         },
-        appearance: { theme: "light", accentColor: "#0052FF", logo: "/brand/crownfi-base-logo.png" },
+        appearance: { theme: "light", accentColor: "#0000C8", logo: "/brand/crownfi-base-logo.png" },
       }}
     >
       <PrivyWalletBridge>{children}</PrivyWalletBridge>

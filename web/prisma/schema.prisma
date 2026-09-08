@@ -410,8 +410,8 @@ model PredictionMarket {
   closeTime     DateTime
   winningOption Int?
   bannerUrl     String?
-  chainMarketId Int? // on-chain market id (live mode)
-  createTxHash  String? // tx that created the market on-chain
+  chainMarketId Int?    @unique // on-chain market id (live mode)
+  createTxHash  String? @unique // tx that created the market on-chain
   resolveTxHash String? // tx that resolved/closed/cancelled it on-chain
   createdAt     DateTime @default(now())
 
@@ -431,7 +431,7 @@ model Prediction {
   option      Int
   amount      Float
   status      String           @default("active") // active | won | lost | claimed
-  txHash      String? // on-chain stake tx
+  txHash      String? @unique // on-chain stake tx; one chain event can be indexed only once
   claimTxHash String? // on-chain claim tx (payout)
   createdAt   DateTime         @default(now())
 

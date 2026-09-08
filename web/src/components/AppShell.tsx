@@ -9,30 +9,27 @@ import { BaseWalletConnect } from "@/base";
 
 const CHAIN_LABEL = "Base";
 
-// Full list (mobile burger drawer shows everything).
+// Prediction-first navigation. Other CrownFi products stay discoverable in the
+// coming-soon section without presenting unfinished routes as active features.
 const USER_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/predictions", label: "Predict" },
-  { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/winners", label: "Winners" },
-  { href: "/verify", label: "Verify" },
-  { href: "/loyalty", label: "Rewards" },
-  { href: "/organizer", label: "Organizer" },
+  { href: "/predictions", label: "Prediction markets" },
+  { href: "/#prediction-markets", label: "How it works" },
+  { href: "/#coming-soon", label: "Coming soon" },
   { href: "/funds", label: "Testnet funds" },
   { href: "/me", label: "Me" },
 ];
 const NAV_DIRECT = [
   { href: "/predictions", label: "Markets" },
-  { href: "/loyalty", label: "Rewards" },
-  { href: "/verify", label: "Verify" },
+  { href: "/#prediction-markets", label: "How it works" },
+  { href: "/#coming-soon", label: "Coming soon" },
   { href: "/#roadmap", label: "Roadmap" },
 ];
 
 const TABS = [
   { href: "/", label: "Home", Icon: Icons.Home },
-  { href: "/predictions", label: "Predict", Icon: Icons.TrendingUp },
-  { href: "/loyalty", label: "Rewards", Icon: Icons.Crown },
-  { href: "/verify", label: "Verify", Icon: Icons.Verify },
+  { href: "/predictions", label: "Markets", Icon: Icons.TrendingUp },
+  { href: "/funds", label: "Funds", Icon: Icons.Wallet },
   { href: "/me", label: "Me", Icon: Icons.Me },
 ];
 
@@ -66,9 +63,9 @@ const SOCIALS = [
 ];
 
 const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
-  { title: "Explore", links: [["/", "Home"], ["/predictions", "Predict"], ["/leaderboard", "Leaderboard"]] },
-  { title: "Experience", links: [["/loyalty", "Rewards"], ["/funds", "Testnet funds"], ["/verify", "Verify a receipt"]] },
-  { title: "Organizers", links: [["/organizer", "Host a pageant"], ["/faq", "FAQ"], ["/faq#legal", "Privacy"], ["/faq#legal", "Terms"]] },
+  { title: "Markets", links: [["/predictions", "Explore markets"], ["/#prediction-markets", "How it works"], ["/funds", "Get test funds"]] },
+  { title: "CrownFi", links: [["/#roadmap", "Roadmap"], ["/faq", "FAQ"], ["/faq#legal", "Privacy and terms"]] },
+  { title: "Coming soon", links: [["/#coming-soon", "Fan voting"], ["/#coming-soon", "Rewards"], ["/#coming-soon", "Organizer tools"]] },
 ];
 
 function SiteFooter() {
@@ -103,7 +100,7 @@ function SiteFooter() {
             <div className="mt-5 flex items-center gap-2">
               {SOCIALS.map(({ href, label, Icon }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="grid h-9 w-9 place-items-center rounded-full text-[#b1b7c3] ring-1 ring-[#5b616e] transition hover:bg-[#0052ff] hover:text-white hover:ring-[#d4af37]">
+                  className="grid h-9 w-9 place-items-center rounded-full text-[#b1b7c3] ring-1 ring-[#5b616e] transition hover:bg-[#0000c8] hover:text-white hover:ring-[#d4af37]">
                   <Icon />
                 </a>
               ))}
@@ -124,11 +121,10 @@ function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-[#d4af37]/25 pt-6 text-xs text-[#aab6e3]">
-          <span className="inline-flex items-center gap-2">We accept
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <span className="inline-flex items-center rounded-md bg-white px-2 py-1"><img src="/brand/gcash.svg" alt="GCash" className="h-5 w-auto" /></span>
+          <span className="inline-flex items-center gap-2">Settlement asset
+            <span className="inline-flex items-center rounded-md bg-white px-2.5 py-1 font-semibold text-[#050a4f]">USDC</span>
           </span>
-          <span className="rounded-full bg-[#0052ff] px-2.5 py-1 text-[11px] text-white ring-1 ring-[#d4af37]/50">Built on {CHAIN_LABEL}</span>
+          <span className="rounded-full bg-[#0000c8] px-2.5 py-1 text-[11px] text-white ring-1 ring-[#d4af37]/50">Built on {CHAIN_LABEL}</span>
           <span className="ml-auto text-[#b1b7c3]">Crown your queen, on-chain.</span>
         </div>
 
@@ -203,7 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link href="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2" onClick={() => setDrawer(false)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/brand/crownfi-base-logo.png" alt="CrownFi" className="h-8 w-8 rounded-[10px] object-cover ring-1 ring-[#e0e2f2]" />
-                <span className="hidden font-display text-base font-semibold tracking-wide text-[#050a4f] min-[421px]:inline min-[480px]:text-xl">CrownFi</span>
+                <span className="font-display text-base font-semibold tracking-wide text-[#050a4f] min-[480px]:text-xl">CrownFi</span>
               </Link>
             </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useChainId, useConnect, useSwitchChain, type Connector } from "wagmi";
 import { useSession } from "@/session/SessionProvider";
 import { targetBaseChain } from "./config";
@@ -23,11 +23,21 @@ function connectorDetails(connector: Connector) {
 
 export function BaseWalletConnect({ menuAlign = "right" }: { menuAlign?: "left" | "right" } = {}) {
   const [open, setOpen] = useState(false);
+  const [connectionTimedOut, setConnectionTimedOut] = useState(false);
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const chainId = useChainId();
   const { connectAsync, connectors, error } = useConnect();
   const { switchChain, isPending: switching } = useSwitchChain();
   const { fan, authenticate, connecting: authenticating, disconnect } = useSession();
+
+  useEffect(() => {
+    if (!isConnecting) {
+      setConnectionTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setConnectionTimedOut(true), 20_000);
+    return () => window.clearTimeout(timer);
+  }, [isConnecting]);
 
   async function connectWith(connector: Connector) {
     setOpen(false);
@@ -85,16 +95,24 @@ export function BaseWalletConnect({ menuAlign = "right" }: { menuAlign?: "left" 
   return (
     <div className="relative">
       {privyEnabled && <PrivyAutoLink />}
-      <button className="btn-gold !min-h-[38px] !rounded-[11px] !px-2.5 text-xs sm:!px-4" disabled={isConnecting || authenticating}
-        aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        {isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /><span className="hidden min-[480px]:inline">Connect Wallet</span><span className="min-[480px]:hidden">Connect</span></>}
+      <button className="btn-gold !min-h-[38px] !rounded-[11px] !px-2.5 text-xs sm:!px-4" disabled={(isConnecting && !connectionTimedOut) || authenticating}
+        aria-expanded={open} onClick={() => {
+          if (connectionTimedOut) {
+            disconnect();
+            setConnectionTimedOut(false);
+            setOpen(true);
+            return;
+          }
+          setOpen((value) => !value);
+        }}>
+        {connectionTimedOut ? "Retry wallet" : isConnecting || authenticating ? "Connecting…" : <><WalletMarkStack /><span className="hidden min-[480px]:inline">Connect Wallet</span><span className="min-[480px]:hidden">Connect</span></>}
       </button>
       {open && (
         <div className={`glass absolute z-50 mt-2 grid w-64 max-w-[calc(100vw-2rem)] gap-1 p-2 ${menuAlign === "left" ? "left-0" : "right-0"}`}>
           {connectors.map((connector) => {
             const details = connectorDetails(connector);
             return (
-              <button key={connector.uid} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-[#3a3f52] transition hover:bg-[#faf6ea]"
+              <button key={connector.uid} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-[#3a3f52] transition hover:bg-[#f3f3fb] hover:ring-1 hover:ring-[#0000c8]/20"
                 onClick={() => connectWith(connector)}>
                 <ConnectorMark connector={connector} />
                 <span className="min-w-0">
@@ -108,7 +126,7 @@ export function BaseWalletConnect({ menuAlign = "right" }: { menuAlign?: "left" 
             <>
               <div className="my-1 flex items-center gap-2 px-2 text-[10px] uppercase tracking-wider text-[#9a968b]"><span className="h-px flex-1 bg-[#eee6d3]" />or<span className="h-px flex-1 bg-[#eee6d3]" /></div>
               <PrivyEmailButton onStart={() => setOpen(false)}>
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#0052ff] text-white"><Icons.Mail size={16} strokeWidth={1.9} /></span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#0000c8] text-white"><Icons.Mail size={16} strokeWidth={1.9} /></span>
                 <span className="min-w-0">
                   <span className="block font-semibold text-[#23252f]">Continue with email</span>
                   <span className="mt-0.5 block text-[11px] text-[#8a8779]">Privy creates your Base wallet automatically</span>

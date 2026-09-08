@@ -14,7 +14,7 @@ This repository is suitable for development, demos, and product review. It is no
 | Database | Active — Prisma with a new Supabase Postgres project |
 | Base network | Configured for Base Sepolia by default |
 | Wallets | Base Account, Coinbase Wallet, and MetaMask connection available |
-| Web2 onboarding | Privy email/Google login with an embedded EVM wallet; credentials required |
+| Web2 onboarding | Privy email login with an embedded EVM wallet; credentials required |
 | Base voting contract | Not planned for raw votes — backend-first voting anchors compact proofs |
 | Base audit-anchor contract | Deployed — admin close flow publishes and verifies the closed-round checkpoint |
 | Base collectible contract | Deployed on Base Sepolia — five candidates registered, no tokens minted |
@@ -32,7 +32,7 @@ The configured Base Sepolia USDC address is Circle's existing test token address
 - Next.js API routes with Prisma/Postgres persistence.
 - Base Sepolia network configuration through Wagmi and Viem.
 - Base Account plus explicit Coinbase Wallet and MetaMask support.
-- Privy email/Google onboarding and automatic embedded EVM-wallet creation when configured.
+- Privy email onboarding and automatic embedded EVM-wallet creation when configured. Google can be enabled later in the Privy dashboard before it is exposed in the UI.
 - Wallet-signed CrownFi sessions and EVM-address-based admin allowlisting.
 - Off-chain vote records, market records, user profiles, pageants, candidates, and application receipts.
 - Merkle proof generation and receipt verification at the application layer.
@@ -70,7 +70,7 @@ CrownFi does not deploy a raw-vote smart contract. Votes remain fast and inexpen
 flowchart LR
   Fan[Fan]
   Wallet[Base Account / Coinbase Wallet / MetaMask]
-  Privy[Privy email or Google]
+  Privy[Privy email]
   Web[Next.js application]
   API[Next.js API routes]
   DB[(Supabase Postgres)]
@@ -113,7 +113,7 @@ Some files under `contracts/` and `docs/` still describe the former Stellar prot
 - Node.js 22 or the version used by CI.
 - npm.
 - A new Supabase project.
-- A Privy application if email/Google onboarding is enabled.
+- A Privy application if email onboarding is enabled.
 - A Base-compatible browser wallet for external-wallet testing.
 
 ### 1. Install the application
@@ -152,13 +152,13 @@ PRIVY_APP_ID="your-privy-app-id"
 PRIVY_APP_SECRET="your-server-only-app-secret"
 ```
 
-Configure email and Google login methods and allow `http://localhost:3000` plus the deployed CrownFi domain. Never expose `PRIVY_APP_SECRET` in browser code or commit it to Git.
+Enable email login and allow `http://localhost:3000` plus the deployed CrownFi domain. Google is intentionally hidden until Google OAuth is enabled in the Privy dashboard. Never expose `PRIVY_APP_SECRET` in browser code or commit it to Git.
 
 The Privy Application ID is exactly 25 characters. In a local `.env` file the quotes above are valid,
 but in the Vercel Environment Variables UI paste only the raw value with **no surrounding quotes or
 whitespace**. Use the Application ID for both App ID variables; do not substitute a client ID, App
 Secret, or the example placeholder. If the public App ID is missing or malformed, CrownFi now keeps
-Base Account, Coinbase Wallet, and MetaMask available while disabling only Privy email/Google login instead of failing
+Base Account, Coinbase Wallet, and MetaMask available while disabling only Privy email login instead of failing
 the entire Next.js prerender.
 
 ### 4. Keep Base on Sepolia
@@ -203,8 +203,8 @@ Do not paste Stellar `C...` contract IDs into these fields. Base requires deploy
 
 Open `/funds` in CrownFi or use these provider pages directly:
 
-- Test ETH for gas: [Alchemy Base Sepolia faucet](https://www.alchemy.com/faucets/base-sepolia), [Coinbase Developer Platform faucet](https://portal.cdp.coinbase.com/products/faucet), or the [Base funding guide](https://docs.base.org/get-started/get-funds).
-- Test USDC for prediction stakes: [Circle's public faucet](https://faucet.circle.com/) or the [Coinbase Developer Platform faucet](https://portal.cdp.coinbase.com/products/faucet). Select **Base Sepolia** and **USDC**.
+- Test ETH for gas: use the maintained [Base funding guide](https://docs.base.org/get-started/get-funds) to choose a currently available Base Sepolia provider.
+- Test USDC for prediction stakes: use [Circle's public faucet](https://faucet.circle.com/), select **Base Sepolia** and **USDC**, and paste the same wallet address.
 
 Use the direct USDC faucet instead of swapping test ETH. A testnet DEX may issue or route through a different mock token that the CrownFi prediction contract will reject. CrownFi accepts Circle's Base Sepolia test USDC at `0x036CbD53842c5426634e7929541eC2318f3dCF7e`.
 
@@ -242,6 +242,7 @@ Never place a deployer private key, wallet seed phrase, database password, or Pr
 4. Keep `NEXT_PUBLIC_BASE_NETWORK=sepolia`.
 5. Use the deployed Base Sepolia prediction-market, audit-anchor, ticket, and collectible addresses from `web/.env.base.example`.
 6. Redeploy after changing any `NEXT_PUBLIC_*` variable because it is included in the client build.
+7. After the deployment finishes, open `/api/stats`; a `200` response confirms the runtime can reach Supabase. A `503` means the database URL, password encoding, Vercel environment scope, or Supabase project state still needs attention.
 
 When entering values in Vercel, do not include the `KEY=` portion or `.env` quotes. Apply the variables
 to Production and Preview as needed, then trigger a fresh deployment. At minimum, double-check:

@@ -7,7 +7,6 @@ import { MARKET_CATEGORIES } from "@/lib/segments";
 import { Icons } from "@/components/icons";
 import { MarketCandidateHint, withCandidateFlags } from "@/lib/markets";
 import { TestnetFundingPanel } from "@/components/TestnetFundingPanel";
-import { BaseWalletConnect } from "@/base/BaseWalletConnect";
 import { TestnetNotice } from "@/components/TestnetNotice";
 
 const CATEGORIES = ["all", ...MARKET_CATEGORIES.map((s) => s.key)];
@@ -20,7 +19,7 @@ const STATUSES = [
 ];
 
 export default function PredictionsLanding() {
-  const { isAdmin, fan } = useSession();
+  const { isAdmin } = useSession();
   const [markets, setMarkets] = useState<MarketView[] | null>(null);
   const [candidates, setCandidates] = useState<MarketCandidateHint[]>([]);
   const [q, setQ] = useState("");
@@ -58,13 +57,13 @@ export default function PredictionsLanding() {
   return (
     <div className="space-y-8">
       <TestnetNotice />
-      <header className="relative z-30 isolate rounded-[28px] border border-[#d4af37]/60 bg-[#061333] px-5 py-8 text-white shadow-[0_28px_70px_-42px_rgba(0,82,255,0.85)] sm:px-8 sm:py-10">
-        <div aria-hidden className="absolute inset-0 -z-10 rounded-[28px] bg-[radial-gradient(circle_at_85%_12%,rgba(0,82,255,0.72),transparent_38%),linear-gradient(125deg,rgba(0,82,255,0.18),transparent_48%)]" />
-        <div aria-hidden className="absolute right-4 top-4 -z-10 h-40 w-40 rounded-full border border-white/15 shadow-[0_0_80px_rgba(0,82,255,0.45)]" />
+      <header className="relative z-30 isolate rounded-[28px] border border-[#d4af37]/60 bg-[#050a4f] px-5 py-8 text-white shadow-[0_28px_70px_-42px_rgba(0,0,200,0.75)] sm:px-8 sm:py-10">
+        <div aria-hidden className="absolute inset-0 -z-10 rounded-[28px] bg-[radial-gradient(circle_at_85%_12%,rgba(0,2,253,0.48),transparent_38%),linear-gradient(125deg,rgba(0,0,200,0.2),transparent_48%)]" />
+        <div aria-hidden className="absolute right-4 top-4 -z-10 h-40 w-40 rounded-full border border-white/15 shadow-[0_0_80px_rgba(0,2,253,0.38)]" />
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#f2d784]/60 bg-[#f2d784]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#f2d784]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#0052ff] shadow-[0_0_0_4px_rgba(0,82,255,0.24)]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#0002fd] shadow-[0_0_0_4px_rgba(0,2,253,0.24)]" />
               Prediction markets on Base
             </div>
             <h1 className="max-w-3xl tracking-tight text-4xl font-semibold text-white sm:text-5xl">Predict the <span className="font-display italic text-[#f2d784]">crown</span></h1>
@@ -85,8 +84,7 @@ export default function PredictionsLanding() {
           )}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {!fan && <BaseWalletConnect menuAlign="left" />}
-            {fan && <span className="rounded-xl border border-[#0052ff]/70 bg-[#0052ff]/20 px-4 py-2.5 text-sm font-semibold text-white">Ready to predict</span>}
+            <a className="btn-gold min-h-[52px] min-w-[230px] px-7 text-sm uppercase tracking-[0.09em]" href="#market-list">Create a prediction</a>
             {isAdmin && <Link className="btn-ghost !border-white/25 !bg-white/10 !text-white hover:!border-[#f2d784] hover:!bg-white/15" href="/admin">Manage markets</Link>}
           </div>
         </div>
@@ -95,14 +93,15 @@ export default function PredictionsLanding() {
       <TestnetFundingPanel compact />
 
       {/* How it works — numbered walk-through, reference-style */}
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <p className="-mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[#65677a] sm:hidden">Swipe through the four steps →</p>
+      <section aria-label="How prediction markets work" className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
         {[
           { n: "01", t: "Pick a market", d: "Each pageant stage gets a market. The percentages are live odds — the crowd's money talking." },
           { n: "02", t: "Stake USDC", d: "Back an outcome with test USDC. You approve every stake in your own wallet; funds sit in the contract." },
           { n: "03", t: "Watch it move", d: "Odds shift as fans take sides. Change your mind? Cancel any position before close for a full refund." },
           { n: "04", t: "Claim winnings", d: "When the result is resolved on-chain, winners split the whole pool. Fee is 2% of profit only." },
         ].map((s) => (
-          <div key={s.n} className="card-gold p-5">
+          <div key={s.n} className="card-gold min-w-[82vw] snap-center p-5 sm:min-w-0">
             <div className="font-display text-sm font-semibold tabular-nums text-[#a97f16]">{s.n}</div>
             <div className="mt-1 font-display text-2xl font-semibold text-[#23252f]">{s.t}</div>
             <p className="mt-2 text-xs leading-relaxed text-[#5f6172]">{s.d}</p>
@@ -111,7 +110,7 @@ export default function PredictionsLanding() {
       </section>
 
       {/* Search + filters (sticky so they stay reachable while scrolling the grid) */}
-      <div className="sticky top-2 z-20 -mx-2 space-y-3 rounded-2xl border border-[#efe4c2]/70 bg-[#fbf9f2]/85 px-3 py-3 backdrop-blur-xl sm:top-3">
+      <div id="market-list" className="sticky top-2 z-20 -mx-2 scroll-mt-24 space-y-3 rounded-2xl border border-[#e0e2f2] bg-white/90 px-3 py-3 backdrop-blur-xl sm:top-3">
         <div className="relative">
           <Icons.Search size={16} strokeWidth={2} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9a968b]" />
           <input className="field !pl-9" placeholder="Search markets…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search markets" />
@@ -126,7 +125,7 @@ export default function PredictionsLanding() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {STATUSES.map((s) => (
-            <button key={s.key} onClick={() => setStatus(s.key)} aria-pressed={status === s.key} className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${status === s.key ? "border-[#a97f16]/50 bg-[rgba(0,0,0,0.842)] text-[#ffd277]" : "border-[#e7e2d3] bg-white text-[#5f6172] hover:border-[#c9a227]"}`}>
+            <button key={s.key} onClick={() => setStatus(s.key)} aria-pressed={status === s.key} className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${status === s.key ? "border-[#d4af37] bg-[#050a4f] text-[#f4e3a1]" : "border-[#e0e2f2] bg-white text-[#5f6172] hover:border-[#0000c8] hover:text-[#0000c8]"}`}>
               {s.label}
             </button>
           ))}

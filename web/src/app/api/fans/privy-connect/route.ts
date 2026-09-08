@@ -7,10 +7,10 @@ import { privyConfigured, resolvePrivyEvmIdentity } from "@/lib/privyServer";
 
 const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
 
-// Web2 sign-in via Privy: the client sends its Privy access token; the server verifies it
-// (proof of identity), resolves the user's embedded EVM wallet, links/creates the Fan, and
-// opens a CrownFi session cookie. No wallet signature is needed here — the verified
-// Privy token is the proof.
+// Web2 sign-in via Privy: the client prefers an identity token and falls back to a
+// standard access token. The server verifies either proof, resolves the embedded EVM
+// wallet, links/creates the Fan, and opens a CrownFi session cookie. No private key or
+// separate wallet signature is handled by CrownFi.
 export async function POST(req: NextRequest) {
   if (!privyConfigured()) {
     return NextResponse.json({ error: "privy_not_configured" }, { status: 501 });
@@ -18,16 +18,16 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const identityToken = String(body?.identityToken ?? "");
-  if (!identityToken) return NextResponse.json({ error: "missing_token" }, { status: 400 });
+  const accessToken = String(body?.accessToken ?? "");
+  if (!identityToken && !accessToken) return NextResponse.json({ error: "missing_token" }, { status: 400 });
 
   let identity;
   try {
-    identity = await resolvePrivyEvmIdentity(identityToken);
+    identity = await resolvePrivyEvmIdentity({ identityToken: identityToken || undefined, accessToken: accessToken || undefined });
   } catch (e: any) {
-    // TEMP DEBUG: include the real message so it shows in the browser Network tab.
     const detail = e?.message ?? String(e);
     console.error("[api/fans/privy-connect] Privy verify/provision failed:", detail, e);
-    return NextResponse.json({ error: "privy_error", detail }, { status: 502 });
+    return NextResponse.json({ error: "privy_error" }, { status: 502 });
   }
 
   const { userId, email } = identity;

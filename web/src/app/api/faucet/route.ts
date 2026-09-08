@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  BASE_SEPOLIA_ETH_FAUCET,
-  BASE_SEPOLIA_ETH_FAUCETS,
+  BASE_SEPOLIA_FUNDING_GUIDE,
   BASE_SEPOLIA_USDC_FAUCET,
-  BASE_SEPOLIA_USDC_FAUCETS,
 } from "@/base/faucets";
 
 // CrownFi does not custody a Base faucet key. Return the verified public funding routes
@@ -11,12 +9,13 @@ import {
 export async function POST() {
   return NextResponse.json({
     error: "external_faucet_required",
-    ethFaucet: BASE_SEPOLIA_ETH_FAUCET,
+    ethFaucet: BASE_SEPOLIA_FUNDING_GUIDE,
     usdcFaucet: BASE_SEPOLIA_USDC_FAUCET,
     providers: {
-      eth: BASE_SEPOLIA_ETH_FAUCETS,
-      usdc: BASE_SEPOLIA_USDC_FAUCETS,
+      eth: [{ label: "Base funding guide", href: BASE_SEPOLIA_FUNDING_GUIDE }],
+      usdc: [{ label: "Circle faucet", href: BASE_SEPOLIA_USDC_FAUCET }],
     },
     swapRequired: false,
+    swapSupported: false,
   }, { status: 409 });
 }

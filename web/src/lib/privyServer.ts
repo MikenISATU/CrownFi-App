@@ -22,9 +22,19 @@ async function getPrivyClient(): Promise<any> {
 
 export type PrivyEvmIdentity = { userId: string; email: string | null; address: string };
 
-export async function resolvePrivyEvmIdentity(identityToken: string): Promise<PrivyEvmIdentity> {
+export async function resolvePrivyEvmIdentity(tokens: { identityToken?: string; accessToken?: string }): Promise<PrivyEvmIdentity> {
   const privy = await getPrivyClient();
-  const user: any = await privy.getUser({ idToken: identityToken });
+  let user: any;
+  if (tokens.identityToken) {
+    user = await privy.getUser({ idToken: tokens.identityToken });
+  } else if (tokens.accessToken) {
+    // Compatibility path for Privy projects where identity tokens are not enabled.
+    // verifyAuthToken proves the caller's DID before the server fetches that same user.
+    const verified = await privy.verifyAuthToken(tokens.accessToken);
+    user = await privy.getUser(verified.userId);
+  } else {
+    throw new Error("missing_token");
+  }
   const userId: string = user.id;
   const accounts: any[] = user?.linkedAccounts ?? [];
   const email: string | null =
