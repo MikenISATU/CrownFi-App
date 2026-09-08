@@ -93,7 +93,7 @@ export default function PredictionsLanding() {
       <TestnetFundingPanel compact />
 
       {/* How it works — numbered walk-through, reference-style */}
-      <p className="-mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[#65677a] sm:hidden">Swipe through the four steps →</p>
+      <p className="-mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-white/70 sm:hidden">Swipe through the four steps →</p>
       <section aria-label="How prediction markets work" className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
         {[
           { n: "01", t: "Pick a market", d: "Each pageant stage gets a market. The percentages are live odds — the crowd's money talking." },
@@ -110,7 +110,7 @@ export default function PredictionsLanding() {
       </section>
 
       {/* Search + filters (sticky so they stay reachable while scrolling the grid) */}
-      <div id="market-list" className="sticky top-2 z-20 -mx-2 scroll-mt-24 space-y-3 rounded-2xl border border-[#e0e2f2] bg-white/90 px-3 py-3 backdrop-blur-xl sm:top-3">
+      <div id="market-list" className="sticky top-2 z-20 -mx-2 scroll-mt-24 space-y-3 rounded-2xl border border-[#d4af37]/55 bg-white px-3 py-3 shadow-[0_20px_48px_-34px_rgba(0,0,0,0.72)] sm:top-3">
         <div className="relative">
           <Icons.Search size={16} strokeWidth={2} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9a968b]" />
           <input className="field !pl-9" placeholder="Search markets…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search markets" />
@@ -152,7 +152,7 @@ export default function PredictionsLanding() {
       {/* Featured live */}
       {markets !== null && status === "active" && cat === "all" && !q && live.length > 0 && (
         <section>
-          <h2 className="mb-3 flex items-center gap-2 tracking-tight text-2xl font-semibold text-[#23252f]">
+          <h2 className="mb-3 flex items-center gap-2 tracking-tight text-2xl font-semibold text-white">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c0392b] opacity-70" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c0392b]" />
@@ -168,7 +168,7 @@ export default function PredictionsLanding() {
       {/* All (filtered) */}
       {markets !== null && (
         <section>
-          {cat === "all" && !q && <h2 className="mb-3 tracking-tight text-2xl font-semibold text-[#23252f]">{status === "previous" ? "Previous markets" : status === "cancelled" ? "Cancelled markets" : status === "active" ? "Active markets" : `${STATUSES.find((s) => s.key === status)?.label ?? "Markets"} markets`}</h2>}
+          {cat === "all" && !q && <h2 className="mb-3 tracking-tight text-2xl font-semibold text-white">{status === "previous" ? "Previous markets" : status === "cancelled" ? "Cancelled markets" : status === "active" ? "Active markets" : `${STATUSES.find((s) => s.key === status)?.label ?? "Markets"} markets`}</h2>}
           {filtered.length === 0 ? (
             <div className="glass p-10 text-center">
               <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full surface-soft text-[#a97f16]"><Icons.Search size={20} strokeWidth={1.75} /></div>

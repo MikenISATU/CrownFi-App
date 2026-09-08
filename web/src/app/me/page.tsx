@@ -32,7 +32,7 @@ export default function MePage() {
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="page-surface mb-8 p-5 sm:p-6">
         <div className="eyebrow mb-2">Your account</div>
         {editing ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -78,7 +78,7 @@ export default function MePage() {
       {/* Collectibles — NFT gallery (art + token id, since wallets can't render Soroban NFTs yet) */}
       <div className="mt-8">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="tracking-tight text-xl text-[#23252f]">Your collectibles</h2>
+          <h2 className="tracking-tight text-xl text-white">Your collectibles</h2>
           <span className="chip">{(data?.collectibles ?? []).length}</span>
         </div>
         {(data?.collectibles ?? []).length === 0 ? (

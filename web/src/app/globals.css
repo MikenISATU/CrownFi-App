@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CrownFi Luminous Editorial: white-first surfaces, midnight structure,
+/* CrownFi Luminous Editorial: a midnight canvas, white content surfaces,
    royal-blue interaction cues, and gold reserved for primary actions. */
 :root {
   color-scheme: light;
@@ -31,9 +31,12 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: clip
 button, a, [role="button"], summary, label { touch-action: manipulation; }
 
 body {
-  color: var(--base-gray-100);
+  color: var(--base-white);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
-  background: #fbfbff;
+  background:
+    radial-gradient(circle at 50% -18rem, rgba(0, 2, 253, 0.34), transparent 42rem),
+    linear-gradient(180deg, #080f64 0%, var(--crown-navy) 34%, #02052f 100%);
+  background-attachment: fixed;
   min-height: 100vh;
   min-height: 100dvh;
   /* Lets full-bleed strips (the collectibles carousel) run past the page container without
@@ -49,8 +52,9 @@ body {
   /* Card — hairline border + layered neutral shadow (crisp/premium, not warm-soft). */
   .glass {
     @apply rounded-2xl border bg-white;
-    border-color: var(--base-gray-15);
-    box-shadow: 0 1px 2px rgba(10,11,13,0.04), 0 14px 34px -24px rgba(50,53,61,0.32);
+    color: var(--crown-navy);
+    border-color: rgba(212,175,55,0.56);
+    box-shadow: 0 1px 2px rgba(10,11,13,0.04), 0 20px 48px -30px rgba(0,0,0,0.72);
   }
   .glass-hover { @apply transition duration-200 hover:-translate-y-0.5; }
   .glass-hover:hover { border-color: var(--crown-gold); box-shadow: 0 20px 46px -28px rgba(0,82,255,0.34); }
@@ -77,6 +81,7 @@ body {
      rather than the button's percentages, which would go lopsided on a wide, short card. */
   .card-gold {
     @apply relative z-0 overflow-hidden rounded-xl border bg-white;
+    color: var(--crown-navy);
     border-color: rgba(212,175,55,0.78);
     box-shadow: 0 12px 30px -24px rgba(50,53,61,0.34);
     transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
@@ -113,6 +118,12 @@ body {
   .tag-on { @apply inline-flex items-center gap-1 rounded-full bg-[#e6f6ef] px-2 py-0.5 text-[11px] font-semibold text-[#0f6e56]; }
   .tag-off { @apply inline-flex items-center gap-1 rounded-full bg-[#f1eee4] px-2 py-0.5 text-[11px] font-semibold text-[#6b6552]; }
   .surface-soft { background: var(--base-gray-10); }
+  .page-surface {
+    @apply rounded-2xl border bg-white;
+    color: var(--crown-navy);
+    border-color: rgba(212,175,55,0.62);
+    box-shadow: 0 24px 58px -38px rgba(0,0,0,0.78);
+  }
 }
 
 .mono { font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace; }

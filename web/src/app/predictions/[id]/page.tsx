@@ -217,7 +217,7 @@ export default function MarketDetail() {
   return (
     <div className="space-y-6">
       <TestnetNotice compact />
-      <Link href="/predictions" className="text-sm text-[#7a7768] hover:text-[#23252f]">← All markets</Link>
+      <Link href="/predictions" className="text-sm text-white/75 transition hover:text-[#f4e3a1]">← All markets</Link>
 
       {m.status === "resolved" && m.winningOption != null && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200 bg-[#f2fbf7] px-5 py-3 text-sm">
@@ -239,7 +239,7 @@ export default function MarketDetail() {
         {/* ══ LEFT: the market ══════════════════════════════ */}
         <div className="space-y-6">
           {/* Header */}
-          <div>
+          <div className="page-surface p-5">
             <div className="flex items-center gap-2 text-xs">
               <span className="rounded-full bg-[#faf0d2] px-2.5 py-0.5 font-semibold text-[#8a6d1f]">{CATEGORY_LABEL[m.category] ?? m.category}</span>
               <span className={`rounded-full px-2.5 py-0.5 font-semibold ${badge.cls}`}>{badge.label}</span>
@@ -281,7 +281,7 @@ export default function MarketDetail() {
           </div>
 
           {/* Outcomes table — the pool "book" */}
-          <div>
+          <div className="page-surface p-4">
             <div className="flex items-center gap-3 px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#9a968b]">
               <span className="flex-1">Outcome</span>
               <span className="w-12 text-right">Chance</span>
@@ -315,7 +315,7 @@ export default function MarketDetail() {
           </div>
 
           {/* Tabs: activity | rules & source */}
-          <div>
+          <div className="page-surface p-4">
             <div className="flex gap-2 border-b border-[#eee6d3]">
               {([["activity", "Recent activity"], ["rules", "Rules & source"]] as const).map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)}

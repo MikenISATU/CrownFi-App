@@ -72,7 +72,7 @@ function Item({ qa }: { qa: QA }) {
 export default function FaqPage() {
   return (
     <div className="space-y-10">
-      <header>
+      <header className="page-surface p-6 sm:p-8">
         <div className="eyebrow mb-2">Help center</div>
         <h1 className="tracking-tight text-4xl font-semibold text-[#23252f] sm:text-5xl">Frequently asked questions</h1>
         <p className="mt-2 max-w-xl text-sm text-[#5f6172]">Everything about wallets, voting, tickets, NFTs, and rewards. Still stuck? Reach us on Discord.</p>
@@ -80,7 +80,7 @@ export default function FaqPage() {
 
       {GROUPS.map((g) => (
         <section key={g.title}>
-          <h2 className="mb-3 tracking-tight text-2xl font-semibold text-[#23252f]">{g.title}</h2>
+          <h2 className="mb-3 tracking-tight text-2xl font-semibold text-white">{g.title}</h2>
           <div className="space-y-3">
             {g.items.map((qa) => <Item key={qa.q} qa={qa} />)}
           </div>

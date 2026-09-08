@@ -191,7 +191,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen pb-20 sm:pb-0">
       <header className="sticky top-3 z-40 px-3 sm:top-4 sm:px-6">
         <div className="mx-auto max-w-[1440px]">
-          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#e0e2f2] bg-white/95 px-2.5 py-2.5 shadow-[0_18px_42px_-24px_rgba(5,10,79,0.42)] backdrop-blur-xl sm:px-6">
+          <div className="brand-header flex items-center justify-between rounded-2xl border border-[#d4af37]/60 bg-white/95 px-2.5 py-2.5 shadow-[0_18px_42px_-24px_rgba(0,0,0,0.68)] backdrop-blur-xl sm:px-6">
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <button className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[#e0e2f2] text-[#050a4f] transition hover:bg-[#f3f3fb] sm:hidden" onClick={() => setDrawer((v) => !v)} aria-label="Toggle menu" aria-expanded={drawer}>
                 {drawer ? <Icons.X size={18} strokeWidth={1.75} /> : <Icons.Menu size={18} strokeWidth={1.75} />}
@@ -222,7 +222,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {drawer && (
             <>
               <div className="fixed inset-0 top-0 z-[-1] sm:hidden" onClick={() => setDrawer(false)} />
-              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#e0e2f2] bg-white p-3 shadow-[0_24px_50px_-24px_rgba(5,10,79,0.42)] sm:hidden">
+              <nav className="mt-2 grid gap-1 rounded-2xl border border-[#d4af37]/60 bg-white p-3 shadow-[0_24px_50px_-24px_rgba(0,0,0,0.68)] sm:hidden">
                 {links.map((l) => (
                   <Link key={l.href} href={l.href} onClick={() => setDrawer(false)}
                     className={`rounded-xl px-3 py-2.5 text-sm ${path === l.href ? "bg-[#050a4f] font-semibold text-white shadow-[inset_3px_0_0_#d4af37]" : "text-[#5e6075] hover:bg-[#f3f3fb] hover:text-[#050a4f]"}`}>
