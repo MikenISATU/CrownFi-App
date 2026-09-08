@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { parseEventLogs } from "viem";
+import { parseEventLogs, type Address } from "viem";
 import { usePublicClient } from "wagmi";
 import { useSession } from "@/session/SessionProvider";
 import { MarketCard, MarketView, CATEGORY_LABEL } from "@/components/MarketCard";
@@ -18,6 +18,7 @@ import { messageFor } from "@/lib/messages";
 import { baseContracts } from "@/base/contracts";
 import { predictionMarketAbi } from "@/base/abis";
 import { useBaseWalletClient } from "@/base/useBaseWalletClient";
+import { BaseWalletConnect } from "@/base";
 
 const CATEGORIES = ["all", ...MARKET_CATEGORIES.map((s) => s.key)];
 const STATUSES = [
@@ -29,7 +30,7 @@ const STATUSES = [
 ];
 
 export default function PredictionsLanding() {
-  const { fan, address, isAdmin, connect, connecting } = useSession();
+  const { fan, address, isAdmin, connecting } = useSession();
   const router = useRouter();
   const publicClient = usePublicClient();
   const getWalletClient = useBaseWalletClient();
@@ -45,14 +46,10 @@ export default function PredictionsLanding() {
     setTimeout(() => setToast({ msg: "", tone: "ok" }), 3600);
   };
 
-  async function openCreator() {
-    if (fan) {
-      setShowCreate((open) => !open);
-      return;
-    }
-    await connect();
-    // The form renders as soon as SessionProvider publishes the authenticated fan.
-    setShowCreate(true);
+  function openCreator() {
+    // Always reveal a useful surface. Signed-out users get the complete wallet chooser
+    // instead of an implicit connector attempt that can appear to do nothing.
+    setShowCreate((open) => !open);
   }
 
   function load() {
@@ -125,14 +122,23 @@ export default function PredictionsLanding() {
         </div>
       </header>
 
-      {showCreate && fan && (
-        <CreateMarket
-          address={address}
-          publicClient={publicClient}
-          getWalletClient={getWalletClient}
-          onCreated={(id) => router.push(`/predictions/${id}`)}
-          onError={(message) => flash(message, "err")}
-        />
+      {showCreate && (
+        fan ? (
+          <CreateMarket
+            address={address}
+            publicClient={publicClient}
+            getWalletClient={getWalletClient}
+            onCreated={(id) => router.push(`/predictions/${id}`)}
+            onError={(message) => flash(message, "err")}
+          />
+        ) : (
+          <section className="page-surface scroll-mt-24 p-5 sm:p-7" aria-labelledby="connect-to-create-title">
+            <div className="eyebrow mb-2">Community market</div>
+            <h2 id="connect-to-create-title" className="tracking-tight text-2xl font-semibold text-[#23252f] sm:text-3xl">Connect to create</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#5f6172]">Choose Base Account, Coinbase Wallet, MetaMask, or email. Every signed-in testnet user can open a prediction market.</p>
+            <div className="mt-5 flex items-center gap-3"><BaseWalletConnect menuAlign="left" /></div>
+          </section>
+        )
       )}
 
       <TestnetFundingPanel compact />
@@ -226,7 +232,8 @@ export default function PredictionsLanding() {
               ) : (
                 <>
                   <div className="font-display text-xl text-[#23252f]">No markets yet</div>
-                  <p className="mt-2 text-sm text-[#7a7768]">Official Base markets open as pageant stages go live.</p>
+                  <p className="mt-2 text-sm text-[#7a7768]">Be the first to open a community prediction market.</p>
+                  <button onClick={() => setShowCreate(true)} className="btn-gold mt-4">Create a prediction</button>
                 </>
               )}
             </div>
@@ -281,14 +288,25 @@ function CreateMarket({
     }
     setBusy(true);
     try {
-      const wallet = await getWalletClient(address);
+      const marketDraft = { question: question.trim(), category, options: cleanOptions, closeTime, bannerUrl };
+      const preflight = await fetch("/api/markets", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(marketDraft),
+      });
+      const preflightData = await preflight.json().catch(() => ({}));
+      if (!preflight.ok) throw new Error(preflightData.error ?? "market_preflight_failed");
+
       const closeUnix = Math.floor(new Date(closeTime).getTime() / 1000);
-      const txHash = await wallet.writeContract({
+      const simulation = await publicClient.simulateContract({
         address: baseContracts.predictionMarket,
         abi: predictionMarketAbi,
         functionName: "createMarket",
         args: [question.trim(), category, cleanOptions.length, BigInt(closeUnix)],
+        account: address as Address,
       });
+      const wallet = await getWalletClient(address);
+      const txHash = await wallet.writeContract(simulation.request);
       const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
       if (receipt.status !== "success") throw new Error("market_create_reverted");
       const events = parseEventLogs({ abi: predictionMarketAbi, logs: receipt.logs, eventName: "MarketCreated", strict: true });
@@ -298,7 +316,7 @@ function CreateMarket({
       const response = await fetch("/api/markets", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question: question.trim(), category, options: cleanOptions, closeTime, bannerUrl, chainMarketId, createTxHash: txHash }),
+        body: JSON.stringify({ ...marketDraft, chainMarketId, createTxHash: txHash }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.id) throw new Error(data.error ?? "market_database_sync_failed");
@@ -306,6 +324,8 @@ function CreateMarket({
     } catch (error: any) {
       const raw = String(error?.shortMessage ?? error?.message ?? "");
       if (/rejected|denied|cancelled/i.test(raw)) onError("Wallet confirmation was cancelled.");
+      else if (/insufficient funds|insufficient.*gas|exceeds balance/i.test(raw)) onError("You need Base Sepolia ETH for network gas before creating a market. Open Testnet funds, fund this wallet, then retry.");
+      else if (/transaction_wallet_unavailable/i.test(raw)) onError("This account is signed in, but its transaction wallet is unavailable. Reconnect the same wallet and try again.");
       else if (/ownable|not owner|unauthorized/i.test(raw)) onError("The current Base contract still restricts creation to its owner. Update the deployed contract address to the community-enabled deployment.");
       else onError(messageFor(raw, "Could not create the Base market."));
     } finally {
@@ -347,6 +367,7 @@ function CreateMarket({
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button className="btn-gold min-w-48" disabled={!valid || busy} onClick={submit}>{busy ? "Confirming in wallet…" : "Create market on Base"}</button>
+        <Link href="/funds" className="text-xs font-semibold text-[#0000c8] hover:underline">Need Base Sepolia ETH for gas?</Link>
         {!valid && <span className="text-xs text-[#9a968b]">Add a question, at least two outcomes, and a future closing time.</span>}
       </div>
     </section>

@@ -3,9 +3,10 @@ import { db } from "@/lib/db";
 import { getAddress, isAddress } from "viem";
 import { verifyFanSignature, createFanSession, setFanCookie } from "@/lib/fanAuth";
 import { clientIpHash } from "@/lib/ip";
+import { newAccountsPerIpLimit, shouldEnforceNewAccountLimit } from "@/lib/registrationLimit";
 
 // Anti-abuse: max NEW accounts per network (IP). Returning wallets are never capped.
-const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
+// Base Sepolia deliberately permits multiple wallets from one test device.
 
 // Step 2 of wallet sign-in: verify the Base signature proves control of the
 // address, then issue an httpOnly session cookie. fanId is never trusted from the
@@ -41,9 +42,9 @@ export async function POST(req: NextRequest) {
     }
 
     // New account → enforce the per-IP registration cap.
-    if (ipHash) {
+    if (shouldEnforceNewAccountLimit(ipHash)) {
       const fromThisIp = await db.fan.count({ where: { registrationIpHash: ipHash } });
-      if (fromThisIp >= MAX_ACCOUNTS_PER_IP) {
+      if (fromThisIp >= newAccountsPerIpLimit()) {
         return NextResponse.json({ error: "ip_registration_limit" }, { status: 429 });
       }
     }

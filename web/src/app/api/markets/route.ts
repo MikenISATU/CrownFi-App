@@ -10,6 +10,35 @@ import { verifiedBaseReceipt } from "@/base/server";
 import { rateLimit } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/ip";
 
+type MarketInput = {
+  question: string;
+  category: string;
+  options: string[];
+  closeTime: Date | null;
+  pageantId: string | null;
+  bannerUrl: string | null;
+};
+
+function parseMarketInput(body: any): MarketInput {
+  return {
+    question: String(body?.question ?? "").trim().slice(0, 300),
+    category: String(body?.category ?? "").trim().slice(0, 40),
+    options: Array.isArray(body?.options)
+      ? body.options.map((value: any) => String(value).trim().slice(0, 120)).filter(Boolean)
+      : [],
+    closeTime: body?.closeTime ? new Date(body.closeTime) : null,
+    pageantId: body?.pageantId ? String(body.pageantId) : null,
+    bannerUrl: body?.bannerUrl ? String(body.bannerUrl).slice(0, 400) : null,
+  };
+}
+
+function marketInputError(input: MarketInput): string | null {
+  if (!input.question || !input.category) return "missing_fields";
+  if (input.options.length < 2 || input.options.length > MAX_MARKET_OPTIONS) return "invalid_options";
+  if (!input.closeTime || isNaN(input.closeTime.getTime()) || input.closeTime.getTime() <= Date.now()) return "invalid_close_time";
+  return null;
+}
+
 // GET — public list of markets (filters: ?category= ?status= ?pageantId= ?q=).
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
@@ -32,6 +61,44 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// PUT — authenticate and verify database readiness before the wallet spends gas.
+// The actual market is indexed only after POST independently verifies the Base receipt.
+export async function PUT(req: NextRequest) {
+  const admin = readAdminSession(req);
+  const fan = readFanSession(req);
+  if (!admin && !fan) return NextResponse.json({ error: "fan_auth_required" }, { status: 401 });
+  if (!baseContracts.predictionMarket) return NextResponse.json({ error: "market_contract_not_configured" }, { status: 503 });
+
+  const rl = rateLimit(`market-preflight:${clientIp(req)}`, 20, 60_000);
+  if (!rl.ok) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+
+  const input = parseMarketInput(await req.json().catch(() => null));
+  const inputError = marketInputError(input);
+  if (inputError) return NextResponse.json({ error: inputError }, { status: 400 });
+
+  try {
+    if (fan) {
+      const creator = await db.fan.findUnique({ where: { id: fan.fanId }, select: { id: true, walletAddress: true } });
+      if (!creator || creator.walletAddress.toLowerCase() !== fan.address.toLowerCase()) {
+        return NextResponse.json({ error: "fan_auth_required" }, { status: 401 });
+      }
+    }
+
+    // Selecting the Base-index fields catches an outdated database schema before a transaction.
+    await db.predictionMarket.findFirst({
+      select: { id: true, creatorFanId: true, chainMarketId: true, createTxHash: true },
+    });
+    return NextResponse.json({
+      ok: true,
+      marketContract: baseContracts.predictionMarket,
+      creatorAddress: admin?.address ?? fan!.address,
+    });
+  } catch (error) {
+    console.error("[api/markets] preflight failed:", error);
+    return NextResponse.json({ error: "market_database_unavailable" }, { status: 503 });
+  }
+}
+
 // POST — persist a market after the signed-in wallet has created it on Base. Admin-created
 // markets are official; fan-created markets are labelled community. The receipt is checked
 // independently so neither the creator nor the market details can be forged by the browser.
@@ -46,16 +113,13 @@ export async function POST(req: NextRequest) {
   if (!baseContracts.predictionMarket) return NextResponse.json({ error: "market_contract_not_configured" }, { status: 503 });
 
   const b = await req.json().catch(() => null);
-  const question = String(b?.question ?? "").trim().slice(0, 300);
-  const category = String(b?.category ?? "").trim().slice(0, 40);
-  const options: string[] = Array.isArray(b?.options) ? b.options.map((x: any) => String(x).trim().slice(0, 120)).filter(Boolean) : [];
-  const closeTime = b?.closeTime ? new Date(b.closeTime) : null;
+  const input = parseMarketInput(b);
+  const { question, category, options, closeTime, pageantId, bannerUrl } = input;
   const chainMarketId = Number(b?.chainMarketId);
   const createTxHash = String(b?.createTxHash ?? "");
 
-  if (!question || !category) return NextResponse.json({ error: "missing_fields" }, { status: 400 });
-  if (options.length < 2 || options.length > MAX_MARKET_OPTIONS) return NextResponse.json({ error: "invalid_options" }, { status: 400 });
-  if (!closeTime || isNaN(closeTime.getTime()) || closeTime.getTime() <= Date.now()) return NextResponse.json({ error: "invalid_close_time" }, { status: 400 });
+  const inputError = marketInputError(input);
+  if (inputError) return NextResponse.json({ error: inputError }, { status: 400 });
   if (!Number.isSafeInteger(chainMarketId) || chainMarketId <= 0 || !createTxHash) {
     return NextResponse.json({ error: "missing_onchain_confirmation" }, { status: 400 });
   }
@@ -76,7 +140,7 @@ export async function POST(req: NextRequest) {
       created.args.question !== question ||
       created.args.category !== category ||
       Number(created.args.numOptions) !== options.length ||
-      Number(created.args.closeTime) !== Math.floor(closeTime.getTime() / 1000)
+      Number(created.args.closeTime) !== Math.floor(closeTime!.getTime() / 1000)
     ) {
       return NextResponse.json({ error: "onchain_market_mismatch" }, { status: 409 });
     }
@@ -86,10 +150,10 @@ export async function POST(req: NextRequest) {
         question,
         category,
         optionsJson: JSON.stringify(options),
-        closeTime,
+        closeTime: closeTime!,
         creatorFanId: admin ? null : fan!.fanId,
-        pageantId: b?.pageantId ? String(b.pageantId) : null,
-        bannerUrl: b?.bannerUrl ? String(b.bannerUrl).slice(0, 400) : null,
+        pageantId,
+        bannerUrl,
         chainMarketId,
         createTxHash,
       },

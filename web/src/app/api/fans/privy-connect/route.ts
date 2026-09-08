@@ -4,8 +4,7 @@ import { getAddress, isAddress } from "viem";
 import { createFanSession, setFanCookie } from "@/lib/fanAuth";
 import { clientIpHash } from "@/lib/ip";
 import { privyConfigured, resolvePrivyEvmIdentity } from "@/lib/privyServer";
-
-const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
+import { newAccountsPerIpLimit, shouldEnforceNewAccountLimit } from "@/lib/registrationLimit";
 
 // Web2 sign-in via Privy: the client prefers an identity token and falls back to a
 // standard access token. The server verifies either proof, resolves the embedded EVM
@@ -62,9 +61,9 @@ export async function POST(req: NextRequest) {
       if (byEmail) return NextResponse.json({ error: "wallet_linked_elsewhere" }, { status: 409 });
     }
 
-    if (ipHash) {
+    if (shouldEnforceNewAccountLimit(ipHash)) {
       const fromThisIp = await db.fan.count({ where: { registrationIpHash: ipHash } });
-      if (fromThisIp >= MAX_ACCOUNTS_PER_IP) {
+      if (fromThisIp >= newAccountsPerIpLimit()) {
         return NextResponse.json({ error: "ip_registration_limit" }, { status: 429 });
       }
     }

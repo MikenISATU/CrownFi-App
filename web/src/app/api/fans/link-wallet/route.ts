@@ -3,8 +3,7 @@ import { db } from "@/lib/db";
 import { getAddress, isAddress } from "viem";
 import { verifyFanSignature, createFanSession, setFanCookie } from "@/lib/fanAuth";
 import { clientIpHash } from "@/lib/ip";
-
-const MAX_ACCOUNTS_PER_IP = Number(process.env.MAX_ACCOUNTS_PER_IP ?? "2");
+import { newAccountsPerIpLimit, shouldEnforceNewAccountLimit } from "@/lib/registrationLimit";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Web2-friendly onboarding (Privy embedded wallets).
@@ -62,9 +61,9 @@ export async function POST(req: NextRequest) {
       if (byEmail) return NextResponse.json({ error: "wallet_linked_elsewhere" }, { status: 409 });
     }
 
-    if (ipHash) {
+    if (shouldEnforceNewAccountLimit(ipHash)) {
       const fromThisIp = await db.fan.count({ where: { registrationIpHash: ipHash } });
-      if (fromThisIp >= MAX_ACCOUNTS_PER_IP) {
+      if (fromThisIp >= newAccountsPerIpLimit()) {
         return NextResponse.json({ error: "ip_registration_limit" }, { status: 429 });
       }
     }
