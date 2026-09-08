@@ -2,18 +2,42 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { Flag } from "@/components/Flag";
 import type { MarketView } from "@/components/MarketCard";
-import { CountUp } from "@/components/ui";
 import { getJson } from "@/lib/api";
 import styles from "./home.module.css";
-
-type Stats = { fans: number; predictions: number };
 
 const ROADMAP = [
   { period: "Now", status: "Testnet", title: "Prediction markets", items: ["Base Sepolia settlement", "Official test USDC", "Privy and EVM wallets", "Live crowd odds"] },
   { period: "Phase 02", status: "Next", title: "Market hardening", items: ["Independent contract audit", "Indexed odds history", "Result-source policy", "Sponsored transactions"] },
   { period: "Phase 03", status: "Planned", title: "Live pageants", items: ["Partner pilot event", "Market moderation", "Official result feeds", "Mobile experience"] },
   { period: "Phase 04", status: "Planned", title: "Mainnet stage", items: ["Base mainnet contracts", "Production liquidity", "Risk and dispute controls", "Ecosystem launch"] },
+];
+
+const NATIONS_ROW_ONE = [
+  { name: "Philippines", sash: "PH" },
+  { name: "Thailand", sash: "TH" },
+  { name: "Indonesia", sash: "ID" },
+  { name: "Vietnam", sash: "VN" },
+  { name: "Japan", sash: "JP" },
+  { name: "United States", sash: "US" },
+  { name: "Mexico", sash: "MX" },
+  { name: "Brazil", sash: "BR" },
+  { name: "Colombia", sash: "CO" },
+  { name: "Venezuela", sash: "VE" },
+];
+
+const NATIONS_ROW_TWO = [
+  { name: "India", sash: "IN" },
+  { name: "South Africa", sash: "ZA" },
+  { name: "Nigeria", sash: "NG" },
+  { name: "France", sash: "FR" },
+  { name: "Spain", sash: "ES" },
+  { name: "Italy", sash: "IT" },
+  { name: "Australia", sash: "AU" },
+  { name: "Canada", sash: "CA" },
+  { name: "Dominican Republic", sash: "DO" },
+  { name: "Puerto Rico", sash: "PR" },
 ];
 
 function marketPreview(market: MarketView, index: number) {
@@ -33,24 +57,18 @@ function marketPreview(market: MarketView, index: number) {
 }
 
 export default function Home() {
-  const [stats, setStats] = useState<Stats | null>(null);
   const [markets, setMarkets] = useState<MarketView[]>([]);
 
   useEffect(() => {
-    getJson<Stats | null>("/api/stats", null, { ttl: 30_000 }).then(setStats);
     getJson<MarketView[]>("/api/markets", [], { ttl: 30_000 }).then(setMarkets);
   }, []);
 
   const onchainMarkets = useMemo(() => markets.filter((market) => market.onchain), [markets]);
   const marketCards = useMemo(() => onchainMarkets.slice(0, 4).map(marketPreview), [onchainMarkets]);
-  const liveMarkets = onchainMarkets.filter((market) => market.live).length;
-  const pooledUsdc = onchainMarkets.reduce((sum, market) => sum + market.totalPool, 0);
-
   return (
     <div className={styles.home}>
       <section className={styles.hero} id="experience">
         <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>Prediction markets on Base</span>
           <h1><span>Predict the</span><em>crown.</em></h1>
           <p>Back a pageant outcome with test USDC. Follow live odds and verify the final settlement on Base Sepolia.</p>
           <div className={styles.actions}>
@@ -62,27 +80,6 @@ export default function Home() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className={styles.heroImage} src="/brand/prediction-crown-hero.webp" alt="A luminous CrownFi market crown formed from financial chart bars" />
           <div className={styles.heroCaption}><strong>Pageant outcomes.<br />Transparent markets.</strong><span>Built on Base</span></div>
-        </div>
-      </section>
-
-      <section className={styles.pulse} aria-labelledby="pulse-title">
-        <header className={styles.sectionIntro}>
-          <span className={styles.pill}>Platform pulse</span>
-          <h2 id="pulse-title">CrownFi in <em>numbers</em></h2>
-          <p>Live from the platform—every figure below is a real record, not a projection.</p>
-        </header>
-        <div className={styles.statsGrid}>
-          {[
-            ["Users registered", stats?.fans ?? 0],
-            ["Markets live", liveMarkets],
-            ["Predictions made", stats?.predictions ?? 0],
-            ["Test USDC pooled", pooledUsdc],
-          ].map(([label, value]) => (
-            <div className={styles.stat} key={label}>
-              <b><CountUp to={Number(value)} /><span>+</span></b>
-              <small>{label}</small>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -133,9 +130,9 @@ export default function Home() {
       </section>
 
       <section className={styles.partners} aria-labelledby="partners-title">
-        <header className={styles.sectionIntro}><span className={styles.pill}>Ecosystem and integrations</span><h2 id="partners-title">Connected to what <em>moves the crown.</em></h2><p>Technology and pageant communities move together in two continuous streams.</p></header>
-        <LogoMarquee labels={["Base", "USDC", "Viem", "Wagmi", "Privy", "GCash"]} />
-        <LogoMarquee labels={["Organizers", "Delegates", "Fan communities", "Media", "Sponsors", "Venues"]} reverse />
+        <header className={styles.sectionIntro}><span className={styles.pill}>Participating nations</span><h2 id="partners-title">Global nations. <em>One crown.</em></h2><p>A global field moves together toward one transparent market.</p></header>
+        <FlagMarquee nations={NATIONS_ROW_ONE} />
+        <FlagMarquee nations={NATIONS_ROW_TWO} reverse />
       </section>
 
       <section className={styles.roadmap} id="roadmap" aria-labelledby="roadmap-title">
@@ -152,7 +149,7 @@ function MarketPreview({ label, question, left, leftPct, right, rightPct }: { la
   return <article className={styles.marketCard}><span>{label}</span><h3>{question}</h3><div><p><i>{left}</i><b>{leftPct === null ? "—" : `${leftPct}%`}</b></p><em><i style={{ width: `${leftPct ?? 0}%` }} /></em>{right && <><p><i>{right}</i><b>{rightPct === null ? "—" : `${rightPct}%`}</b></p><em><i style={{ width: `${rightPct ?? 0}%` }} /></em></>}</div></article>;
 }
 
-function LogoMarquee({ labels, reverse = false }: { labels: string[]; reverse?: boolean }) {
-  const all = [...labels, ...labels];
-  return <div className={styles.marquee}><div className={reverse ? styles.marqueeReverse : styles.marqueeTrack}>{all.map((label, i) => <span aria-hidden={i >= labels.length} key={`${label}-${i}`}><b>{label.slice(0, 2).toUpperCase()}</b>{label}</span>)}</div></div>;
+function FlagMarquee({ nations, reverse = false }: { nations: { name: string; sash: string }[]; reverse?: boolean }) {
+  const all = [...nations, ...nations];
+  return <div className={styles.marquee}><div className={reverse ? styles.marqueeReverse : styles.marqueeTrack}>{all.map((nation, i) => <span aria-hidden={i >= nations.length} key={`${nation.name}-${i}`}><b aria-hidden><Flag sash={nation.sash} className={styles.nationFlag} /></b>{nation.name}</span>)}</div></div>;
 }

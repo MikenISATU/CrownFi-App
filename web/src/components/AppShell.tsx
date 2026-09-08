@@ -55,10 +55,18 @@ function LinkedInIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" className={className} aria-hidden>
+      <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.03 1.79-4.7 4.53-4.7 1.31 0 2.69.24 2.69.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.27h3.32l-.53 3.49h-2.79V24C19.61 23.1 24 18.1 24 12.07Z" />
+    </svg>
+  );
+}
 
 const SOCIALS = [
   { href: "https://discord.com/", label: "Discord", Icon: DiscordIcon },
   { href: "https://x.com/CrownFi_app", label: "X", Icon: XIcon },
+  { href: "https://www.facebook.com/profile.php?id=61592649017590", label: "Facebook", Icon: FacebookIcon },
   { href: "https://www.linkedin.com/", label: "LinkedIn", Icon: LinkedInIcon },
 ];
 
@@ -206,7 +214,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <nav className="hidden items-center gap-1 text-sm sm:flex">
               {NAV_DIRECT.map((l) => (
                 <Link key={l.href} href={l.href}
-                  className={`rounded-full px-3.5 py-1.5 transition ${path === l.href ? "bg-[#050a4f] text-white" : "text-[#5e6075] hover:bg-[#f3f3fb] hover:text-[#050a4f]"}`}>
+                  className={`site-nav-link ${path === l.href ? "site-nav-link-active" : ""}`}>
                   {l.label}
                 </Link>
               ))}
