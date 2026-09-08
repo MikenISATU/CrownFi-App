@@ -14,7 +14,7 @@ export function TicketHero({ hasAddress, balance, busy, onGetTestUsdc }: TicketH
         <div className="eyebrow mb-2">{TICKETING_COPY.heroEyebrow}</div>
         <h1 className="tracking-tight text-4xl font-semibold text-[#23252f]">{TICKETING_COPY.heroTitle}</h1>
         <p className="mt-2 text-sm text-[#5f6172]">
-          Pay in <b>USDC</b>. Every ticket is minted on Stellar with your tier and seat — scannable at the door, impossible to duplicate. <span className="tag-on ml-1">{TICKETING_COPY.onChainTag}</span>
+          Pay in <b>USDC</b>. Ticket minting on Base will bind your tier and seat to a scannable, unique credential. <span className="tag-on ml-1">{TICKETING_COPY.onChainTag}</span>
         </p>
       </div>
       {hasAddress && (

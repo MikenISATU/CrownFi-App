@@ -1,9 +1,8 @@
 // Payment-provider abstraction. The app talks to this layer, never to a provider SDK
 // directly, so providers can be swapped from the admin Payment Settings without refactoring.
 //
-// `testnet_usdc` is implemented today (buyer-signed USDC via the existing sale-splitter flow).
-// The fiat-onramp providers are catalogued with their capabilities and wired later behind the
-// same interface. Verify each provider's CURRENT PH/GCash + Stellar/USDC support before enabling.
+// `testnet_usdc` is implemented for the Base Sepolia prediction-market flow.
+// Fiat-onramp providers are catalogued for future integrations and remain disabled.
 
 export type PaymentCapabilities = {
   gcash: boolean;
@@ -11,7 +10,7 @@ export type PaymentCapabilities = {
   usdc: boolean;
   fiatOnramp: boolean;
   kyc: boolean;
-  stellar: boolean;
+  base: boolean;
 };
 
 export type PaymentProviderMeta = {
@@ -25,45 +24,45 @@ export type PaymentProviderMeta = {
 export const PROVIDERS: PaymentProviderMeta[] = [
   {
     id: "testnet_usdc",
-    label: "Testnet USDC (Stellar)",
-    capabilities: { gcash: false, cards: false, usdc: true, fiatOnramp: false, kyc: false, stellar: true },
+    label: "Testnet USDC (Base Sepolia)",
+    capabilities: { gcash: false, cards: false, usdc: true, fiatOnramp: false, kyc: false, base: true },
     implemented: true,
-    notes: "Buyer-signed USDC via the sale-splitter. Default for development/testing.",
+    notes: "Buyer-signed USDC for CrownFi prediction markets. Testnet only.",
   },
   {
     id: "gcash",
     label: "GCash (third-party merchant)",
-    capabilities: { gcash: true, cards: false, usdc: false, fiatOnramp: true, kyc: true, stellar: false },
+    capabilities: { gcash: true, cards: false, usdc: false, fiatOnramp: true, kyc: true, base: false },
     implemented: false,
     notes: "PH GCash merchant checkout. Testnet/demo only for now — you can enable or disable third-party payments here. A live GCash merchant account + webhook reconciliation is required before production.",
   },
   {
     id: "transak",
     label: "Transak",
-    capabilities: { gcash: true, cards: true, usdc: true, fiatOnramp: true, kyc: true, stellar: true },
+    capabilities: { gcash: true, cards: true, usdc: true, fiatOnramp: true, kyc: true, base: false },
     implemented: false,
-    notes: "Fiat→crypto onramp with GCash + cards + bundled KYC. Verify current PH + Stellar-asset support.",
+    notes: "Potential fiat-to-crypto onramp; Base support must be verified before enabling.",
   },
   {
     id: "alchemypay",
     label: "Alchemy Pay",
-    capabilities: { gcash: true, cards: true, usdc: true, fiatOnramp: true, kyc: true, stellar: true },
+    capabilities: { gcash: true, cards: true, usdc: true, fiatOnramp: true, kyc: true, base: false },
     implemented: false,
-    notes: "GCash + cards; verify Stellar/USDC rails for your region.",
+    notes: "Potential GCash and card provider; Base support must be verified before enabling.",
   },
   {
     id: "moonpay",
     label: "MoonPay",
-    capabilities: { gcash: false, cards: true, usdc: true, fiatOnramp: true, kyc: true, stellar: true },
+    capabilities: { gcash: false, cards: true, usdc: true, fiatOnramp: true, kyc: true, base: false },
     implemented: false,
     notes: "Cards + bank; strong KYC. GCash not native.",
   },
   {
     id: "ramp",
     label: "Ramp Network",
-    capabilities: { gcash: false, cards: true, usdc: true, fiatOnramp: true, kyc: true, stellar: false },
+    capabilities: { gcash: false, cards: true, usdc: true, fiatOnramp: true, kyc: true, base: false },
     implemented: false,
-    notes: "Cards/bank onramp; confirm Stellar support before relying on it.",
+    notes: "Cards/bank onramp; Base support must be verified before enabling.",
   },
 ];
 

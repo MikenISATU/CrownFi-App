@@ -56,7 +56,7 @@ NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL="https://sepolia.base.org"
 NEXT_PUBLIC_BASE_USDC_ADDRESS="0x036CbD53842c5426634e7929541eC2318f3dCF7e"
 ```
 
-The Privy wallet is an EVM wallet and can use Base Sepolia. It is not a Stellar wallet and no Friendbot funding or Stellar signing is used by the new login flow.
+The Privy embedded wallet is an EVM wallet configured for Base Sepolia.
 
 ## 5. Verify and seed
 

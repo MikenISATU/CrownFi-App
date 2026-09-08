@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 
 // Deterministic SHA-256 Merkle tree used to anchor a voting round.
-// Leaves are the per-vote hashes; the root is anchored on Stellar, and any voter
+// Leaves are the per-vote hashes; the root is anchored on Base, and any voter
 // can be given an inclusion proof (a receipt) that verifies against the published root
 // without revealing any other voter's identity.
 

@@ -42,7 +42,7 @@ async function main() {
       { key: "join_discord", title: "Join the Discord", description: "Join the community server and say hello.", points: 25, actionUrl: "https://discord.com/", icon: "discord", order: 2 },
       { key: "follow_linkedin", title: "Follow on LinkedIn", description: "Follow CrownFi for partnership news.", points: 15, actionUrl: "https://www.linkedin.com/", icon: "linkedin", order: 3 },
       { key: "share_vote", title: "Share your vote", description: "Share the CrownFi vote link with a friend.", points: 20, actionUrl: null, icon: "share", order: 4 },
-      { key: "connect_wallet", title: "Connect your wallet", description: "Sign in with Freighter to secure your identity.", points: 10, actionUrl: null, icon: "wallet", order: 5 },
+      { key: "connect_wallet", title: "Connect your wallet", description: "Sign in with a Base wallet to secure your identity.", points: 10, actionUrl: null, icon: "wallet", order: 5 },
     ],
   });
 

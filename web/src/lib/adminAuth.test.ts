@@ -27,7 +27,6 @@ async function main() {
 
   assert(isAdminAddress(admin.address), "allowlisted Base address is recognized case-insensitively");
   assert(!isAdminAddress(stranger.address), "non-allowlisted Base address is rejected");
-  assert(!isAdminAddress("GABC"), "legacy Stellar address is rejected");
 
   const request = new NextRequest("http://localhost:3000/api/admin/challenge", {
     method: "POST",

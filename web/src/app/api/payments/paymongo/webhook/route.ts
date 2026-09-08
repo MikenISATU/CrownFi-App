@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { mintPageantNft, mintCollectible } from "@/lib/stellar";
 
 // PayMongo webhook — fires when a GCash (or card) payment clears. We verify the signature, then
-// fulfill the order encoded in reference_number ("mint:<collectibleId>:<fanId>") by minting the NFT.
+// record the order encoded in reference_number ("mint:<collectibleId>:<fanId>"). Base collectible
+// fulfillment is disabled until a server-authorized transaction path is released.
 // Configure this URL in the PayMongo dashboard and set PAYMONGO_WEBHOOK_SECRET.
 export async function POST(req: NextRequest) {
   const raw = await req.text();
@@ -37,15 +37,22 @@ export async function POST(req: NextRequest) {
       db.collectible.findUnique({ where: { id: collectibleId } }),
       db.purchase.findFirst({ where: { fanId, collectibleId } }),
     ]);
-    if (already) return NextResponse.json({ ok: true, note: "already fulfilled" }); // idempotent
+    if (already) return NextResponse.json({ ok: true, note: "already fulfilled" });
     if (!fan?.walletAddress || !collectible) return NextResponse.json({ ok: true, note: "missing fan/collectible" });
 
-    const mint = collectible.candidateId != null
-      ? await mintPageantNft({ toAddress: fan.walletAddress, candidateId: collectible.candidateId })
-      : await mintCollectible({ toAddress: fan.walletAddress, metadataUri: collectible.metadataUri });
-    await db.purchase.create({ data: { fanId, collectibleId, priceUsdc: collectible.priceUsdc, tokenId: mint.tokenId, mintTx: mint.txHash } });
-    await db.paymentLog.create({ data: { fanId, kind: "mint", provider: "gcash", amount: collectible.priceUsdc, currency: "PHP", status: "success" } }).catch(() => {});
-    return NextResponse.json({ ok: true, minted: mint.tokenId });
+    await db.paymentLog.create({
+      data: {
+        fanId,
+        kind: "mint",
+        provider: "gcash",
+        amount: collectible.priceUsdc,
+        currency: "PHP",
+        status: "pending",
+        reference: String(event?.data?.id ?? ""),
+        detail: "Payment received; Base collectible fulfillment is not enabled.",
+      },
+    });
+    return NextResponse.json({ ok: true, pendingFulfillment: true }, { status: 202 });
   } catch (e: any) {
     console.error("[paymongo webhook] fulfill failed:", e?.message ?? e);
     return NextResponse.json({ error: "fulfill_failed" }, { status: 500 });

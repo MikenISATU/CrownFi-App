@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { useSession } from "@/session/SessionProvider";
 import { Icons } from "./icons";
-import { FreighterMark, GoogleMark } from "./brandIcons";
+import { BaseMark, GoogleMark } from "./brandIcons";
 import { short } from "@/lib/format";
 import { PrivyAutoLink } from "./PrivyAutoLink";
 import { PrivyEmailButton } from "./PrivyEmailButton";
 import { privyEnabled } from "@/lib/publicEnv";
 
 // Single entry point for connecting. Signed out → a "Connect Wallet" button that opens a
-// chooser (Freighter or Email/Privy, each with an icon). Signed in → the account chip + menu.
+// chooser (Base wallet or Email/Privy, each with an icon). Signed in → the account chip + menu.
 export function WalletConnect() {
   const { fan, address, isAdmin, connect, disconnect, connecting } = useSession();
   const [chooser, setChooser] = useState(false);
@@ -74,15 +74,15 @@ export function WalletConnect() {
           <div className="absolute right-0 z-50 mt-2 w-72 glass p-2 shadow-[0_20px_50px_-24px_rgba(120,100,40,0.4)]">
             <div className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#7a7768]">Choose how to connect</div>
 
-            {/* Freighter */}
+            {/* Base-compatible wallet */}
             <button
               onClick={() => { setChooser(false); connect(); }}
               className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition hover:bg-[#faf6ea]"
             >
-              <FreighterMark className="h-9 w-9 shrink-0 rounded-lg" />
+              <BaseMark className="h-9 w-9 shrink-0 rounded-lg" />
               <span>
-                <span className="block text-sm font-semibold text-[#23252f]">Freighter</span>
-                <span className="block text-xs text-[#7a7768]">Stellar browser wallet</span>
+                <span className="block text-sm font-semibold text-[#23252f]">Base wallet</span>
+                <span className="block text-xs text-[#7a7768]">Base Account, Coinbase Wallet, or MetaMask</span>
               </span>
             </button>
 

@@ -45,10 +45,10 @@ it into chat, commit it, or put it in a `NEXT_PUBLIC_*` variable. An ignored `ev
 `.env.example` is supported for this testnet deployment. The deployer needs Base Sepolia ETH.
 By default the deployer becomes both contract owner and fee treasury, and the prediction fee is 2%.
 
-Current Base Sepolia deployment (2026-08-29):
+Current Base Sepolia deployment (2026-09-08):
 
 ```env
-NEXT_PUBLIC_BASE_PREDICTION_MARKET_ADDRESS="0x692c12283C2339021733a88Ba129556Ce73eff9c"
+NEXT_PUBLIC_BASE_PREDICTION_MARKET_ADDRESS="0x35f9E8AB0Db5a0e1A3484dF97B0aeE6fAEF7c2d2"
 NEXT_PUBLIC_BASE_AUDIT_ANCHOR_ADDRESS="0xc7E6e385fCf5494cF740202c4E37fDD0977F0Be9"
 NEXT_PUBLIC_BASE_TICKET_CONTRACT_ADDRESS="0xD1013c0dEd496B75eE8e07d723807A7939bA205c"
 NEXT_PUBLIC_BASE_COLLECTIBLE_CONTRACT_ADDRESS="0xaBF95a64439adc98cAaB2AA05806a9dbbC79219A"
@@ -58,7 +58,7 @@ The collectible deployment registered candidate IDs 1–5 for Indonesia, Philipp
 Japan, and Thailand with the supplied immutable IPFS metadata CIDs. The contract started with zero
 minted tokens. See `base-sepolia.deployment.json` for transaction hashes and configuration.
 
-The supplied metadata JSON descriptions still say “on Stellar.” Repin corrected Base-specific JSON
-and call `setCandidateMetadata` before the first mint if that wording should change. Metadata becomes
-frozen per candidate after minting starts. Testnet deployment is not a security audit; obtain an
+Review the supplied metadata JSON before the first mint and call `setCandidateMetadata` if a URI
+needs correction. Metadata becomes frozen per candidate after minting starts. Testnet deployment
+is not a security audit; obtain an
 independent review before using real funds or moving to Base Mainnet.

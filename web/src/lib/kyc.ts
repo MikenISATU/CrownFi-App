@@ -6,7 +6,7 @@
 // withdrawals — to keep friction and PII exposure low for everyday fans.
 //
 // The verification itself is performed by an EXTERNAL provider (Persona / Sumsub /
-// Onfido / Veriff) or via a Stellar anchor's SEP-12 flow. This module does NOT verify
+// Onfido / Veriff). This module does NOT verify
 // anyone — it only reads the status stored on the Fan (`kycStatus`) and decides whether
 // a gated action may proceed. A provider webhook flips `kycStatus` to "verified".
 //

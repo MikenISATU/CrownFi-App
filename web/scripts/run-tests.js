@@ -26,8 +26,6 @@ try {
 
   // 3. Set environment variable for execution
   process.env.DATABASE_URL = 'file:./test.db';
-  process.env.STELLAR_MODE = 'mock';
-  process.env.WALLET_PROVIDER = 'mock';
 
   // 4. Run prisma generate and prisma db push
   console.log('Running prisma generate...');

@@ -79,6 +79,25 @@ describe("CrownFiPredictionMarket", () => {
     );
   });
 
+  it("lets any Base wallet create a market while keeping settlement owner-only", async () => {
+    const publicClient = await viem.getPublicClient();
+    const block = await publicClient.getBlock();
+    const closeTime = Number(block.timestamp) + 3600;
+
+    await fixture.predictionMarket.write.createMarket([
+      "Will the Philippines reach the final five?",
+      "yes_no",
+      2,
+      closeTime,
+    ], { account: fixture.alice.account });
+
+    const market = await fixture.predictionMarket.read.getMarket([1n]);
+    assert.equal(market.question, "Will the Philippines reach the final five?");
+    await assert.rejects(
+      fixture.predictionMarket.write.cancelMarket([1n], { account: fixture.alice.account }),
+    );
+  });
+
   it("blocks new stakes while paused but leaves pre-close withdrawals available", async () => {
     const { marketId } = await createMarket();
     const stake = parseUnits("25", 6);

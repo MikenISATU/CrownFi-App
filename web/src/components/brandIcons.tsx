@@ -1,22 +1,12 @@
-// Brand icons for the wallet chooser. Inline SVG so they always render (no external
-// requests / CSP issues). To use pixel-perfect official logos instead, drop
-// `freighter.svg` / `privy.svg` into /public/brand and swap the <img> in WalletConnect.
+// Brand icons for the wallet chooser. Inline SVG keeps the chooser available without
+// external image requests.
 
-// Freighter — purple rounded square with its two white keys (brand color ~#6C5CE0).
-export function FreighterMark({ className }: { className?: string }) {
+// Base mark: a white circular form on Base blue.
+export function BaseMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 40 40" width="36" height="36" className={className} aria-hidden>
-      <rect width="40" height="40" rx="11" fill="#6C5CE0" />
-      {/* top key — head upper-left, shaft to the right */}
-      <circle cx="13" cy="15" r="4" fill="none" stroke="#fff" strokeWidth="3" />
-      <rect x="16" y="13.5" width="12" height="3" rx="1.2" fill="#fff" />
-      <rect x="23" y="16.4" width="2.4" height="3.2" rx="1" fill="#fff" />
-      <rect x="26.6" y="16.4" width="2.4" height="4.2" rx="1" fill="#fff" />
-      {/* bottom key — head lower-right, shaft to the left (mirrored) */}
-      <circle cx="27" cy="26" r="4" fill="none" stroke="#fff" strokeWidth="3" />
-      <rect x="12" y="24.5" width="12" height="3" rx="1.2" fill="#fff" />
-      <rect x="14.6" y="20.4" width="2.4" height="4.2" rx="1" fill="#fff" />
-      <rect x="18.2" y="21.4" width="2.4" height="3.2" rx="1" fill="#fff" />
+      <rect width="40" height="40" rx="11" fill="#0052FF" />
+      <path fill="#fff" d="M20 8a12 12 0 1 1-11.31 16H24a4.4 4.4 0 1 0 0-8H8.69A12 12 0 0 1 20 8Z" />
     </svg>
   );
 }

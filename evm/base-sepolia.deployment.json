@@ -1,12 +1,14 @@
 {
   "network": "base-sepolia",
   "chainId": 84532,
-  "deployedAt": "2026-08-29",
+  "deployedAt": "2026-09-08",
   "deployer": "0x04Fb587523Abf2194B7A712f2522690Ef8E050E0",
   "contracts": {
     "CrownFiPredictionMarket": {
-      "address": "0x692c12283C2339021733a88Ba129556Ce73eff9c",
-      "transactionHash": "0xd73d7e67f757f4f7df81bfe3232f8683cc70ada9b84f8334fad941dc76470ac5",
+      "address": "0x35f9E8AB0Db5a0e1A3484dF97B0aeE6fAEF7c2d2",
+      "transactionHash": "0xbc93859ebe21f897dfa5f17e5a99f6ec3f092bdf069c83b08b0b44a1822bf615",
+      "previousAddress": "0x692c12283C2339021733a88Ba129556Ce73eff9c",
+      "communityCreation": true,
       "settlementToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       "treasury": "0x04Fb587523Abf2194B7A712f2522690Ef8E050E0",
       "defaultFeeBps": 200

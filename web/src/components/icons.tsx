@@ -13,7 +13,7 @@ export const Icons = {
   TrendingUp,
   Lock,            // was 🔒 (admin locked panel)
   Menu,            // hamburger
-  Wallet,          // Freighter connect
+  Wallet,          // Base wallet connect
   Mail,
   Repeat: RefreshCw, // switch wallet
   Sun,

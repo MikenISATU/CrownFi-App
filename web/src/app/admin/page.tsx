@@ -14,7 +14,7 @@ import { messageFor } from "@/lib/messages";
 import { BannerUpload } from "@/components/BannerUpload";
 import { MarketCloseField } from "@/components/MarketCloseField";
 import { PAGEANT_SEGMENTS, MARKET_CATEGORIES, CATEGORY_LABEL } from "@/lib/segments";
-import { baseContracts } from "@/base/contracts";
+import { baseContracts, baseExplorerUrl } from "@/base/contracts";
 import { auditAnchorAbi, predictionMarketAbi } from "@/base/abis";
 import { useBaseWalletClient } from "@/base/useBaseWalletClient";
 import { parseCandidateCsv } from "@/lib/candidateCsv";
@@ -407,7 +407,7 @@ function AnchorPanel({ roundId, contestants }: { roundId: string; contestants: a
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[#7a7768]">Anchor transaction</span>
                 {cp.anchorTx ? (
-                  <a href={`https://stellar.expert/explorer/testnet/tx/${cp.anchorTx}`} target="_blank" rel="noopener noreferrer" className="mono text-[#a97f16] hover:underline">
+                  <a href={`${baseExplorerUrl}/tx/${cp.anchorTx}`} target="_blank" rel="noopener noreferrer" className="mono text-[#a97f16] hover:underline">
                     {short(cp.anchorTx, 8)} ↗
                   </a>
                 ) : <span className="text-[#9a968b]">—</span>}

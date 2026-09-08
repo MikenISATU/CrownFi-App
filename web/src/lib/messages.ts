@@ -103,8 +103,7 @@ export const DEFAULT_ERROR = "Something went wrong. Please try again.";
 
 /**
  * Translate a machine error code (or a raw error string) into friendly copy.
- * Handles a couple of common substring cases (insufficient balance / trustline)
- * that the Stellar SDK surfaces as free-text rather than codes.
+ * Handles common wallet/provider errors that may arrive as free text rather than codes.
  */
 export function messageFor(code?: string | null, fallback: string = DEFAULT_ERROR): string {
   if (!code) return fallback;

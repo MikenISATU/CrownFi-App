@@ -8,8 +8,6 @@ The app has collectible catalogue and purchase interfaces:
 
 - `web/src/app/contestants/page.tsx`
 - `web/src/app/api/collectibles/route.ts`
-- `web/src/app/api/collectibles/prepare-buy/route.ts`
-- `web/src/app/api/collectibles/confirm-buy/route.ts`
 - `evm/contracts/CrownFiCollectible.sol`
 - `evm/ignition/modules/CrownFiCollectible.ts`
 
@@ -32,8 +30,7 @@ Support and purchases must not multiply vote power. Use this framing:
 ## MVP limitations
 
 - The current implementation is suitable for testnet/demo usage only and has not been audited.
-- The active web fulfillment routes still use legacy Stellar helpers and must be replaced with
-  server-authorized Base transactions before the UI can claim live Base minting.
-- The supplied Pinata metadata currently describes each collectible as “on Stellar”; repin corrected
-  Base metadata and update each candidate URI before its first mint if that wording should change.
+- Public minting remains disabled until CrownFi adds and reviews a server-authorized Base fulfillment path.
+- Review and, if needed, repin the supplied Pinata metadata before the first mint. Candidate metadata
+  can be updated only until minting begins for that candidate.
 - Real-money/mainnet support requires a deeper contract and backend review.

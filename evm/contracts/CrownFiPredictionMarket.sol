@@ -10,7 +10,8 @@ import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title CrownFi Prediction Market
-/// @notice Pageant-only, pooled USDC prediction markets with admin settlement and user custody.
+/// @notice Pageant-focused, pooled USDC prediction markets with community creation,
+/// admin settlement, and user custody.
 /// @dev Each market snapshots its fee and treasury so configuration cannot change after stakes begin.
 contract CrownFiPredictionMarket is Ownable2Step, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -100,7 +101,7 @@ contract CrownFiPredictionMarket is Ownable2Step, Pausable, ReentrancyGuard {
         string calldata category,
         uint8 numOptions,
         uint64 closeTime
-    ) external onlyOwner whenNotPaused returns (uint256 marketId) {
+    ) external whenNotPaused returns (uint256 marketId) {
         if (
             bytes(question).length == 0 ||
             bytes(category).length == 0 ||

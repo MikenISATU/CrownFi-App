@@ -7,6 +7,7 @@ import { getJson } from "@/lib/api";
 import { messageFor } from "@/lib/messages";
 import { Toast } from "@/components/ui";
 import { Icons } from "@/components/icons";
+import { baseExplorerUrl } from "@/base/contracts";
 
 export default function MePage() {
   const { fan, ready, refresh } = useSession();
@@ -63,7 +64,7 @@ export default function MePage() {
         <div className="card-gold p-5 sm:col-span-2">
           <div className="text-xs uppercase tracking-wider text-[#7a7768]">Base wallet</div>
           <div className="mono mt-2 break-all text-sm text-[#2a2d3a]">{fan?.walletAddress ?? "Created on your first purchase"}</div>
-          <div className="mt-2 text-xs text-[#8a8779]">Managed for you. No seed phrase, no XLM needed.</div>
+          <div className="mt-2 text-xs text-[#8a8779]">Managed for you through your connected or embedded Base wallet.</div>
         </div>
       </div>
 
@@ -75,7 +76,7 @@ export default function MePage() {
         <Panel title="Tickets" empty="No tickets yet." href="/tickets" cta="Buy a ticket" rows={(data?.tickets ?? []).map((t: any) => ({ main: `${t.tier} · seat ${t.seat}`, sub: t.eventName, tag: t.tokenId ? `NFT ${short(t.tokenId, 5)}` : "" }))} />
       </div>
 
-      {/* Collectibles — NFT gallery (art + token id, since wallets can't render Soroban NFTs yet) */}
+      {/* Collectibles — gallery of Base collectible art and token IDs. */}
       <div className="mt-8">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="tracking-tight text-xl text-white">Your collectibles</h2>
@@ -101,7 +102,7 @@ export default function MePage() {
                   <div className="font-display text-base text-[#23252f]">{c.title}</div>
                   <div className="mt-0.5 text-xs text-[#7a7768]">{c.priceUsdc} USDC · 1 per wallet{c.candidateId != null ? ` · candidate ${c.candidateId}` : ""}</div>
                   {c.mintTx && (
-                    <a href={`https://stellar.expert/explorer/testnet/tx/${c.mintTx}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-[#a97f16] hover:underline">View mint on explorer →</a>
+                    <a href={`${baseExplorerUrl}/tx/${c.mintTx}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-[#a97f16] hover:underline">View mint on explorer →</a>
                   )}
                 </div>
               </div>

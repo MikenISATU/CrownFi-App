@@ -1,13 +1,23 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { parseEventLogs } from "viem";
+import { usePublicClient } from "wagmi";
 import { useSession } from "@/session/SessionProvider";
 import { MarketCard, MarketView, CATEGORY_LABEL } from "@/components/MarketCard";
 import { MARKET_CATEGORIES } from "@/lib/segments";
 import { Icons } from "@/components/icons";
-import { MarketCandidateHint, withCandidateFlags } from "@/lib/markets";
+import { MarketCandidateHint, MAX_MARKET_OPTIONS, withCandidateFlags } from "@/lib/markets";
 import { TestnetFundingPanel } from "@/components/TestnetFundingPanel";
 import { TestnetNotice } from "@/components/TestnetNotice";
+import { MarketCloseField } from "@/components/MarketCloseField";
+import { BannerUpload } from "@/components/BannerUpload";
+import { Toast } from "@/components/ui";
+import { messageFor } from "@/lib/messages";
+import { baseContracts } from "@/base/contracts";
+import { predictionMarketAbi } from "@/base/abis";
+import { useBaseWalletClient } from "@/base/useBaseWalletClient";
 
 const CATEGORIES = ["all", ...MARKET_CATEGORIES.map((s) => s.key)];
 const STATUSES = [
@@ -19,12 +29,31 @@ const STATUSES = [
 ];
 
 export default function PredictionsLanding() {
-  const { isAdmin } = useSession();
+  const { fan, address, isAdmin, connect, connecting } = useSession();
+  const router = useRouter();
+  const publicClient = usePublicClient();
+  const getWalletClient = useBaseWalletClient();
   const [markets, setMarkets] = useState<MarketView[] | null>(null);
   const [candidates, setCandidates] = useState<MarketCandidateHint[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
   const [status, setStatus] = useState("active");
+  const [showCreate, setShowCreate] = useState(false);
+  const [toast, setToast] = useState({ msg: "", tone: "ok" as "ok" | "err" });
+  const flash = (msg: string, tone: "ok" | "err" = "ok") => {
+    setToast({ msg, tone });
+    setTimeout(() => setToast({ msg: "", tone: "ok" }), 3600);
+  };
+
+  async function openCreator() {
+    if (fan) {
+      setShowCreate((open) => !open);
+      return;
+    }
+    await connect();
+    // The form renders as soon as SessionProvider publishes the authenticated fan.
+    setShowCreate(true);
+  }
 
   function load() {
     fetch("/api/markets", { cache: "no-store" }).then((r) => r.json()).then((d) => setMarkets(Array.isArray(d) ? d : [])).catch(() => setMarkets([]));
@@ -68,7 +97,7 @@ export default function PredictionsLanding() {
             </div>
             <h1 className="max-w-3xl tracking-tight text-4xl font-semibold text-white sm:text-5xl">Predict the <span className="font-display italic text-[#f2d784]">crown</span></h1>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">Every signed-in fan can place a prediction with test USDC. Browse freely, connect only when you stake, and confirm each position in your own wallet.</p>
-            <p className="mt-2 text-xs text-white/55">Market creation, cancellation, and settlement remain owner-controlled for verifiable outcomes.</p>
+            <p className="mt-2 text-xs text-white/55">Any signed-in fan can open a community market. Closing, cancellation, and settlement remain admin-controlled for verifiable outcomes.</p>
           {markets !== null && markets.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 font-medium text-white/85 tabular-nums backdrop-blur">
@@ -84,11 +113,27 @@ export default function PredictionsLanding() {
           )}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <a className="btn-gold min-h-[52px] min-w-[230px] px-7 text-sm uppercase tracking-[0.09em]" href="#market-list">Create a prediction</a>
+            <button
+              className="btn-gold min-h-[52px] min-w-[230px] px-7 text-sm uppercase tracking-[0.09em]"
+              onClick={() => void openCreator()}
+              disabled={connecting}
+            >
+              {connecting ? "Connecting…" : showCreate ? "Close creator" : "Create a prediction"}
+            </button>
             {isAdmin && <Link className="btn-ghost !border-white/25 !bg-white/10 !text-white hover:!border-[#f2d784] hover:!bg-white/15" href="/admin">Manage markets</Link>}
           </div>
         </div>
       </header>
+
+      {showCreate && fan && (
+        <CreateMarket
+          address={address}
+          publicClient={publicClient}
+          getWalletClient={getWalletClient}
+          onCreated={(id) => router.push(`/predictions/${id}`)}
+          onError={(message) => flash(message, "err")}
+        />
+      )}
 
       <TestnetFundingPanel compact />
 
@@ -193,6 +238,117 @@ export default function PredictionsLanding() {
         </section>
       )}
 
+      <Toast msg={toast.msg} tone={toast.tone} />
     </div>
+  );
+}
+
+function CreateMarket({
+  address,
+  publicClient,
+  getWalletClient,
+  onCreated,
+  onError,
+}: {
+  address: string | null;
+  publicClient: ReturnType<typeof usePublicClient>;
+  getWalletClient: ReturnType<typeof useBaseWalletClient>;
+  onCreated: (id: string) => void;
+  onError: (message: string) => void;
+}) {
+  const defaultClose = () => new Date(Date.now() + 72 * 3_600_000).toISOString();
+  const [question, setQuestion] = useState("");
+  const [category, setCategory] = useState<string>(MARKET_CATEGORIES[0].key);
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const [closeTime, setCloseTime] = useState(defaultClose);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const isYesNo = category === "yes_no";
+  const cleanOptions = options.map((option) => option.trim()).filter(Boolean);
+  const valid = question.trim().length >= 3 && cleanOptions.length >= 2 && cleanOptions.length <= MAX_MARKET_OPTIONS && new Date(closeTime).getTime() > Date.now();
+
+  function changeCategory(next: string) {
+    setCategory(next);
+    if (next === "yes_no") setOptions(["Yes", "No"]);
+    else if (isYesNo) setOptions(["", ""]);
+  }
+
+  async function submit() {
+    if (!valid || busy) return;
+    if (!address || !publicClient || !baseContracts.predictionMarket) {
+      onError("Connect a Base wallet before creating a market.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const wallet = await getWalletClient(address);
+      const closeUnix = Math.floor(new Date(closeTime).getTime() / 1000);
+      const txHash = await wallet.writeContract({
+        address: baseContracts.predictionMarket,
+        abi: predictionMarketAbi,
+        functionName: "createMarket",
+        args: [question.trim(), category, cleanOptions.length, BigInt(closeUnix)],
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      if (receipt.status !== "success") throw new Error("market_create_reverted");
+      const events = parseEventLogs({ abi: predictionMarketAbi, logs: receipt.logs, eventName: "MarketCreated", strict: true });
+      const chainMarketId = Number(events[0]?.args.marketId);
+      if (!Number.isSafeInteger(chainMarketId) || chainMarketId <= 0) throw new Error("market_created_event_missing");
+
+      const response = await fetch("/api/markets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ question: question.trim(), category, options: cleanOptions, closeTime, bannerUrl, chainMarketId, createTxHash: txHash }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.id) throw new Error(data.error ?? "market_database_sync_failed");
+      onCreated(data.id);
+    } catch (error: any) {
+      const raw = String(error?.shortMessage ?? error?.message ?? "");
+      if (/rejected|denied|cancelled/i.test(raw)) onError("Wallet confirmation was cancelled.");
+      else if (/ownable|not owner|unauthorized/i.test(raw)) onError("The current Base contract still restricts creation to its owner. Update the deployed contract address to the community-enabled deployment.");
+      else onError(messageFor(raw, "Could not create the Base market."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="page-surface scroll-mt-24 p-5 sm:p-7" aria-labelledby="create-market-title">
+      <div className="mb-5">
+        <div className="eyebrow mb-2">Community market</div>
+        <h2 id="create-market-title" className="tracking-tight text-2xl font-semibold text-[#23252f] sm:text-3xl">Create a prediction market</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#5f6172]">Your wallet opens the market on Base Sepolia. CrownFi admins verify the final result before settlement.</p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <label className="lg:col-span-2">
+          <span className="mb-1.5 block text-xs font-semibold text-[#5f6172]">Prediction question</span>
+          <input className="field" maxLength={300} placeholder="For example: Will the Philippines reach the final five?" value={question} onChange={(event) => setQuestion(event.target.value)} />
+        </label>
+        <label>
+          <span className="mb-1.5 block text-xs font-semibold text-[#5f6172]">Category</span>
+          <select className="field" value={category} onChange={(event) => changeCategory(event.target.value)}>
+            {MARKET_CATEGORIES.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+          </select>
+        </label>
+        <MarketCloseField value={closeTime} onChange={setCloseTime} />
+        <div className="space-y-2 lg:col-span-2">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#5f6172]"><span>Outcomes</span><span>{cleanOptions.length} / {MAX_MARKET_OPTIONS}</span></div>
+          {options.map((option, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <span className="w-5 text-right text-xs text-[#9a968b]">{index + 1}</span>
+              <input className="field" maxLength={120} readOnly={isYesNo} placeholder={`Outcome ${index + 1}`} value={option} onChange={(event) => setOptions((current) => current.map((value, i) => i === index ? event.target.value : value))} />
+              {!isYesNo && options.length > 2 && <button type="button" aria-label={`Remove outcome ${index + 1}`} className="rounded-lg border border-[#e7e2d3] p-2 text-[#9a968b] hover:text-[#9f1239]" onClick={() => setOptions((current) => current.filter((_, i) => i !== index))}><Icons.X size={16} /></button>}
+            </div>
+          ))}
+          {!isYesNo && options.length < MAX_MARKET_OPTIONS && <button type="button" className="text-sm font-semibold text-[#a97f16] hover:underline" onClick={() => setOptions((current) => [...current, ""])}>+ Add outcome</button>}
+        </div>
+        <div className="lg:col-span-2"><BannerUpload value={bannerUrl} onUploaded={setBannerUrl} /></div>
+      </div>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button className="btn-gold min-w-48" disabled={!valid || busy} onClick={submit}>{busy ? "Confirming in wallet…" : "Create market on Base"}</button>
+        {!valid && <span className="text-xs text-[#9a968b]">Add a question, at least two outcomes, and a future closing time.</span>}
+      </div>
+    </section>
   );
 }

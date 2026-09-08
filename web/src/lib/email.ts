@@ -38,7 +38,7 @@ const wrap = (title: string, body: string) =>
      <div style="border:1px solid #eee6d3;border-top:0;border-radius:0 0 12px 12px;padding:24px">
        <h2 style="margin:0 0 12px">${title}</h2>
        ${body}
-       <p style="color:#7a7768;font-size:12px;margin-top:24px">CrownFi — pageant platform on Stellar (testnet/demo).</p>
+       <p style="color:#7a7768;font-size:12px;margin-top:24px">CrownFi — pageant prediction markets on Base (testnet/demo).</p>
      </div>
    </div>`;
 

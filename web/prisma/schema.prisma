@@ -363,7 +363,7 @@ model PaymentLog {
   amount    Float
   currency  String // USDC | PHP | USD | …
   status    String // success | failed | pending
-  reference String? // provider tx id / stellar tx hash
+  reference String? // provider or Base transaction hash
   detail    String?
   createdAt DateTime @default(now())
 

@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Prisma + stellar sdk are server-only; keep them external on the server bundle.
-  serverExternalPackages: ["@prisma/client", "@stellar/stellar-sdk"],
+  // Prisma is server-only; keep it external to the application bundle.
+  serverExternalPackages: ["@prisma/client"],
   webpack: (config) => {
     // @privy-io/react-auth optionally references packages for features we don't use
     // (Farcaster/Solana login, Stripe crypto onramp). Alias the missing ones to empty modules

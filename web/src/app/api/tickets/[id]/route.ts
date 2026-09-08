@@ -17,11 +17,11 @@ function getMockTicket(id: string, status = "minted") {
     tier: "Gold",
     seat: "GA-402",
     priceUsdc: 75.0,
-    tokenId: "CAS-Soroban-NFT-Mock-0x38d9fa39281a",
-    mintTx: "stellar-tx-mock-0x76b2c2898c0b",
+    tokenId: "demo-token-12345",
+    mintTx: null,
     status,
     createdAt: new Date().toISOString(),
-    fan: { handle: "demo_fan", walletAddress: "GBD7K2...MOCK_WALLET...R4X2Q" },
+    fan: { handle: "demo_fan", walletAddress: "0x1111111111111111111111111111111111111111" },
   };
 }
 

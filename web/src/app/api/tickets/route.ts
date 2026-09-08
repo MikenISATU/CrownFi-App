@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getWallet } from "@/wallet";
-import { mintTicket } from "@/lib/stellar";
 import { mockTicketsStore } from "@/lib/mockStore";
 import { TICKET_TIERS, type TierName } from "@/lib/tiers";
 import { requireFan } from "@/lib/fanAuth";
 
-const LIVE = (process.env.STELLAR_MODE ?? "mock") === "live";
 const DEMO_EVENT_NAME = "Coronation Night 2026";
 
 function isTierName(tier: string): tier is TierName {
@@ -26,10 +23,8 @@ export async function GET() {
   }
 }
 
-// Mock/dev purchase path only. Live purchases must use prepare-buy -> Freighter -> confirm-buy.
+// Testnet reservation only. Public ticket minting remains disabled until its Base checkout ships.
 export async function POST(req: NextRequest) {
-  if (LIVE) return NextResponse.json({ error: "use_prepare_confirm_flow" }, { status: 409 });
-
   const auth = requireFan(req);
   if (auth instanceof NextResponse) return auth;
 
@@ -50,20 +45,12 @@ export async function POST(req: NextRequest) {
   } catch {
     // Offline demo fallback only for mock fans created by /api/fans/connect when DB is unavailable.
     if (!fanId.startsWith("mock-fan-")) return NextResponse.json({ error: "database_unavailable" }, { status: 503 });
-    fan = { id: fanId, handle: `fan_${fanId.slice(-6)}`, walletAddress: `G${"A".repeat(55)}` };
+    fan = { id: fanId, handle: `fan_${fanId.slice(-6)}`, walletAddress: auth.address };
   }
 
-  const address = fan.walletAddress ?? (await getWallet().ensureAddress(fan.handle));
-  let tokenId = `mock-token-id-${Math.floor(Math.random() * 100000)}`;
-  let mintTx = `mock-tx-hash-${Math.floor(Math.random() * 1000000)}`;
-
-  try {
-    const mint = await mintTicket({ toAddress: address, eventName: DEMO_EVENT_NAME, tier, seat });
-    tokenId = mint.tokenId || tokenId;
-    mintTx = mint.txHash || mintTx;
-  } catch {
-    // Ignore blockchain mint failure in offline mock testing.
-  }
+  const address = fan.walletAddress ?? auth.address;
+  const tokenId = null;
+  const mintTx = null;
 
   const ticketData = {
     id: `mock-ticket-${Math.floor(Math.random() * 1000000)}`,
@@ -74,7 +61,7 @@ export async function POST(req: NextRequest) {
     priceUsdc: tierConfig.priceUsdc,
     tokenId,
     mintTx,
-    status: "minted",
+    status: "reserved",
     createdAt: new Date().toISOString(),
     fan: { handle: fan.handle, walletAddress: address },
   };
@@ -89,6 +76,7 @@ export async function POST(req: NextRequest) {
         priceUsdc: tierConfig.priceUsdc,
         tokenId,
         mintTx,
+        status: "reserved",
       },
       include: { fan: true },
     });

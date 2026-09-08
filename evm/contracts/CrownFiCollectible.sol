@@ -125,7 +125,7 @@ contract CrownFiCollectible is ERC721, Ownable2Step, Pausable {
     }
 
     /// @dev Pausing blocks mints, burns, and transfers. This keeps emergency behavior aligned
-    ///      with the former Soroban collectible contract.
+    ///      with the rest of CrownFi's emergency controls.
     function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
         _requireNotPaused();
         return super._update(to, tokenId, auth);

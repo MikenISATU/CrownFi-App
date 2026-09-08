@@ -8,6 +8,7 @@
     "test": "hardhat test",
     "check": "npm run build && npm run test",
     "deploy:base-sepolia": "hardhat ignition deploy ignition/modules/CrownFiBase.ts --network baseSepolia --build-profile production",
+    "deploy:community-markets:base-sepolia": "hardhat ignition deploy ignition/modules/CrownFiCommunityMarkets.ts --network baseSepolia --build-profile production",
     "deploy:ticket:base-sepolia": "hardhat ignition deploy ignition/modules/CrownFiTicket.ts --network baseSepolia --build-profile production",
     "deploy:collectible:base-sepolia": "hardhat ignition deploy ignition/modules/CrownFiCollectible.ts --network baseSepolia --build-profile production"
   },

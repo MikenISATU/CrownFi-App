@@ -68,5 +68,5 @@ Supabase (replace SQLite):
 
 Remove demo accounts:
 - prisma/seed.ts: stop seeding demo fans (queen_bee, etc.). Seed only contestants / a round if needed.
-- Identity comes from the connected Freighter wallet: on wallet sign-in, create-or-fetch a Fan by walletAddress. Remove the "sign in as" demo fan switcher from the session/account menu.
+- Identity comes from the connected or Privy-embedded Base wallet: on sign-in, create or fetch a Fan by `walletAddress`.
 - Admin stays wallet-allowlist based (ADMIN_WALLETS), as Codex built it.

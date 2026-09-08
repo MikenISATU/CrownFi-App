@@ -68,7 +68,7 @@ Important examples:
 - anti-scalping wording;
 - mock/testnet mode labels;
 - ticket verification explanation;
-- Stellar anchoring explanation;
+- Base anchoring explanation;
 - production limitation warnings.
 
 Do not duplicate this wording directly in pages. Duplicated copy is easy to miss during redesign and can reintroduce overclaims.

@@ -66,31 +66,26 @@ jobs:
         run: npm run test:merkle
 
   contracts-security:
-    name: Soroban contracts audit
+    name: Base contracts checks
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: contracts
+        working-directory: evm
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - name: Setup Rust stable
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-      - name: Format check
-        run: cargo fmt --all -- --check
-      - name: Test contracts
-        run: cargo test --workspace --locked
-      - name: Install cargo-audit
-        run: cargo install cargo-audit --locked
-      - name: Audit Rust dependencies for vulnerabilities
-        run: cargo audit
-      - name: Report Rust advisory warnings
-        continue-on-error: true
-        run: cargo audit --deny warnings
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: evm/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build and test contracts
+        run: npm run check
 
   secret-smoke-test:
     name: Secret smoke test
@@ -103,17 +98,7 @@ jobs:
       - name: Look for high-risk committed secrets
         run: |
           set -euo pipefail
-          STELLAR_SECRET_RE='(^|[^A-Z2-7])S[A-Z2-7]{55}([^A-Z2-7]|$)'
           DB_URL_RE='postgresql://[^[:space:]]+:[^<][^@[:space:]]+@'
-
-          if git grep -n -I -E "$STELLAR_SECRET_RE" -- \
-            . \
-            ':!contracts/DEPLOY_GUIDE.md' \
-            ':!web/.env.example' \
-            ':!.github/workflows/*'; then
-            echo "Potential Stellar secret key committed." >&2
-            exit 1
-          fi
 
           if git grep -n -I -E "$DB_URL_RE" -- \
             . \

@@ -14,7 +14,7 @@ function optionalAddress(value: string | undefined): Address | undefined {
 
 /**
  * Contract addresses stay undefined until their Base replacements are deployed.
- * Feature code must treat an undefined address as "not migrated yet".
+ * Feature code must treat an undefined address as "not configured".
  */
 export const baseContracts = {
   usdc: (optionalAddress(process.env.NEXT_PUBLIC_BASE_USDC_ADDRESS) || OFFICIAL_USDC[BASE_NETWORK]) as Address,

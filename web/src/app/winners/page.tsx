@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Portrait } from "@/components/Portrait";
 import { Flag } from "@/components/Flag";
 import { getJson } from "@/lib/api";
+import { baseExplorerUrl } from "@/base/contracts";
 
 type Winner = {
   category: string; label: string; roundTitle: string;
@@ -91,7 +92,7 @@ export default function WinnersPage() {
               <div className="mt-1 flex items-center justify-center gap-1.5 text-sm text-[#6f6c5f]"><Flag sash={crown.sash} /> {crown.country}</div>
               <div className="mt-2 text-xs text-[#7a7768]">{crown.votes} of {crown.totalVotes} sealed votes · {crown.roundTitle}</div>
               {crown.anchorTx && (
-                <a href={`https://stellar.expert/explorer/testnet/tx/${crown.anchorTx}`} target="_blank" rel="noopener noreferrer"
+                <a href={`${baseExplorerUrl}/tx/${crown.anchorTx}`} target="_blank" rel="noopener noreferrer"
                   className="mt-3 inline-block text-xs font-semibold text-[#a97f16] hover:underline">
                   View the public result anchor ↗
                 </a>
@@ -126,7 +127,7 @@ export default function WinnersPage() {
                   <div className="mt-0.5 flex items-center justify-center gap-1.5 text-xs text-[#6f6c5f]"><Flag sash={w.sash} /> {w.country}</div>
                   <div className="mt-1.5 text-[11px] text-[#7a7768]">{w.votes} of {w.totalVotes} sealed votes</div>
                   {w.anchorTx && (
-                    <a href={`https://stellar.expert/explorer/testnet/tx/${w.anchorTx}`} target="_blank" rel="noopener noreferrer"
+                    <a href={`${baseExplorerUrl}/tx/${w.anchorTx}`} target="_blank" rel="noopener noreferrer"
                       className="mt-2 inline-block text-[11px] font-semibold text-[#a97f16] hover:underline">
                       View the anchor ↗
                     </a>

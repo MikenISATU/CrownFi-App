@@ -6,7 +6,6 @@ import { useSession } from "@/session/SessionProvider";
 import { Toast } from "@/components/ui";
 import { getJson, postJson } from "@/lib/api";
 import { messageFor } from "@/lib/messages";
-import { signTx } from "@/wallet/sign";
 import { TIER_LIST } from "@/lib/tiers";
 import { TicketHero } from "@/components/tickets/TicketHero";
 import { TicketTierSelector } from "@/components/tickets/TicketTierSelector";
@@ -106,43 +105,20 @@ function TicketsPageInner() {
     }
     setBusy(true);
     try {
-      const prep = await postJson<any>("/api/tickets/prepare-buy", { tier, buyerAddress: address, fanId: fan.id });
-      if (!prep.ok) throw new Error((prep.data as any)?.error ?? "prepare_failed");
-
-      if ((prep.data as any).mock) {
-        const r = await postJson<any>("/api/tickets", {
-          fanId: fan.id,
-          eventName: "Coronation Night 2026",
-          tier,
-          priceUsdc: TIERS.find((x) => x.name === tier)!.price,
-        });
-        if (!r.ok) throw new Error((r.data as any)?.error ?? "buy_failed");
-        const newTicket = (r.data as any)?.ticket;
-        if (newTicket?.id) {
-          setLastTicketId(newTicket.id);
-          setAssigningTicket(newTicket);
-        }
-        flash("Ticket minted! Please choose your seat.", "ok");
-        return;
-      }
-
-      const signed = await signTx((prep.data as any).xdr, fan);
-      if (signed.error || !signed.signedXdr) throw new Error(signed.error ?? "You cancelled the signature.");
-
-      const conf = await postJson<any>("/api/tickets/confirm-buy", {
+      const r = await postJson<any>("/api/tickets", {
         tier,
         fanId: fan.id,
-        signedXdr: signed.signedXdr,
-        intentId: (prep.data as any).intentId,
+        eventName: "Coronation Night 2026",
+        priceUsdc: TIERS.find((x) => x.name === tier)!.price,
       });
-      if (!conf.ok) throw new Error((conf.data as any)?.error ?? "confirm_failed");
+      if (!r.ok) throw new Error((r.data as any)?.error ?? "reserve_failed");
 
-      const newTicket = (conf.data as any)?.ticket;
+      const newTicket = (r.data as any)?.ticket;
       if (newTicket?.id) {
         setLastTicketId(newTicket.id);
         setAssigningTicket(newTicket);
       }
-      flash(`Paid ${(prep.data as any).priceUsdc} USDC on-chain — ticket minted! Please choose your seat.`, "ok");
+      flash("Testnet ticket reserved. Please choose your seat.", "ok");
     } catch (e: any) {
       flash(messageFor(String(e?.message ?? ""), "Could not complete the purchase."), "err");
     } finally {

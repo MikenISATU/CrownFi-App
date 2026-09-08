@@ -5,7 +5,7 @@ import {
 } from "@/base/faucets";
 
 // CrownFi does not custody a Base faucet key. Return the verified public funding routes
-// instead of pretending the former Stellar mint endpoint can fund a 0x wallet.
+// instead of pretending the app can fund a user's wallet.
 export async function POST() {
   return NextResponse.json({
     error: "external_faucet_required",

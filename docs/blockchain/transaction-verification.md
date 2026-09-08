@@ -1,39 +1,16 @@
-# Transaction verification notes
+# Base transaction verification
 
-This document tracks what the app should verify when it claims something happened through Stellar/Soroban.
+The server never trusts a transaction hash by itself. Before CrownFi updates its database index, the confirmation route verifies the receipt on the configured Base chain.
 
-## Signed XDR confirmation
+For prediction-market actions, verify:
 
-The backend should not blindly trust a signed XDR submitted by the browser. For payment/ticket/collectible flows, the backend should verify that the signed XDR corresponds to a transaction intent created by the server.
+- the receipt succeeded;
+- the transaction sender matches the authenticated Base address;
+- the destination is the configured `CrownFiPredictionMarket` contract;
+- the expected contract event exists;
+- market ID, option, amount, and participant match the prepared action;
+- a transaction hash is not accepted twice.
 
-Current hardening pieces:
+For vote checkpoints, verify the publisher is an authorized admin and that `CheckpointPublished` contains the expected round ID, Merkle root, tally hash, and total vote count.
 
-- `web/src/lib/txIntents.ts`
-- `web/src/app/api/tickets/prepare-buy/route.ts`
-- `web/src/app/api/tickets/confirm-buy/route.ts`
-- `web/src/app/api/collectibles/prepare-buy/route.ts`
-- `web/src/app/api/collectibles/confirm-buy/route.ts`
-
-Expected checks:
-
-- intent ID exists and is not expired;
-- intent kind matches the route;
-- expected buyer/admin/source account matches;
-- expected transaction hash/body matches;
-- tier/listing/price comes from server state or contract state, not request body.
-
-## Audit checkpoint verification
-
-For snapshot anchoring, the system should verify:
-
-- snapshot ID;
-- round/event/category;
-- Merkle root;
-- tally hash;
-- total votes;
-- transaction hash or contract state reference;
-- mock vs live mode.
-
-## MVP caveat
-
-The current system demonstrates verification semantics. It is not a formal chain indexer. A production version would need a durable job/worker, retry handling, transaction confirmation polling, and possibly an indexer or RPC verification service.
+The application is a testnet implementation, not a general-purpose chain indexer. Production use needs durable workers, retries, confirmation-depth rules, RPC failover, and monitoring.
