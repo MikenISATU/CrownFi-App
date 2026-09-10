@@ -216,6 +216,12 @@ export default function MarketDetail() {
 
   return (
     <div className="space-y-6">
+      {m.bannerUrl && (
+        <div className="overflow-hidden rounded-[28px] border border-[#d4af37]/60 bg-[#050a4f] shadow-[0_24px_60px_-38px_rgba(5,10,79,0.8)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={m.bannerUrl} alt={`${m.question} market banner`} className="h-48 w-full object-cover sm:h-64 lg:h-72" />
+        </div>
+      )}
       <TestnetNotice compact />
       <Link href="/predictions" className="text-sm text-white/75 transition hover:text-[#f4e3a1]">← All markets</Link>
 
