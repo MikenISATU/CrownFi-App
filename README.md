@@ -19,11 +19,6 @@ Tickets and collectibles have deployed testnet contracts, but their public check
 | Contract | Address |
 | --- | --- |
 | `CrownFiPredictionMarket` | [`0x35f9E8AB0Db5a0e1A3484dF97B0aeE6fAEF7c2d2`](https://sepolia.basescan.org/address/0x35f9E8AB0Db5a0e1A3484dF97B0aeE6fAEF7c2d2) |
-| `CrownFiAuditAnchor` | [`0xc7E6e385fCf5494cF740202c4E37fDD0977F0Be9`](https://sepolia.basescan.org/address/0xc7E6e385fCf5494cF740202c4E37fDD0977F0Be9) |
-| `CrownFiTicket` | [`0xD1013c0dEd496B75eE8e07d723807A7939bA205c`](https://sepolia.basescan.org/address/0xD1013c0dEd496B75eE8e07d723807A7939bA205c) |
-| `CrownFiCollectible` | [`0xaBF95a64439adc98cAaB2AA05806a9dbbC79219A`](https://sepolia.basescan.org/address/0xaBF95a64439adc98cAaB2AA05806a9dbbC79219A) |
-| Circle Base Sepolia USDC | [`0x036CbD53842c5426634e7929541eC2318f3dCF7e`](https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e) |
-
 Deployment transaction hashes and contract configuration are recorded in [`evm/base-sepolia.deployment.json`](evm/base-sepolia.deployment.json).
 
 ## What is on-chain
