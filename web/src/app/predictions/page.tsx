@@ -79,10 +79,21 @@ export default function PredictionsLanding() {
 
   const activeMarkets = markets?.filter((m) => m.status === "open") ?? [];
   const live = (markets ?? []).map((m) => withCandidateFlags(m, candidates)).filter((m) => m.live).sort((a, b) => (b.official ? 1 : 0) - (a.official ? 1 : 0));
+  const bannerMarket = activeMarkets.find((m) => m.bannerUrl);
 
   return (
     <div className="space-y-8">
       <TestnetNotice />
+      {bannerMarket?.bannerUrl && (
+          <div className="overflow-hidden rounded-[28px] border border-[#d4af37]/60 bg-[#050a4f] shadow-[0_24px_60px_-38px_rgba(5,10,79,0.8)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={bannerMarket.bannerUrl}
+              alt={`${bannerMarket.question} market banner`}
+              className="h-48 w-full object-cover sm:h-64 lg:h-72"
+            />
+          </div>
+        )}
       <header className="relative z-30 isolate rounded-[28px] border border-[#d4af37]/60 bg-[#050a4f] px-5 py-8 text-white shadow-[0_28px_70px_-42px_rgba(0,0,200,0.75)] sm:px-8 sm:py-10">
         <div aria-hidden className="absolute inset-0 -z-10 rounded-[28px] bg-[radial-gradient(circle_at_85%_12%,rgba(0,2,253,0.48),transparent_38%),linear-gradient(125deg,rgba(0,0,200,0.2),transparent_48%)]" />
         <div aria-hidden className="absolute right-4 top-4 -z-10 h-40 w-40 rounded-full border border-white/15 shadow-[0_0_80px_rgba(0,2,253,0.38)]" />
